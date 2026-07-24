@@ -1,0 +1,387 @@
+<UserControl x:Class="ZiraatProje.UI.Views.ChatView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ZiraatProje.UI.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="580" d:DesignWidth="950">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+    </UserControl.Resources>
+    
+    <Grid Background="Transparent" Margin="20" Height="540">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT PANEL: CHANNELS & ACTIVE CHATS -->
+        <Border Grid.Column="0" Background="White" BorderBrush="#e2e8f0" BorderThickness="1" CornerRadius="10" Margin="0,0,15,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Panel Header -->
+                <Border Grid.Row="0" Background="#f1f5f9" Padding="15,12" CornerRadius="10,10,0,0" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1">
+                    <StackPanel>
+                        <TextBlock Text="💬 Dahili Sohbet Odaları" FontSize="15" FontWeight="Bold" Foreground="#0f172a"/>
+                        <TextBlock Text="Ekip arkadaşlarınız ve yöneticilerinizle yazışın" FontSize="11" Foreground="#64748b" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- NEW CHAT BUTTON (WhatsApp Style "Yeni Sohbet Başlat") -->
+                <Border Grid.Row="1" Padding="12,10,12,5">
+                    <Button Content="➕ Yeni Sohbet Başlat" Command="{Binding OpenNewChatModalCommand}"
+                            Background="{StaticResource ZiraatRed}" Foreground="White" BorderThickness="0"
+                            Padding="12,8" FontSize="12" FontWeight="Bold" Cursor="Hand" HorizontalAlignment="Stretch">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border CornerRadius="8" Background="{TemplateBinding Background}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Border>
+
+                <!-- Auto-Cleanup Notice Card -->
+                <Border Grid.Row="2" Background="#eff6ff" BorderBrush="#bfdbfe" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="12,5,12,5">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="🧹" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Grid.Column="1" Text="Sohbet geçmişi her gün sonu otomatik silinir."
+                                   FontSize="10" Foreground="#1e40af" TextWrapping="Wrap" VerticalAlignment="Center" LineHeight="13"/>
+                    </Grid>
+                </Border>
+
+                <!-- Channels / Active Direct Chats Scroll List -->
+                <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="8,5">
+                    <ItemsControl ItemsSource="{Binding Channels}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{Binding SelectedBackground}" 
+                                        BorderBrush="{Binding SelectedBorderBrush}" 
+                                        BorderThickness="{Binding SelectedBorderThickness}" 
+                                        CornerRadius="8" Padding="10,9" Margin="0,2" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" 
+                                                      Command="{Binding DataContext.SelectChannelCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" 
+                                                      CommandParameter="{Binding}"/>
+                                    </Border.InputBindings>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0" Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1" Width="34" Height="34" CornerRadius="17" Margin="0,0,10,0">
+                                            <TextBlock Text="{Binding Icon}" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="Bold" Foreground="#1e293b"/>
+                                            <TextBlock Text="{Binding Subtitle}" FontSize="10" Foreground="#64748b" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+
+                                        <!-- Unread Count Badge (Bright Red Notification Badge) -->
+                                        <Border Grid.Column="2" Visibility="{Binding UnreadBadgeVisibility}" 
+                                                Background="#bc171d" CornerRadius="10" Padding="8,3" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="🔴 " FontSize="9" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding UnreadCount, StringFormat='{}{0} YENİ'}" Foreground="White" FontSize="10" FontWeight="ExtraBold" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Footer Clear Chat Button -->
+                <Border Grid.Row="4" Padding="10" BorderBrush="#e2e8f0" BorderThickness="0,1,0,0" Background="#f8fafc">
+                    <Button Content="🗑️ Bugünkü Sohbeti Temizle" Command="{Binding ClearChatCommand}" 
+                            Background="#fef2f2" Foreground="{StaticResource ZiraatRed}" BorderBrush="#fecaca" BorderThickness="1"
+                            Padding="8,5" FontSize="10" FontWeight="Bold" Cursor="Hand" HorizontalAlignment="Stretch">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- RIGHT PANEL: CHAT WINDOW STREAM & FIXED BOTTOM INPUT BAR -->
+        <Border Grid.Column="1" Background="White" BorderBrush="#e2e8f0" BorderThickness="1" CornerRadius="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Active Channel Header Banner -->
+                <Border Grid.Row="0" Background="#ffffff" Padding="18,12" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1" CornerRadius="10,10,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding ActiveChannelTitle}" FontSize="15" FontWeight="ExtraBold" Foreground="{StaticResource ZiraatRed}"/>
+                            <TextBlock Text="{Binding ActiveChannelSubtitle}" FontSize="11" Foreground="#64748b" Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <!-- Offline Security Badge -->
+                        <Border Grid.Column="1" Background="#ecfdf5" BorderBrush="#a7f3d0" BorderThickness="1" CornerRadius="12" Padding="8,4" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔒 " FontSize="10"/>
+                                <TextBlock Text="%100 Çevrimdışı Güvenli" FontSize="9" FontWeight="Bold" Foreground="#065f46"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- In-App Real-Time Notification Banner -->
+                <Border Grid.Row="1" Visibility="{Binding NotificationBannerVisibility}" Background="#ffeef0" BorderBrush="#fca5a5" BorderThickness="0,0,0,1" Padding="12,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding NotificationBannerText}" FontWeight="Bold" Foreground="#991b1b" FontSize="11" VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Content="✕" Command="{Binding DismissNotificationBannerCommand}" Background="Transparent" Foreground="#991b1b" BorderThickness="0" FontWeight="Bold" Cursor="Hand"/>
+                    </Grid>
+                </Border>
+
+                <!-- Message History Stream Canvas (Fills middle height, auto-scrolls) -->
+                <ScrollViewer x:Name="MessageScrollViewer" Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="15">
+                    <ItemsControl ItemsSource="{Binding Messages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,6">
+                                    <!-- Bubble Container Alignment -->
+                                    <StackPanel HorizontalAlignment="{Binding Alignment}" MaxWidth="500">
+                                        
+                                        <!-- Sender Info Header -->
+                                        <StackPanel Orientation="Horizontal" Margin="2,0,2,3" HorizontalAlignment="{Binding Alignment}">
+                                            <TextBlock Text="{Binding SenderName}" FontSize="11" FontWeight="Bold" Foreground="#334155"/>
+                                            <TextBlock Text="{Binding SenderTitle, StringFormat='{} ({0})'}" FontSize="10" Foreground="#64748b" Margin="3,0,0,0"/>
+                                            <TextBlock Text="{Binding TimeText}" FontSize="10" Foreground="#94a3b8" Margin="8,0,0,0"/>
+                                        </StackPanel>
+
+                                        <!-- Message Bubble -->
+                                        <Border Background="{Binding BubbleBackground}" BorderBrush="{Binding BubbleBorder}" BorderThickness="1" CornerRadius="12" Padding="12,8">
+                                            <TextBlock Text="{Binding MessageText}" Foreground="{Binding BubbleForeground}" FontSize="13" TextWrapping="Wrap" LineHeight="18"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- FIXED BOTTOM MESSAGE INPUT BAR (Always visible at the bottom of the card!) -->
+                <Border Grid.Row="3" Background="#f8fafc" Padding="12" BorderBrush="#e2e8f0" BorderThickness="0,1,0,0" CornerRadius="0,0,10,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Background="White" BorderBrush="#cbd5e1" BorderThickness="1.5" CornerRadius="8" MinHeight="44" MaxHeight="100" VerticalAlignment="Center">
+                            <TextBox Text="{Binding NewMessageText, UpdateSourceTrigger=PropertyChanged}" 
+                                     Padding="12,10" FontSize="13" Foreground="#0f172a" Background="Transparent"
+                                     TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                                     MinHeight="40" MaxHeight="90" VerticalContentAlignment="Center">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="TextBox">
+                                                    <ScrollViewer x:Name="PART_ContentHost" Margin="0" VerticalAlignment="Center"/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </TextBox.Style>
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SendMessageCommand}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </Border>
+
+                        <Button Grid.Column="1" Content="Gönder 🚀" Command="{Binding SendMessageCommand}" 
+                                Background="{StaticResource ZiraatRed}" Foreground="White" FontWeight="Bold" FontSize="12"
+                                Padding="18,10" Margin="10,0,0,0" Cursor="Hand" VerticalAlignment="Center">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border CornerRadius="8" Background="{TemplateBinding Background}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- WHATSAPP-STYLE "YENİ SOHBET / GRUP OLUŞTUR" OVERLAY MODAL -->
+        <Border Grid.ColumnSpan="2" Visibility="{Binding NewChatModalVisibility}" Background="#77000000">
+            <Border Background="White" Width="460" Height="520" CornerRadius="12" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Modal Title Bar -->
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <TextBlock Text="💬 Yeni Sohbet veya Grup Oluştur" FontSize="16" FontWeight="ExtraBold" Foreground="{StaticResource ZiraatRed}"/>
+                        <Button Content="✕" Command="{Binding CloseNewChatModalCommand}" HorizontalAlignment="Right"
+                                Background="Transparent" Foreground="#64748b" BorderThickness="0" FontSize="16" FontWeight="Bold" Cursor="Hand"/>
+                    </Grid>
+
+                    <!-- Tab Mode Switcher (Direct Chat vs Group Creation) -->
+                    <Grid Grid.Row="1" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="👤 Birebir Sohbet" Command="{Binding SwitchToDirectTabCommand}" Height="34" Margin="0,0,5,0" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border CornerRadius="6" Background="{Binding DataContext.DirectTabBg, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}">
+                                        <TextBlock Text="{TemplateBinding Content}" Foreground="White" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        <Button Grid.Column="1" Content="👥 Yeni Grup Kur" Command="{Binding SwitchToGroupTabCommand}" Height="34" Margin="5,0,0,0" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border CornerRadius="6" Background="{Binding DataContext.GroupTabBg, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}">
+                                        <TextBlock Text="{TemplateBinding Content}" Foreground="White" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+
+                    <!-- Group Name Input Box (Visible ONLY in Group Creation Tab) -->
+                    <StackPanel Grid.Row="2" Visibility="{Binding GroupTabVisibility}" Margin="0,0,0,10">
+                        <TextBlock Text="Sohbet Grubu Adı" FontSize="11" FontWeight="Bold" Foreground="#475569" Margin="0,0,0,4"/>
+                        <Border Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1.5" CornerRadius="6" Padding="10,6">
+                            <TextBox Text="{Binding NewGroupName, UpdateSourceTrigger=PropertyChanged}" 
+                                     BorderThickness="0" Background="Transparent" FontSize="12" FontWeight="Bold" Foreground="#0f172a"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- User Search Box (Visible in Direct Chat Tab) -->
+                    <Border Grid.Row="2" Visibility="{Binding DirectTabVisibility}" Background="#f1f5f9" BorderBrush="#cbd5e1" BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="🔍 " FontSize="12" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBox Grid.Column="1" Text="{Binding UserSearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                     BorderThickness="0" Background="Transparent" FontSize="12" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Colleagues List -->
+                    <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding AllUsersList}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#ffffff" BorderBrush="#e2e8f0" BorderThickness="1" CornerRadius="8" Padding="12,9" Margin="0,0,0,6" Cursor="Hand">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Group Member Checkbox (Group Tab Only) -->
+                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsSelectedForGroup}" 
+                                                      Visibility="{Binding DataContext.GroupTabVisibility, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                      VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                                            <Border Grid.Column="1" Background="#f1f5f9" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,0">
+                                                <TextBlock Text="{Binding Icon}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding FullName}" FontSize="13" FontWeight="Bold" Foreground="#1e293b"/>
+                                                <TextBlock Text="{Binding TitleAndTeam}" FontSize="10" Foreground="#64748b" Margin="0,2,0,0"/>
+                                            </StackPanel>
+
+                                            <!-- Direct Chat Action Button -->
+                                            <Button Grid.Column="3" Content="💬 Sohbet Et ➔" 
+                                                    Command="{Binding DataContext.SelectUserToChatCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" 
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding DataContext.DirectTabVisibility, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                    Background="Transparent" Foreground="{StaticResource ZiraatRed}" FontWeight="Bold" FontSize="11" BorderThickness="0" Cursor="Hand" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Bottom Action Bar -->
+                    <Grid Grid.Row="4" Margin="0,12,0,0">
+                        <Button Content="Kapat" Command="{Binding CloseNewChatModalCommand}" 
+                                Background="#f1f5f9" Foreground="#475569" BorderBrush="#cbd5e1" BorderThickness="1"
+                                Padding="14,8" FontSize="11" FontWeight="Bold" Cursor="Hand" HorizontalAlignment="Left">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <Button Content="🚀 Grubu Oluştur" Command="{Binding CreateGroupCommand}" 
+                                Visibility="{Binding GroupTabVisibility}"
+                                Background="{StaticResource ZiraatRed}" Foreground="White" 
+                                Padding="16,8" FontSize="11" FontWeight="Bold" Cursor="Hand" HorizontalAlignment="Right">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border CornerRadius="6" Background="{TemplateBinding Background}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

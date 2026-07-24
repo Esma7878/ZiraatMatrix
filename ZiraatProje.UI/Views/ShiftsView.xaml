@@ -1,0 +1,1571 @@
+<UserControl x:Class="ZiraatProje.UI.Views.ShiftsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ZiraatProje.UI.Views"
+             xmlns:helpers="clr-namespace:ZiraatProje.UI.Helpers"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1100">
+    
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        
+        <!-- Compact Table Action Button Style -->
+        <Style x:Key="SmallLinkButton" TargetType="Button">
+            <Setter Property="Background" Value="#2b6cb0"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Width" Value="60"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Name="Border" CornerRadius="5" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#1a365d"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="Transparent" Margin="25">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- View Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,15">
+            <TextBlock Text="Nöbet Takvimi" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Burgundy}"/>
+            <TextBlock Text="Ana yaygınlaştırma dönemsel nöbetleri, özelleştirilmiş geçiş nöbetleri ve görsel nöbet takvimi" FontSize="13" Foreground="{StaticResource TextGray}" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Main Tabbed Layout -->
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
+
+            <!-- ========================================================================= -->
+            <!-- TAB 1: NÖBET LİSTESİ & KAYIT FORMU                                       -->
+            <!-- ========================================================================= -->
+            <TabItem Header="📝 Nöbet Listesi &amp; Kayıt" Padding="15,8" Style="{DynamicResource CustomTabItemStyle}">
+                <Grid Margin="0,15,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Top Action Control Bar -->
+                    <Grid Grid.Row="0" Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="📋 Nöbet Plan ve Görev Listesi" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Burgundy}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Content="➕ Yeni Nöbet Kaydı Ekle" Command="{Binding AddNewShiftCommand}" 
+                                    Style="{StaticResource NormalLoginButton}" Width="180" Height="36" FontSize="12"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3.2*"/>
+                            <ColumnDefinition Width="2.2*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Left Column: Categorized Shift Tables (Spans 2 columns when Form is closed!) -->
+                        <StackPanel Grid.Column="0" Grid.ColumnSpan="{Binding ShiftScheduleColumnSpan}" Margin="0,0,15,0">
+                            <StackPanel>
+
+                                <!-- ========================================================================= -->
+                                <!-- SECTION 1: ANA YAYGINLAŞTIRMA NÖBET LİSTESİ                               -->
+                                <!-- ========================================================================= -->
+                                <Border Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="20" Margin="0,0,0,25">
+                                    <StackPanel>
+                                        <!-- Header Title & Info Banner -->
+                                        <Grid Margin="0,0,0,15">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border Background="#bc171d" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,0">
+                                                    <TextBlock Text="📆" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel>
+                                                    <TextBlock Text="Yaygınlaştırma Nöbet Planı" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Burgundy}"/>
+                                                    <TextBlock Text="Aylık ana yayınlar ve haftalık yaygınlaştırma nöbet tarihleri" FontSize="11" Foreground="{StaticResource TextGray}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Sub-Section 1: Aylık Yaygınlaştırma Nöbet Listesi -->
+                                        <StackPanel Margin="0,0,0,15">
+                                            <TextBlock Text="📌 Aylık Ana Yaygınlaştırma Nöbetleri" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Burgundy}" Margin="0,0,0,8"/>
+
+                                            <DataGrid ItemsSource="{Binding MonthlyReleaseList}" 
+                                                      SelectedItem="{Binding SelectedMonthlyRelease}" 
+                                                      AutoGenerateColumns="False" HeadersVisibility="Column"
+                                                      GridLinesVisibility="Horizontal" Height="Auto" MinHeight="100"
+                                                      ScrollViewer.CanContentScroll="False"
+                                                      helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True"
+                                                      CanUserReorderColumns="False" CanUserSortColumns="False" CanUserResizeRows="False">
+                                                <DataGrid.RowStyle>
+                                                    <Style TargetType="DataGridRow">
+                                                        <Setter Property="ToolTip" Value="{Binding UpdateTooltip}"/>
+                                                    </Style>
+                                                </DataGrid.RowStyle>
+
+                                                <DataGrid.Columns>
+                                                    <!-- Dönem / Ay Adı -->
+                                                    <DataGridTextColumn Header="Dönem / Açıklama" Binding="{Binding DisplayWeekLabel}" Width="320" FontWeight="Bold"/>
+
+                                                    <!-- Yayın Tarihi -->
+                                                    <DataGridTextColumn Header="Yayın Tarihi" Binding="{Binding ReleaseDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
+
+                                                    <DataGridTemplateColumn Header="Sorumlu Ekip Nöbetçileri" Width="*">
+                                                        <DataGridTemplateColumn.HeaderStyle>
+                                                            <Style TargetType="DataGridColumnHeader">
+                                                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                                <Setter Property="FontWeight" Value="Bold"/>
+                                                            </Style>
+                                                        </DataGridTemplateColumn.HeaderStyle>
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <ItemsControl ItemsSource="{Binding TeamCompartments}">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <WrapPanel Orientation="Horizontal"/>
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <Border Visibility="{Binding HasUsers, Converter={StaticResource BoolToVisConverter}}" 
+                                                                                    Background="{Binding BgColor}" BorderBrush="{Binding BorderColor}" BorderThickness="1" 
+                                                                                    CornerRadius="4" Padding="6,3" Margin="0,2,6,2">
+                                                                                <StackPanel Orientation="Horizontal">
+                                                                                    <TextBlock Text="{Binding TeamName, StringFormat='\{0\}: '}" FontWeight="Bold" Foreground="{Binding HeaderColor}" FontSize="11"/>
+                                                                                    <TextBlock Text="{Binding UserNames}" Foreground="{Binding TextColor}" FontSize="11" TextWrapping="NoWrap"/>
+                                                                                </StackPanel>
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+
+                                                    <!-- JIRA Ticket No -->
+                                                    <DataGridTextColumn Header="JIRA No" Binding="{Binding JiraTicketNo}" Width="110"/>
+
+                                                    <!-- Harici Bağlantı -->
+                                                    <DataGridTemplateColumn Header="Bağlantı" Width="85">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Button Content="🔗 Aç" 
+                                                                        Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
+                                                                        CommandParameter="{Binding ExternalLink}"
+                                                                        Style="{StaticResource SmallLinkButton}"/>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+
+                                                     <!-- İşlem (Nöbeti Bitti) -->
+                                                     <DataGridTemplateColumn Header="İşlem" Width="95">
+                                                         <DataGridTemplateColumn.CellTemplate>
+                                                             <DataTemplate>
+                                                                 <Button Content="✔️ Bitti" 
+                                                                         Command="{Binding DataContext.FinishMonthlyReleaseCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
+                                                                         CommandParameter="{Binding}"
+                                                                         Visibility="{Binding FinishShiftVisibility}"
+                                                                         PreviewMouseDown="FinishButton_PreviewMouseDown"
+                                                                         Background="#10b981" Foreground="White" FontWeight="Bold" FontSize="11" Height="26" Width="78" Cursor="Hand">
+                                                                     <Button.Template>
+                                                                         <ControlTemplate TargetType="Button">
+                                                                             <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                                                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                             </Border>
+                                                                         </ControlTemplate>
+                                                                     </Button.Template>
+                                                                 </Button>
+                                                             </DataTemplate>
+                                                         </DataGridTemplateColumn.CellTemplate>
+                                                     </DataGridTemplateColumn>
+                                                 </DataGrid.Columns>
+                                            </DataGrid>
+                                        </StackPanel>
+
+                                        <!-- Sub-Section 2: Haftalık Yaygınlaştırma Nöbet Listesi -->
+                                        <StackPanel Margin="0,0,0,20">
+                                            <TextBlock Text="🗓️ Haftalık Yaygınlaştırma Nöbetleri" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Burgundy}" Margin="0,0,0,8"/>
+
+                                            <DataGrid ItemsSource="{Binding WeeklyReleaseList}" 
+                                                      SelectedItem="{Binding SelectedWeeklyRelease}" 
+                                                      AutoGenerateColumns="False" HeadersVisibility="Column"
+                                                      GridLinesVisibility="Horizontal" Height="Auto" MinHeight="80"
+                                                      ScrollViewer.CanContentScroll="False"
+                                                      helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True"
+                                                      CanUserReorderColumns="False" CanUserSortColumns="False" CanUserResizeRows="False">
+                                                <DataGrid.RowStyle>
+                                                    <Style TargetType="DataGridRow">
+                                                        <Setter Property="ToolTip" Value="{Binding UpdateTooltip}"/>
+                                                    </Style>
+                                                </DataGrid.RowStyle>
+
+                                                <DataGrid.Columns>
+                                                    <!-- Dönem / Yayın Adı -->
+                                                    <DataGridTextColumn Header="Yayın Adı / Hafta" Binding="{Binding DisplayWeekLabel}" Width="320" FontWeight="Bold"/>
+
+                                                    <!-- Yayın Tarihi -->
+                                                    <DataGridTextColumn Header="Yayın Tarihi" Binding="{Binding ReleaseDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
+
+                                                    <DataGridTemplateColumn Header="Sorumlu Ekip Nöbetçileri" Width="*">
+                                                        <DataGridTemplateColumn.HeaderStyle>
+                                                            <Style TargetType="DataGridColumnHeader">
+                                                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                                <Setter Property="FontWeight" Value="Bold"/>
+                                                            </Style>
+                                                        </DataGridTemplateColumn.HeaderStyle>
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <ItemsControl ItemsSource="{Binding TeamCompartments}">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <WrapPanel Orientation="Horizontal"/>
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <Border Visibility="{Binding HasUsers, Converter={StaticResource BoolToVisConverter}}" 
+                                                                                    Background="{Binding BgColor}" BorderBrush="{Binding BorderColor}" BorderThickness="1" 
+                                                                                    CornerRadius="4" Padding="6,3" Margin="0,2,6,2">
+                                                                                <StackPanel Orientation="Horizontal">
+                                                                                    <TextBlock Text="{Binding TeamName, StringFormat='\{0\}: '}" FontWeight="Bold" Foreground="{Binding HeaderColor}" FontSize="11"/>
+                                                                                    <TextBlock Text="{Binding UserNames}" Foreground="{Binding TextColor}" FontSize="11" TextWrapping="NoWrap"/>
+                                                                                </StackPanel>
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+
+                                                    <!-- JIRA Ticket No -->
+                                                    <DataGridTextColumn Header="JIRA No" Binding="{Binding JiraTicketNo}" Width="110"/>
+
+                                                    <!-- Harici Bağlantı -->
+                                                    <DataGridTemplateColumn Header="Bağlantı" Width="85">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Button Content="🔗 Aç" 
+                                                                        Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
+                                                                        CommandParameter="{Binding ExternalLink}"
+                                                                        Style="{StaticResource SmallLinkButton}"/>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+
+                                                    <!-- İşlem (Nöbeti Bitti) -->
+                                                    <DataGridTemplateColumn Header="İşlem" Width="95">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Button Content="✔️ Bitti" 
+                                                                        Command="{Binding DataContext.FinishMonthlyReleaseCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
+                                                                        CommandParameter="{Binding}"
+                                                                        Visibility="{Binding FinishShiftVisibility}"
+                                                                        PreviewMouseDown="FinishButton_PreviewMouseDown"
+                                                                        Background="#10b981" Foreground="White" FontWeight="Bold" FontSize="11" Height="26" Width="78" Cursor="Hand">
+                                                                    <Button.Template>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                            </Border>
+                                                                        </ControlTemplate>
+                                                                    </Button.Template>
+                                                                </Button>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </StackPanel>
+
+                                        <!-- Sub-Section 3: Ekip Haftalık Nöbetleri -->
+                                        <StackPanel Margin="0,5,0,0">
+                                            <Border Background="#f8fafc" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,0">
+                                                <StackPanel>
+                                                     <!-- Large Title & Badge Header (Matches Yaygınlaştırma Nöbet Planı style) -->
+                                                     <Grid Margin="0,0,0,15">
+                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                             <Border Background="#bc171d" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,0">
+                                                                 <TextBlock Text="🗓️" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                             </Border>
+                                                             <StackPanel VerticalAlignment="Center">
+                                                                 <TextBlock Text="Ekip Haftalık Nöbetleri" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Burgundy}"/>
+                                                                 <TextBlock Text="Ekip bazlı haftalık nöbetçi analist ve yazılımcı çizelgeleri" FontSize="11" Foreground="{StaticResource TextGray}"/>
+                                                             </StackPanel>
+                                                         </StackPanel>
+                                                     </Grid>
+
+                                                     <!-- Team Filter Tabs (Takip, Tahsis, Teminat) -->
+                                                     <Grid Margin="0,0,0,12">
+                                                         <Grid.ColumnDefinitions>
+                                                             <ColumnDefinition Width="*"/>
+                                                             <ColumnDefinition Width="*"/>
+                                                             <ColumnDefinition Width="*"/>
+                                                         </Grid.ColumnDefinitions>
+
+                                                         <Button Grid.Column="0" Command="{Binding SelectWeeklyTeamFilterCommand}" CommandParameter="Takip" Margin="0,0,4,0" Height="32" Cursor="Hand">
+                                                             <Button.Style>
+                                                                 <Style TargetType="Button">
+                                                                     <Setter Property="Background" Value="#f5f3ff"/>
+                                                                     <Setter Property="Foreground" Value="#5b21b6"/>
+                                                                     <Setter Property="BorderBrush" Value="#ddd6fe"/>
+                                                                     <Setter Property="BorderThickness" Value="1"/>
+                                                                     <Setter Property="FontWeight" Value="SemiBold"/>
+                                                                     <Style.Triggers>
+                                                                         <DataTrigger Binding="{Binding IsTakipFilterSelected}" Value="True">
+                                                                             <Setter Property="Background" Value="#7c3aed"/>
+                                                                             <Setter Property="Foreground" Value="White"/>
+                                                                             <Setter Property="FontWeight" Value="Bold"/>
+                                                                         </DataTrigger>
+                                                                     </Style.Triggers>
+                                                                 </Style>
+                                                             </Button.Style>
+                                                             <Button.Template>
+                                                                 <ControlTemplate TargetType="Button">
+                                                                     <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                             <TextBlock Text="📋 " FontSize="11"/>
+                                                                             <TextBlock Text="Takip Ekibi" FontSize="11"/>
+                                                                         </StackPanel>
+                                                                     </Border>
+                                                                 </ControlTemplate>
+                                                             </Button.Template>
+                                                         </Button>
+
+                                                         <Button Grid.Column="1" Command="{Binding SelectWeeklyTeamFilterCommand}" CommandParameter="Tahsis" Margin="4,0,4,0" Height="32" Cursor="Hand">
+                                                             <Button.Style>
+                                                                 <Style TargetType="Button">
+                                                                     <Setter Property="Background" Value="#ecfdf5"/>
+                                                                     <Setter Property="Foreground" Value="#065f46"/>
+                                                                     <Setter Property="BorderBrush" Value="#a7f3d0"/>
+                                                                     <Setter Property="BorderThickness" Value="1"/>
+                                                                     <Setter Property="FontWeight" Value="SemiBold"/>
+                                                                     <Style.Triggers>
+                                                                         <DataTrigger Binding="{Binding IsTahsisFilterSelected}" Value="True">
+                                                                             <Setter Property="Background" Value="#059669"/>
+                                                                             <Setter Property="Foreground" Value="White"/>
+                                                                             <Setter Property="FontWeight" Value="Bold"/>
+                                                                         </DataTrigger>
+                                                                     </Style.Triggers>
+                                                                 </Style>
+                                                             </Button.Style>
+                                                             <Button.Template>
+                                                                 <ControlTemplate TargetType="Button">
+                                                                     <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                             <TextBlock Text="💰 " FontSize="11"/>
+                                                                             <TextBlock Text="Tahsis Ekibi" FontSize="11"/>
+                                                                         </StackPanel>
+                                                                     </Border>
+                                                                 </ControlTemplate>
+                                                             </Button.Template>
+                                                         </Button>
+
+                                                         <Button Grid.Column="2" Command="{Binding SelectWeeklyTeamFilterCommand}" CommandParameter="Teminat" Margin="4,0,0,0" Height="32" Cursor="Hand">
+                                                             <Button.Style>
+                                                                 <Style TargetType="Button">
+                                                                     <Setter Property="Background" Value="#eff6ff"/>
+                                                                     <Setter Property="Foreground" Value="#1e40af"/>
+                                                                     <Setter Property="BorderBrush" Value="#bfdbfe"/>
+                                                                     <Setter Property="BorderThickness" Value="1"/>
+                                                                     <Setter Property="FontWeight" Value="SemiBold"/>
+                                                                     <Style.Triggers>
+                                                                         <DataTrigger Binding="{Binding IsTeminatFilterSelected}" Value="True">
+                                                                             <Setter Property="Background" Value="#2563eb"/>
+                                                                             <Setter Property="Foreground" Value="White"/>
+                                                                             <Setter Property="FontWeight" Value="Bold"/>
+                                                                         </DataTrigger>
+                                                                     </Style.Triggers>
+                                                                 </Style>
+                                                             </Button.Style>
+                                                             <Button.Template>
+                                                                 <ControlTemplate TargetType="Button">
+                                                                     <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                             <TextBlock Text="🛡️ " FontSize="11"/>
+                                                                             <TextBlock Text="Teminat Ekibi" FontSize="11"/>
+                                                                         </StackPanel>
+                                                                     </Border>
+                                                                 </ControlTemplate>
+                                                             </Button.Template>
+                                                         </Button>
+                                                     </Grid>
+
+                                                    <DataGrid ItemsSource="{Binding FilteredWeeklyReleaseList}" 
+                                                              SelectedItem="{Binding SelectedWeeklyRelease}" 
+                                                              AutoGenerateColumns="False" HeadersVisibility="Column"
+                                                              GridLinesVisibility="Horizontal" Height="Auto" MinHeight="80"
+                                                              ScrollViewer.CanContentScroll="False"
+                                                              helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True"
+                                                              CanUserReorderColumns="False" CanUserSortColumns="False" CanUserResizeRows="False">
+                                                        <DataGrid.RowStyle>
+                                                            <Style TargetType="DataGridRow">
+                                                                <Setter Property="ToolTip" Value="{Binding UpdateTooltip}"/>
+                                                            </Style>
+                                                        </DataGrid.RowStyle>
+
+                                                        <DataGrid.Columns>
+                                                            <DataGridTextColumn Header="Nöbet Haftası" Binding="{Binding DisplayWeekLabel}" Width="240" FontWeight="Bold"/>
+                                                            <DataGridTextColumn Header="Yayın Tarihi" Binding="{Binding ReleaseDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
+
+                                                            <DataGridTemplateColumn Header="Sorumlu Ekip Nöbetçileri" Width="*">
+                                                                <DataGridTemplateColumn.HeaderStyle>
+                                                                    <Style TargetType="DataGridColumnHeader">
+                                                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                                    </Style>
+                                                                </DataGridTemplateColumn.HeaderStyle>
+                                                                <DataGridTemplateColumn.CellTemplate>
+                                                                    <DataTemplate>
+                                                                        <ItemsControl ItemsSource="{Binding TeamCompartments}">
+                                                                            <ItemsControl.ItemsPanel>
+                                                                                <ItemsPanelTemplate>
+                                                                                    <WrapPanel Orientation="Horizontal"/>
+                                                                                </ItemsPanelTemplate>
+                                                                            </ItemsControl.ItemsPanel>
+                                                                            <ItemsControl.ItemTemplate>
+                                                                                <DataTemplate>
+                                                                                    <Border Visibility="{Binding HasUsers, Converter={StaticResource BoolToVisConverter}}" 
+                                                                                            Background="{Binding BgColor}" BorderBrush="{Binding BorderColor}" BorderThickness="1" 
+                                                                                            CornerRadius="4" Padding="6,3" Margin="0,2,6,2">
+                                                                                        <StackPanel Orientation="Horizontal">
+                                                                                            <TextBlock Text="{Binding TeamName, StringFormat='\{0\}: '}" FontWeight="Bold" Foreground="{Binding HeaderColor}" FontSize="11"/>
+                                                                                            <TextBlock Text="{Binding UserNames}" Foreground="{Binding TextColor}" FontSize="11" TextWrapping="NoWrap"/>
+                                                                                        </StackPanel>
+                                                                                    </Border>
+                                                                                </DataTemplate>
+                                                                            </ItemsControl.ItemTemplate>
+                                                                        </ItemsControl>
+                                                                    </DataTemplate>
+                                                                </DataGridTemplateColumn.CellTemplate>
+                                                            </DataGridTemplateColumn>
+
+                                                            <DataGridTextColumn Header="JIRA No" Binding="{Binding JiraTicketNo}" Width="110"/>
+
+                                                            <DataGridTemplateColumn Header="Bağlantı" Width="85">
+                                                                <DataGridTemplateColumn.CellTemplate>
+                                                                    <DataTemplate>
+                                                                        <Button Content="🔗 Aç" 
+                                                                                Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
+                                                                                CommandParameter="{Binding ExternalLink}"
+                                                                                Style="{StaticResource SmallLinkButton}"/>
+                                                                    </DataTemplate>
+                                                                </DataGridTemplateColumn.CellTemplate>
+                                                            </DataGridTemplateColumn>
+
+                                                            <!-- İşlem (Nöbeti Bitti) -->
+                                                            <DataGridTemplateColumn Header="İşlem" Width="95">
+                                                                <DataGridTemplateColumn.CellTemplate>
+                                                                    <DataTemplate>
+                                                                        <Button Content="✔️ Bitti" 
+                                                                                Command="{Binding DataContext.FinishMonthlyReleaseCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
+                                                                                CommandParameter="{Binding}"
+                                                                                Visibility="{Binding FinishShiftVisibility}"
+                                                                                PreviewMouseDown="FinishButton_PreviewMouseDown"
+                                                                                Background="#10b981" Foreground="White" FontWeight="Bold" FontSize="11" Height="26" Width="78" Cursor="Hand">
+                                                                            <Button.Template>
+                                                                                <ControlTemplate TargetType="Button">
+                                                                                    <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                                    </Border>
+                                                                                </ControlTemplate>
+                                                                            </Button.Template>
+                                                                        </Button>
+                                                                    </DataTemplate>
+                                                                </DataGridTemplateColumn.CellTemplate>
+                                                            </DataGridTemplateColumn>
+                                                        </DataGrid.Columns>
+                                                    </DataGrid>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+
+                                <!-- ========================================================================= -->
+                                <!-- SECTION 2: ÖZELLEŞTİRİLMİŞ GEÇİŞ / DİĞER NÖBET LİSTESİ                    -->
+                                <!-- ========================================================================= -->
+                                <Border Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="20">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,15">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border Background="#bc171d" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,0">
+                                                    <TextBlock Text="🛡️" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel>
+                                                    <TextBlock Text="Diğer / Özel Nöbet Görevleri" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Burgundy}"/>
+                                                    <TextBlock Text="Server geçiş, acil müdahale ve özel nöbet atamaları" FontSize="11" Foreground="{StaticResource TextGray}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <DataGrid ItemsSource="{Binding CustomShiftsList}" 
+                                                  SelectedItem="{Binding SelectedCustomShift}"
+                                                  AutoGenerateColumns="False" HeadersVisibility="Column"
+                                                  GridLinesVisibility="Horizontal" Height="Auto" MinHeight="100"
+                                                  ScrollViewer.CanContentScroll="False"
+                                                  helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True"
+                                                  CanUserReorderColumns="False" CanUserSortColumns="False" CanUserResizeRows="False">
+                                            <DataGrid.RowStyle>
+                                                <Style TargetType="DataGridRow">
+                                                    <Setter Property="ToolTip" Value="{Binding UpdateTooltip}"/>
+                                                </Style>
+                                            </DataGrid.RowStyle>
+
+                                            <DataGrid.Columns>
+                                                <!-- Column 1: Nöbet Konusu / Detay -->
+                                                <DataGridTemplateColumn Header="Nöbet Konusu / Detay" Width="190">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Topic}" FontWeight="Bold" Foreground="#1a202c"/>
+                                                                <TextBlock Text="{Binding Description}" FontSize="11" Foreground="#718096" TextTrimming="CharacterEllipsis" Margin="0,1,0,0"/>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+
+                                                <!-- Column 2: Nöbet Tarihi -->
+                                                <DataGridTextColumn Header="Nöbet Tarihi" Binding="{Binding ShiftDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
+
+                                                <!-- Column 3: Sorumlu Ekip Nöbetçileri -->
+                                                <DataGridTemplateColumn Header="Sorumlu Ekip Nöbetçileri" Width="*">
+                                                    <DataGridTemplateColumn.HeaderStyle>
+                                                        <Style TargetType="DataGridColumnHeader">
+                                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                            <Setter Property="FontWeight" Value="Bold"/>
+                                                        </Style>
+                                                    </DataGridTemplateColumn.HeaderStyle>
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <ItemsControl ItemsSource="{Binding TeamCompartments}">
+                                                                <ItemsControl.ItemsPanel>
+                                                                    <ItemsPanelTemplate>
+                                                                        <WrapPanel Orientation="Horizontal"/>
+                                                                    </ItemsPanelTemplate>
+                                                                </ItemsControl.ItemsPanel>
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Border Visibility="{Binding HasUsers, Converter={StaticResource BoolToVisConverter}}" 
+                                                                                Background="{Binding BgColor}" BorderBrush="{Binding BorderColor}" BorderThickness="1" 
+                                                                                CornerRadius="4" Padding="6,3" Margin="0,2,6,2">
+                                                                            <StackPanel Orientation="Horizontal">
+                                                                                <TextBlock Text="{Binding TeamName, StringFormat='\{0\}: '}" FontWeight="Bold" Foreground="{Binding HeaderColor}" FontSize="11"/>
+                                                                                <TextBlock Text="{Binding UserNames}" Foreground="{Binding TextColor}" FontSize="11" TextWrapping="NoWrap"/>
+                                                                            </StackPanel>
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+
+                                                <!-- Column 4: JIRA No -->
+                                                <DataGridTextColumn Header="JIRA No" Binding="{Binding JiraTicketNo}" Width="110"/>
+
+                                                <!-- Column 5: Harici Bağlantı -->
+                                                <DataGridTemplateColumn Header="Bağlantı" Width="85">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <Button Content="🔗 Aç" 
+                                                                    Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
+                                                                    CommandParameter="{Binding ExternalLink}"
+                                                                    Style="{StaticResource SmallLinkButton}"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <!-- Column 6: Islem (Nobeti Bitti) -->
+                                                <DataGridTemplateColumn Header="İşlem" Width="95">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <Button Content="✔️ Bitti" 
+                                                                    Command="{Binding DataContext.FinishCustomShiftCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
+                                                                    CommandParameter="{Binding}" 
+                                                                    Visibility="{Binding FinishShiftVisibility}"
+                                                                    PreviewMouseDown="FinishButton_PreviewMouseDown"
+                                                                    Background="#10b981" Foreground="White" FontWeight="Bold" FontSize="11" Height="26" Width="78" Cursor="Hand">
+                                                                <Button.Template>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                    </ControlTemplate>
+                                                                </Button.Template>
+                                                            </Button>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </StackPanel>
+                                </Border>
+
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Right Column: Interactive Tabbed Form Panel (Toggleable / Collapsible!) -->
+                        <Border Grid.Column="1" Visibility="{Binding FormVisibility}" Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1.5" CornerRadius="10" Padding="15">
+                            <StackPanel>
+                                <!-- Form Header Bar with Close Button -->
+                                <Grid Margin="0,0,0,10">
+                                    <TextBlock Text="⚙️ NÖBET KAYIT / DÜZENLEME" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Burgundy}" VerticalAlignment="Center"/>
+                                    <Button Content="✕ Formu Kapat" Command="{Binding CloseFormCommand}" 
+                                            Background="Transparent" Foreground="#e53e3e" FontWeight="Bold" FontSize="11" 
+                                            BorderThickness="0" Cursor="Hand" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Border Height="1" Background="#e2e8f0" Margin="0,0,0,10"/>
+
+                        <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}" Background="Transparent" BorderThickness="0">
+
+                            <!-- TAB 1: Yaygınlaştırma Nöbeti Ekle / Düzenle -->
+                            <TabItem Header="Yaygınlaştırma Nöbeti" Padding="10,6" Style="{DynamicResource CustomTabItemStyle}">
+                                <StackPanel Margin="0,10,0,0">
+                                        <TextBlock Text="Yaygınlaştırma Nöbet Planlama" FontSize="14" FontWeight="Bold" Foreground="{StaticResource ZiraatRed}" Margin="0,0,0,10"/>
+
+                                        <!-- Seçenek / Nöbet Türü -->
+                                        <TextBlock Text="Nöbet Türü Seçimi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <ComboBox SelectedValue="{Binding SelectedReleaseTypeOption, Mode=TwoWay}" SelectedValuePath="Content" Height="32" Margin="0,0,0,10">
+                                            <ComboBoxItem Content="Aylık Yaygınlaştırma"/>
+                                            <ComboBoxItem Content="Haftalık Yaygınlaştırma"/>
+                                        </ComboBox>
+
+                                        <!-- Ay Seçimi -->
+                                        <TextBlock Text="Dönem Ayı" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <ComboBox ItemsSource="{Binding MonthsList}" SelectedItem="{Binding SelectedMonth}" Height="32" Margin="0,0,0,10"/>
+
+                                        <!-- Hafta Seçimi (Sadece Haftalık Yaygınlaştırma İçin) -->
+                                        <StackPanel Visibility="{Binding IsWeeklyReleaseTypeSelected, Converter={StaticResource BoolToVisConverter}}">
+                                            <TextBlock Text="Dönem Haftası (Tarih Aralığı)" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                            <ComboBox ItemsSource="{Binding MonthWeeksList}" SelectedItem="{Binding SelectedMonthWeekOption}" DisplayMemberPath="DisplayText" Height="32" Margin="0,0,0,10"/>
+                                        </StackPanel>
+
+                                        <!-- Yayın Adı -->
+                                        <TextBlock Text="Yayın Adı / Açıklama" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding ReleaseMonthName, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,0,0,10"/>
+
+                                        <!-- Yayın Tarihi -->
+                                        <TextBlock Text="Yayın Tarihi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <DatePicker SelectedDate="{Binding ReleaseDate}" Height="32" Margin="0,0,0,10"/>
+
+                                        <!-- JIRA No -->
+                                        <TextBlock Text="JIRA Ticket No" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding ReleaseJiraNo, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,0,0,10"/>
+
+                                        <!-- Harici Link -->
+                                        <TextBlock Text="Harici Bağlantı (DevOps / Confluence / Teams)" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding ReleaseExternalLink, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,0,0,15"/>
+
+                                        <!-- Team Personel Checkboxes (Pastel Color Styled) -->
+                                        <TextBlock Text="Ekip Bazlı Nöbetçi Personel Seçimi" FontSize="13" FontWeight="Bold" Foreground="{StaticResource ZiraatRed}" Margin="0,5,0,8"/>
+
+                                        <ItemsControl ItemsSource="{Binding ReleaseTeamUserGroups}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{Binding BgColor}" BorderBrush="{Binding BorderColor}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding TeamName, StringFormat='\{0\} Ekibi'}" FontWeight="Bold" Foreground="{Binding HeaderColor}" Margin="0,0,0,5"/>
+                                                            <ItemsControl ItemsSource="{Binding Users}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding DisplayText}" Margin="0,3,0,3"/>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <!-- Buttons -->
+                                        <Grid Margin="0,10,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Button Grid.Column="0" Content="{Binding MonthlySaveButtonText}" Command="{Binding SaveMonthlyReleaseCommand}" Style="{StaticResource NormalLoginButton}" Height="36" Margin="0,0,4,0"/>
+                                            <Button Grid.Column="1" Content="Sil" Command="{Binding DeleteMonthlyReleaseCommand}" IsEnabled="{Binding IsMonthlySelected}" Background="#e53e3e" Foreground="White" FontWeight="Bold" Height="36" Margin="4,0,4,0">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Name="Border" CornerRadius="8" Background="{TemplateBinding Background}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Border" Property="Background" Value="#c53030"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                            <Button Grid.Column="2" Content="Yeni Kayıt" Command="{Binding ClearMonthlyFormCommand}" Background="#718096" Foreground="White" FontWeight="Bold" Height="36" Margin="4,0,0,0">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Name="Border" CornerRadius="8" Background="{TemplateBinding Background}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Border" Property="Background" Value="#4a5568"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </Grid>
+                                    </StackPanel>
+                            </TabItem>
+
+                            <!-- TAB 2: Diğer / Özel Nöbet Ekle / Düzenle -->
+                            <TabItem Header="Diğer / Özel Nöbet" Padding="10,6" Style="{DynamicResource CustomTabItemStyle}">
+                                <StackPanel Margin="0,10,0,0">
+                                        <TextBlock Text="Özel Geçiş &amp; Müdahale Nöbeti" FontSize="14" FontWeight="Bold" Foreground="{StaticResource ZiraatRed}" Margin="0,0,0,10"/>
+
+                                        <!-- Nöbet Konusu -->
+                                        <TextBlock Text="Nöbet Konusu / Tipi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <ComboBox ItemsSource="{Binding ShiftTopicsList}" 
+                                                  Text="{Binding CustomTopic, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                  SelectedItem="{Binding CustomTopic, Mode=TwoWay}" 
+                                                  IsEditable="True" 
+                                                  Height="32" Margin="0,0,0,10"/>
+
+                                        <!-- Açıklama -->
+                                        <TextBlock Text="Açıklama / JIRA No" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding CustomDescription, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,0,0,10"/>
+
+                                        <!-- Tarih -->
+                                        <TextBlock Text="Nöbet Tarihi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <DatePicker SelectedDate="{Binding CustomShiftDate}" Height="32" Margin="0,0,0,10"/>
+
+                                        <!-- JIRA No -->
+                                        <TextBlock Text="JIRA Ticket No" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding CustomJiraNo, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,0,0,10"/>
+
+                                        <!-- Harici Link -->
+                                        <TextBlock Text="Harici Bağlantı (Teams / Confluence)" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding CustomLink, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,0,0,15"/>
+
+                                        <!-- Team Personel Checkboxes (Pastel Color Styled) -->
+                                        <TextBlock Text="Ekip Bazlı Nöbetçi Personel Seçimi" FontSize="13" FontWeight="Bold" Foreground="{StaticResource ZiraatRed}" Margin="0,5,0,8"/>
+
+                                        <ItemsControl ItemsSource="{Binding CustomTeamUserGroups}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{Binding BgColor}" BorderBrush="{Binding BorderColor}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding TeamName, StringFormat='\{0\} Ekibi'}" FontWeight="Bold" Foreground="{Binding HeaderColor}" Margin="0,0,0,5"/>
+                                                            <ItemsControl ItemsSource="{Binding Users}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <CheckBox IsChecked="{Binding IsSelected}" Content="{Binding DisplayText}" Margin="0,3,0,3"/>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <!-- Buttons -->
+                                        <Grid Margin="0,10,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Button Grid.Column="0" Content="{Binding CustomSaveButtonText}" Command="{Binding SaveCustomShiftCommand}" Style="{StaticResource NormalLoginButton}" Height="36" Margin="0,0,4,0"/>
+                                            <Button Grid.Column="1" Content="Sil" Command="{Binding DeleteCustomShiftCommand}" IsEnabled="{Binding IsCustomSelected}" Background="#e53e3e" Foreground="White" FontWeight="Bold" Height="36" Margin="4,0,4,0">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Name="Border" CornerRadius="8" Background="{TemplateBinding Background}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Border" Property="Background" Value="#c53030"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                            <Button Grid.Column="2" Content="Yeni Kayıt" Command="{Binding ClearCustomFormCommand}" Background="#718096" Foreground="White" FontWeight="Bold" Height="36" Margin="4,0,0,0">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Name="Border" CornerRadius="8" Background="{TemplateBinding Background}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Border" Property="Background" Value="#4a5568"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </Grid>
+                                    </StackPanel>
+                            </TabItem>
+
+                            <!-- TAB 3: Haftalık Nöbet Ekle / Düzenle -->
+                            <TabItem Header="Haftalık Nöbet" Padding="10,6" Style="{DynamicResource CustomTabItemStyle}">
+                                <StackPanel Margin="0,10,0,0">
+                                    <!-- Header -->
+                                    <Grid Margin="0,0,0,10">
+                                        <TextBlock Text="Haftalık Nöbet Planlama" FontSize="14" FontWeight="Bold" Foreground="{StaticResource ZiraatRed}" VerticalAlignment="Center"/>
+                                        <Button Content="➕ Toplu Giriş" Command="{Binding ClearWeeklyFormCommand}" 
+                                                Visibility="{Binding SingleWeeklyModeVisibility}"
+                                                Background="#eff6ff" Foreground="#2563eb" BorderBrush="#bfdbfe" BorderThickness="1" 
+                                                Padding="8,3" FontSize="11" FontWeight="Bold" HorizontalAlignment="Right" Cursor="Hand"/>
+                                    </Grid>
+
+                                    <!-- Ekip Seçimi -->
+                                    <TextBlock Text="1. Sorumlu Ekip Seçin" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                    <Grid Margin="0,0,0,10">
+                                        <ComboBox x:Name="TeamCombo" ItemsSource="{Binding TeamsList}" SelectedItem="{Binding WeeklyFormTeam}" Height="32"/>
+                                        <TextBlock Text="-- Sorumlu Ekip Seçin --" Foreground="#94a3b8" VerticalAlignment="Center" Margin="10,0,0,0" IsHitTestVisible="False">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ElementName=TeamCombo, Path=SelectedItem}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding ElementName=TeamCombo, Path=SelectedItem}" Value="">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+
+                                    <!-- TOPLU GİRİŞ MODU (BULK MODE) -->
+                                    <StackPanel Visibility="{Binding BulkWeeklyModeVisibility}">
+                                        <Border Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
+                                            <StackPanel>
+                                                <TextBlock Text="🗓️ Gelecek 8 Haftanın Nöbetçi Seçimleri" FontSize="12" FontWeight="Bold" Foreground="#1e293b" Margin="0,0,0,8"/>
+                                                
+                                                <ScrollViewer x:Name="BulkScrollViewer" MaxHeight="320" VerticalScrollBarVisibility="Auto" PreviewMouseWheel="BulkScrollViewer_PreviewMouseWheel">
+                                                    <ItemsControl ItemsSource="{Binding BulkWeeklyShiftRows}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Background="White" BorderBrush="#e2e8f0" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,8">
+                                                                    <StackPanel>
+                                                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                                            <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                                            <TextBlock Text="{Binding WeekLabel}" FontWeight="Bold" Foreground="#2563eb" FontSize="11" VerticalAlignment="Center"/>
+                                                                        </StackPanel>
+
+                                                                        <Grid Margin="0,2,0,0">
+                                                                            <Grid.ColumnDefinitions>
+                                                                                <ColumnDefinition Width="*"/>
+                                                                                <ColumnDefinition Width="*"/>
+                                                                            </Grid.ColumnDefinitions>
+
+                                                                            <!-- Analist Seçin -->
+                                                                            <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                                                                                <TextBlock Text="Analist" FontSize="10" Foreground="#64748b" Margin="0,0,0,2"/>
+                                                                                <Grid>
+                                                                                    <ComboBox x:Name="BulkAnalystCombo" ItemsSource="{Binding Analysts}" SelectedItem="{Binding SelectedAnalyst}" DisplayMemberPath="FullName" Height="28" FontSize="11"/>
+                                                                                    <TextBlock Text="Analist Seçin..." Foreground="#94a3b8" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False">
+                                                                                        <TextBlock.Style>
+                                                                                            <Style TargetType="TextBlock">
+                                                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                                <Style.Triggers>
+                                                                                                    <DataTrigger Binding="{Binding ElementName=BulkAnalystCombo, Path=SelectedItem}" Value="{x:Null}">
+                                                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                                                    </DataTrigger>
+                                                                                                </Style.Triggers>
+                                                                                            </Style>
+                                                                                        </TextBlock.Style>
+                                                                                    </TextBlock>
+                                                                                </Grid>
+                                                                            </StackPanel>
+
+                                                                            <!-- Yazılımcı Seçin -->
+                                                                            <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                                                                <TextBlock Text="Yazılımcı" FontSize="10" Foreground="#64748b" Margin="0,0,0,2"/>
+                                                                                <Grid>
+                                                                                    <ComboBox x:Name="BulkDevCombo" ItemsSource="{Binding Developers}" SelectedItem="{Binding SelectedDeveloper}" DisplayMemberPath="FullName" Height="28" FontSize="11"/>
+                                                                                    <TextBlock Text="Yazılımcı Seçin..." Foreground="#94a3b8" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0" IsHitTestVisible="False">
+                                                                                        <TextBlock.Style>
+                                                                                            <Style TargetType="TextBlock">
+                                                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                                <Style.Triggers>
+                                                                                                    <DataTrigger Binding="{Binding ElementName=BulkDevCombo, Path=SelectedItem}" Value="{x:Null}">
+                                                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                                                    </DataTrigger>
+                                                                                                </Style.Triggers>
+                                                                                            </Style>
+                                                                                        </TextBlock.Style>
+                                                                                    </TextBlock>
+                                                                                </Grid>
+                                                                            </StackPanel>
+                                                                        </Grid>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </ScrollViewer>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <!-- TEKLİ DÜZENLEME MODU (SINGLE EDIT MODE) -->
+                                    <StackPanel Visibility="{Binding SingleWeeklyModeVisibility}">
+                                        <Border Background="#eff6ff" BorderBrush="#2563eb" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,10">
+                                            <TextBlock Text="✏️ Nöbet Kaydı Düzenleme Modu" FontSize="11" FontWeight="Bold" Foreground="#1e40af"/>
+                                        </Border>
+
+                                        <!-- Analist Seçimi -->
+                                        <TextBlock Text="2. Nöbetçi Analist Seçin" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <Grid Margin="0,0,0,10">
+                                            <ComboBox x:Name="SingleAnalystCombo" ItemsSource="{Binding WeeklyTeamAnalysts}" SelectedItem="{Binding SelectedWeeklyFormAnalyst}" DisplayMemberPath="FullName" Height="32"/>
+                                            <TextBlock Text="-- Nöbetçi Analist Seçin --" Foreground="#94a3b8" VerticalAlignment="Center" Margin="10,0,0,0" IsHitTestVisible="False">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ElementName=SingleAnalystCombo, Path=SelectedItem}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+
+                                        <!-- Yazılımcı Seçimi -->
+                                        <TextBlock Text="3. Nöbetçi Yazılımcı Seçin" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <Grid Margin="0,0,0,10">
+                                            <ComboBox x:Name="SingleDevCombo" ItemsSource="{Binding WeeklyTeamDevelopers}" SelectedItem="{Binding SelectedWeeklyFormDeveloper}" DisplayMemberPath="FullName" Height="32"/>
+                                            <TextBlock Text="-- Nöbetçi Yazılımcı Seçin --" Foreground="#94a3b8" VerticalAlignment="Center" Margin="10,0,0,0" IsHitTestVisible="False">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ElementName=SingleDevCombo, Path=SelectedItem}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+
+                                        <!-- Hafta Seçimi -->
+                                        <TextBlock Text="4. Nöbet Haftasını Seçin" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <Grid Margin="0,0,0,10">
+                                            <ComboBox x:Name="SingleWeekCombo" ItemsSource="{Binding AvailableWeeksList}" SelectedItem="{Binding SelectedWeekOption}" DisplayMemberPath="DisplayText" Height="32"/>
+                                            <TextBlock Text="-- Nöbet Haftasını Seçin --" Foreground="#94a3b8" VerticalAlignment="Center" Margin="10,0,0,0" IsHitTestVisible="False">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ElementName=SingleWeekCombo, Path=SelectedItem}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+
+                                        <!-- JIRA Ticket No -->
+                                        <TextBlock Text="JIRA Ticket No" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding WeeklyFormJiraNo, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,0,0,10"/>
+
+                                        <!-- Harici Bağlantı -->
+                                        <TextBlock Text="Harici Bağlantı" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding WeeklyFormLink, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,0,0,15"/>
+                                    </StackPanel>
+
+                                    <!-- Form Action Buttons -->
+                                    <Grid Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1.4*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Content="{Binding WeeklySaveButtonText}" Command="{Binding SaveWeeklyShiftCommand}" IsEnabled="{Binding IsWeeklySaveEnabled}" Height="36" Margin="0,0,4,0">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Background" Value="{StaticResource ZiraatRed}"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                    <Setter Property="FontSize" Value="12"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border Name="Border" CornerRadius="8" Background="{TemplateBinding Background}">
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="Border" Property="Background" Value="#b91c1c"/>
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsEnabled" Value="False">
+                                                                        <Setter TargetName="Border" Property="Background" Value="#94a3b8"/>
+                                                                        <Setter Property="Foreground" Value="#f1f5f9"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                        <Button Grid.Column="1" Content="🗑️ Sil" Command="{Binding DeleteWeeklyShiftCommand}" IsEnabled="{Binding IsWeeklySelected}" Background="#e53e3e" Foreground="White" FontWeight="Bold" Height="36" Margin="4,0,4,0">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Name="Border" CornerRadius="8" Background="{TemplateBinding Background}">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Border" Property="Background" Value="#c53030"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                        <Button Grid.Column="2" Content="🔄 Sıfırla" Command="{Binding ClearWeeklyFormCommand}" Background="#718096" Foreground="White" FontWeight="Bold" Height="36" Margin="4,0,0,0">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Name="Border" CornerRadius="8" Background="{TemplateBinding Background}">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Border" Property="Background" Value="#4a5568"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </TabItem>
+                        </TabControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </TabItem>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 2: GÖRSEL NÖBET TAKVİMİ & MATRİSİ                                    -->
+            <!-- ========================================================================= -->
+            <TabItem Header="📅 Görsel Nöbet Takvimi" Padding="15,8" Style="{DynamicResource CustomTabItemStyle}">
+                <Grid Margin="0,15,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="340"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- LEFT: Calendar View Container -->
+                    <Grid Grid.Column="0" Margin="0,0,15,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- 1. Filter Control Panel & Legends -->
+                        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="15" Margin="0,0,0,15">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Year Filter -->
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <TextBlock Text="Yıl:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#4a5568"/>
+                                    <ComboBox ItemsSource="{Binding CalendarYears}" SelectedItem="{Binding SelectedCalendarYear}" Width="90" Height="30"/>
+                                </StackPanel>
+
+                                <!-- Month Filter with Prev / Next Arrow Buttons -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="◀" Command="{Binding PrevCalendarMonthCommand}" Width="30" Height="30" Margin="0,0,6,0" ToolTip="Önceki Ay"
+                                            Background="#f1f5f9" Foreground="{StaticResource ZiraatRed}" FontWeight="ExtraBold" FontSize="13" BorderBrush="#cbd5e1" BorderThickness="1" Cursor="Hand">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                    
+                                    <TextBlock Text="Ay:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="#4a5568"/>
+                                    <ComboBox ItemsSource="{Binding CalendarMonths}" SelectedValuePath="Key" DisplayMemberPath="Value" SelectedValue="{Binding SelectedCalendarMonth}" Width="110" Height="30"/>
+                                    
+                                    <Button Content="▶" Command="{Binding NextCalendarMonthCommand}" Width="30" Height="30" Margin="6,0,0,0" ToolTip="Sonraki Ay"
+                                            Background="#f1f5f9" Foreground="{StaticResource ZiraatRed}" FontWeight="ExtraBold" FontSize="13" BorderBrush="#cbd5e1" BorderThickness="1" Cursor="Hand">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </StackPanel>
+
+                                <!-- Color Legends -->
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Background="#6b46c1" Width="14" Height="14" CornerRadius="3" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Aylık" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#4a5568" Margin="0,0,15,0"/>
+
+                                    <Border Background="#2b6cb0" Width="14" Height="14" CornerRadius="3" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Haftalık" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#4a5568" Margin="0,0,15,0"/>
+
+                                    <Border Background="#d69e2e" Width="14" Height="14" CornerRadius="3" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Özel / Geçiş" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#4a5568"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- 2. Days of Week Header -->
+                        <Grid Grid.Row="1" Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="Pazartesi" FontWeight="Bold" FontSize="12" Foreground="#4a5568" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Salı" FontWeight="Bold" FontSize="12" Foreground="#4a5568" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="Çarşamba" FontWeight="Bold" FontSize="12" Foreground="#4a5568" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="3" Text="Perşembe" FontWeight="Bold" FontSize="12" Foreground="#4a5568" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="4" Text="Cuma" FontWeight="Bold" FontSize="12" Foreground="#4a5568" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="5" Text="Cumartesi" FontWeight="Bold" FontSize="12" Foreground="#e53e3e" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="6" Text="Pazar" FontWeight="Bold" FontSize="12" Foreground="#e53e3e" HorizontalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- 3. Calendar Grid (6x7 Grid of Days) -->
+                        <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="10">
+                            <ItemsControl ItemsSource="{Binding CalendarDays}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="6" Columns="7"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="3" MinHeight="105" CornerRadius="8" Cursor="Hand">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" 
+                                                              Command="{Binding DataContext.SelectCalendarDayCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}"
+                                                              CommandParameter="{Binding}"/>
+                                            </Border.InputBindings>
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#ffffff"/>
+                                                    <Setter Property="BorderBrush" Value="#e2e8f0"/>
+                                                    <Setter Property="BorderThickness" Value="1.5"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsWeekend}" Value="True">
+                                                            <Setter Property="Background" Value="#fcfcfd"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
+                                                            <Setter Property="Opacity" Value="0.4"/>
+                                                            <Setter Property="Background" Value="#f8fafc"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                                            <Setter Property="BorderBrush" Value="#3182ce"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="BorderBrush" Value="{StaticResource ZiraatRed}"/>
+                                                            <Setter Property="Background" Value="#fff5f5"/>
+                                                            <Setter Property="BorderThickness" Value="2"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+
+                                            <Grid Margin="6" Background="Transparent">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+
+                                                <!-- Day Number & Indicators -->
+                                                <Grid Grid.Row="0" Margin="0,0,0,4">
+                                                    <TextBlock Text="{Binding DayNumber}" FontWeight="Bold" FontSize="12" Foreground="#2d3748"/>
+
+                                                    <!-- Today Badge -->
+                                                    <Border Visibility="{Binding IsToday, Converter={StaticResource BoolToVisConverter}}" HorizontalAlignment="Right" Background="#3182ce" CornerRadius="4" Padding="4,1">
+                                                        <TextBlock Text="Bugün" Foreground="White" FontSize="9" FontWeight="Bold"/>
+                                                    </Border>
+                                                </Grid>
+
+                                                <!-- Shift Badges List -->
+                                                <ItemsControl Grid.Row="1" ItemsSource="{Binding Items}" IsHitTestVisible="False">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Margin="0,1,0,3" Padding="5,3" CornerRadius="4" Background="{Binding BadgeBackground}" BorderBrush="{Binding BadgeBorder}" BorderThickness="1">
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0" Text="{Binding CategoryIcon}" FontSize="10" Margin="0,0,4,0"/>
+                                                                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="10" FontWeight="Bold" Foreground="{Binding BadgeColor}" TextTrimming="CharacterEllipsis"/>
+                                                                </Grid>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </Grid>
+
+                    <!-- RIGHT: Selected Day Interactive Details Panel -->
+                    <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="18">
+                        <StackPanel>
+                            <!-- Selected Date Banner -->
+                                <!-- Selected Date Banner -->
+                                <Border Background="#5c1317" CornerRadius="8" Padding="12" Margin="0,0,0,15">
+                                    <StackPanel>
+                                        <TextBlock Text="📅 NÖBET DETAY KARTI" Foreground="White" FontSize="11" FontWeight="Bold" Opacity="0.8"/>
+                                        <TextBlock Text="{Binding SelectedCalendarDay.Date, StringFormat='dd MMMM yyyy, dddd'}" Foreground="White" FontSize="15" FontWeight="Bold" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Empty State (ONLY shown when HasSelectedDayShifts is FALSE) -->
+                                <StackPanel Margin="0,30,0,0" HorizontalAlignment="Center">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasSelectedDayShifts}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    
+                                    <TextBlock Text="☕" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Bu tarihte nöbet kaydı bulunmuyor." FontSize="13" FontWeight="SemiBold" Foreground="#718096" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Takvimden nöbetli günlere tıklayarak detaylarını görüntüleyebilirsiniz." FontSize="11" Foreground="#a0aec0" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="0,5,0,0"/>
+                                </StackPanel>
+
+                                <!-- Shifts List for Selected Day -->
+                                <ItemsControl ItemsSource="{Binding SelectedCalendarDay.Items}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#f8fafc" BorderBrush="{Binding BadgeBorder}" BorderThickness="1.5" CornerRadius="8" Padding="12" Margin="0,0,0,15">
+                                                <StackPanel>
+                                                    <!-- Category Title Badge -->
+                                                    <Border Background="{Binding BadgeBackground}" BorderBrush="{Binding BadgeBorder}" BorderThickness="1" CornerRadius="6" Padding="8,4" HorizontalAlignment="Left" Margin="0,0,0,10">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding CategoryIcon}" Margin="0,0,5,0"/>
+                                                            <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="12" Foreground="{Binding BadgeColor}"/>
+                                                        </StackPanel>
+                                                    </Border>
+
+                                                    <!-- Sorumlu Ekip Nöbetçileri (Pastel Color Styled) -->
+                                                    <TextBlock Text="👥 Nöbetçi Personeller" FontSize="11" FontWeight="Bold" Foreground="#4a5568" Margin="0,0,0,6"/>
+
+                                                    <ItemsControl ItemsSource="{Binding TeamCompartments}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Visibility="{Binding HasUsers, Converter={StaticResource BoolToVisConverter}}" 
+                                                                        Background="{Binding BgColor}" BorderBrush="{Binding BorderColor}" BorderThickness="1" 
+                                                                        CornerRadius="6" Padding="8,5" Margin="0,0,0,5">
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="Auto"/>
+                                                                            <ColumnDefinition Width="*"/>
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Grid.Column="0" Text="{Binding TeamName, StringFormat='\{0\} Ekibi:'}" FontWeight="Bold" FontSize="11" Foreground="{Binding HeaderColor}" Margin="0,0,6,0"/>
+                                                                        <TextBlock Grid.Column="1" Text="{Binding UserNames}" FontSize="11" Foreground="{Binding TextColor}" TextWrapping="Wrap"/>
+                                                                    </Grid>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+
+                                                    <!-- JIRA Ticket -->
+                                                    <TextBlock Visibility="{Binding HasJiraTicket, Converter={StaticResource BoolToVisConverter}}" 
+                                                               Text="{Binding JiraTicketNo, StringFormat='🎫 JIRA: \{0\}'}" 
+                                                               FontSize="11" FontWeight="SemiBold" Foreground="#2b6cb0" Margin="0,6,0,4"/>
+
+                                                    <!-- Tıklanabilir Harici Link -->
+                                                    <Button Visibility="{Binding HasExternalLink, Converter={StaticResource BoolToVisConverter}}" 
+                                                            Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
+                                                            CommandParameter="{Binding ExternalLink}" 
+                                                            Style="{StaticResource SmallLinkButton}" Width="Auto" Padding="8,3" HorizontalAlignment="Left" Margin="0,4,0,0">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="🔗 " FontSize="10"/>
+                                                            <TextBlock Text="{Binding ExternalLink}" FontSize="10" TextTrimming="CharacterEllipsis" MaxWidth="250"/>
+                                                        </StackPanel>
+                                                    </Button>
+
+                                                    <!-- Created/Updated Info Box -->
+                                                    <Border Background="#edf2f7" CornerRadius="6" Padding="8,4" Margin="0,10,0,0">
+                                                        <TextBlock Text="{Binding UpdateTooltip}" FontSize="10" Foreground="#718096" TextWrapping="Wrap"/>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ========================================================================= -->
+            <!-- TAB 3: GEÇMİŞ NÖBET KAYITLARI                                            -->
+            <!-- ========================================================================= -->
+            <TabItem Header="📜 Geçmiş Nöbet Kayıtları" Padding="15,8" Style="{DynamicResource CustomTabItemStyle}">
+                <Grid Margin="0,15,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Info Alert Message -->
+                    <Border Grid.Row="0" Background="#ebf8ff" BorderBrush="#3182ce" BorderThickness="1" CornerRadius="8" Padding="15,12" Margin="0,0,0,15">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="ℹ️ " FontSize="16" VerticalAlignment="Center"/>
+                            <TextBlock Text="Geçmiş nöbet kayıtları yıllık olarak saklanır ve her yılbaşında otomatik olarak sıfırlanır (Bulunulan Yıl: 2026)." 
+                                       FontSize="12" FontWeight="SemiBold" Foreground="#2b6cb0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Finished Shifts DataGrid -->
+                    <Border Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="20">
+                        <StackPanel>
+                                                        <TextBlock Text="📋 Tamamlanmış Geçmiş Nöbet Kayıtları" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Burgundy}" Margin="0,0,0,12"/>
+                            
+                            <!-- Filter Buttons (Tümü, Aylık Yaygınlaştırma, Ekip Haftalık Nöbetleri, Diğer/Özel) -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Tümü -->
+                                <Button Grid.Column="0" Command="{Binding SelectFinishedFilterCommand}" CommandParameter="Tümü" Margin="0,0,4,0" Height="34" Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#f1f5f9"/>
+                                            <Setter Property="Foreground" Value="#334155"/>
+                                            <Setter Property="BorderBrush" Value="#cbd5e1"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFinishedAllSelected}" Value="True">
+                                                    <Setter Property="Background" Value="#3b82f6"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                                <TextBlock Text="🌐 Tüm Geçmiş Nöbetler" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <!-- Aylık Yaygınlaştırma -->
+                                <Button Grid.Column="1" Command="{Binding SelectFinishedFilterCommand}" CommandParameter="Aylık" Margin="4,0,4,0" Height="34" Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#fef2f2"/>
+                                            <Setter Property="Foreground" Value="#991b1b"/>
+                                            <Setter Property="BorderBrush" Value="#fca5a5"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFinishedMonthlySelected}" Value="True">
+                                                    <Setter Property="Background" Value="#dc2626"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                                <TextBlock Text="🚀 Aylık Yaygınlaştırma" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <!-- Haftalık Ekip -->
+                                <Button Grid.Column="2" Command="{Binding SelectFinishedFilterCommand}" CommandParameter="Haftalık" Margin="4,0,4,0" Height="34" Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#eff6ff"/>
+                                            <Setter Property="Foreground" Value="#1e40af"/>
+                                            <Setter Property="BorderBrush" Value="#bfdbfe"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFinishedWeeklySelected}" Value="True">
+                                                    <Setter Property="Background" Value="#2563eb"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                                <TextBlock Text="📆 Ekip Haftalık Nöbetleri" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <!-- Diğer / Özel -->
+                                <Button Grid.Column="3" Command="{Binding SelectFinishedFilterCommand}" CommandParameter="Özel" Margin="4,0,0,0" Height="34" Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#f5f3ff"/>
+                                            <Setter Property="Foreground" Value="#5b21b6"/>
+                                            <Setter Property="BorderBrush" Value="#ddd6fe"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFinishedCustomSelected}" Value="True">
+                                                    <Setter Property="Background" Value="#7c3aed"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter Property="FontWeight" Value="Bold"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                                <TextBlock Text="🛡️ Diğer / Özel Nöbetler" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Grid>
+                            
+                            <DataGrid ItemsSource="{Binding FilteredFinishedList}" 
+                                      AutoGenerateColumns="False" HeadersVisibility="Column"
+                                      GridLinesVisibility="Horizontal" Height="Auto" MinHeight="150" MaxHeight="600"
+                                      ScrollViewer.CanContentScroll="False"
+                                      helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True"
+                                      CanUserReorderColumns="False" CanUserSortColumns="False" CanUserResizeRows="False"
+                                      IsReadOnly="True">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <Setter Property="ToolTip" Value="{Binding UpdateTooltip}"/>
+                                    </Style>
+                                </DataGrid.RowStyle>
+
+                                <DataGrid.Columns>
+                                    <!-- Dönem / Ay Adı -->
+                                     <DataGridTextColumn Header="Dönem / Açıklama" Binding="{Binding DisplayWeekLabel}" Width="240" FontWeight="Bold"/>
+
+                                    <!-- Yayın Tarihi -->
+                                    <DataGridTextColumn Header="Yayın Tarihi" Binding="{Binding ReleaseDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
+
+                                    <!-- Sorumlu Ekip Nöbetçileri -->
+                                    <DataGridTemplateColumn Header="Nöbetçi Personeller" Width="*">
+                                        <DataGridTemplateColumn.HeaderStyle>
+                                            <Style TargetType="DataGridColumnHeader">
+                                                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                <Setter Property="FontWeight" Value="Bold"/>
+                                            </Style>
+                                        </DataGridTemplateColumn.HeaderStyle>
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ItemsControl ItemsSource="{Binding TeamCompartments}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel Orientation="Horizontal"/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Visibility="{Binding HasUsers, Converter={StaticResource BoolToVisConverter}}" 
+                                                                    Background="{Binding BgColor}" BorderBrush="{Binding BorderColor}" BorderThickness="1" 
+                                                                    CornerRadius="4" Padding="6,3" Margin="0,2,6,2">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="{Binding TeamName, StringFormat='\{0\}: '}" FontWeight="Bold" Foreground="{Binding HeaderColor}" FontSize="11"/>
+                                                                    <TextBlock Text="{Binding UserNames}" Foreground="{Binding TextColor}" FontSize="11" TextWrapping="NoWrap"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <!-- JIRA Ticket No -->
+                                    <DataGridTextColumn Header="JIRA No" Binding="{Binding JiraTicketNo}" Width="110"/>
+
+                                    <!-- Harici Bağlantı -->
+                                    <DataGridTemplateColumn Header="Bağlantı" Width="85">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="🔗 Aç" 
+                                                        Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
+                                                        CommandParameter="{Binding ExternalLink}"
+                                                        Style="{StaticResource SmallLinkButton}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+</TabControl>
+
+    </Grid>
+</UserControl>

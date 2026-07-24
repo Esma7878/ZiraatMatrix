@@ -1,0 +1,896 @@
+<UserControl x:Class="ZiraatProje.UI.Views.LeavesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ZiraatProje.UI.Views"
+             xmlns:helpers="clr-namespace:ZiraatProje.UI.Helpers"
+             mc:Ignorable="d" 
+             d:DesignHeight="950" d:DesignWidth="1200">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <local:LeaveEditVisibilityConverter x:Key="LeaveEditVisConverter"/>
+        
+        <Style x:Key="ApproveBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#38a169"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="4" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="RejectBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#e53e3e"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="4" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True" Padding="20">
+        <Grid Background="Transparent">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- View Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                <TextBlock Text="İzin Yönetimi &amp; Çakışma Kontrolü" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Burgundy}"/>
+                <TextBlock Text="Görsel izin takvim matrisini inceleyin veya sağdaki sekmeye geçerek izin talebi oluşturup onaylı izinleri listeyin." FontSize="13" Foreground="#718096" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <!-- NOTIFICATION BANNERS (Admin onaylandı/güncelledi/reddeti bildirimleri) -->
+            <Border Grid.Row="1" Visibility="{Binding NotificationVisible}" Margin="0,0,0,15">
+                <ItemsControl ItemsSource="{Binding NotificationList}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding BackgroundColor}" BorderBrush="{Binding BorderColor}" BorderThickness="1.5" CornerRadius="8" Padding="14,10" Margin="0,0,0,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="12" Foreground="{Binding HeaderTextColor}"/>
+                                        <TextBlock Text="{Binding Message}" FontSize="11.5" Foreground="{Binding BodyTextColor}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <Button Grid.Column="2" Content="Tamam, Anladım ✕" 
+                                            Command="{Binding DataContext.DismissNotificationCommand, RelativeSource={RelativeSource AncestorType={x:Type local:LeavesView}}}"
+                                            CommandParameter="{Binding}"
+                                            Background="{Binding ButtonBackground}"
+                                            Foreground="{Binding ButtonForeground}"
+                                            FontWeight="Bold" FontSize="11" Padding="10,4" VerticalAlignment="Center">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border CornerRadius="5" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+
+            <!-- SUB-TAB NAVIGATION BAR (Matches Nöbet Takvimi CustomTabItemStyle) -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,15">
+                <!-- TAB 0: GÖRSEL İZİN TAKVİMİ -->
+                <Button Command="{Binding SelectTabCommand}" CommandParameter="0" Height="40" Margin="0,0,10,0" Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="#e2e8f0"/>
+                            <Setter Property="Foreground" Value="#334155"/>
+                            <Setter Property="BorderBrush" Value="#94a3b8"/>
+                            <Setter Property="BorderThickness" Value="1.5"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="8" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="18,8">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="📅 Görsel İzin Takvimi" FontWeight="Bold" FontSize="13" Foreground="{TemplateBinding Foreground}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#cbd5e1"/>
+                                    <Setter Property="BorderBrush" Value="#bc171d"/>
+                                    <Setter Property="Foreground" Value="#0f172a"/>
+                                </Trigger>
+                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
+                                    <Setter Property="Background" Value="#bc171d"/>
+                                    <Setter Property="BorderBrush" Value="#881337"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <!-- TAB 1: İZİN LİSTESİ & KAYIT -->
+                <Button Command="{Binding SelectTabCommand}" CommandParameter="1" Height="40" Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="#e2e8f0"/>
+                            <Setter Property="Foreground" Value="#334155"/>
+                            <Setter Property="BorderBrush" Value="#94a3b8"/>
+                            <Setter Property="BorderThickness" Value="1.5"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border CornerRadius="8" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="18,8">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="📝 İzin Listesi &amp; Kayıt" FontWeight="Bold" FontSize="13" Foreground="{TemplateBinding Foreground}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#cbd5e1"/>
+                                    <Setter Property="BorderBrush" Value="#bc171d"/>
+                                    <Setter Property="Foreground" Value="#0f172a"/>
+                                </Trigger>
+                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
+                                    <Setter Property="Background" Value="#bc171d"/>
+                                    <Setter Property="BorderBrush" Value="#881337"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StackPanel>
+
+            <!-- ROW 3: TAB CONTENTS -->
+            <Grid Grid.Row="3">
+
+                <!-- ════════════════════════════════════════════════════════════════ -->
+                <!-- TAB 0: GÖRSEL İZİN MATRİSİ (TAM SAYFA TAKVİM MATRİSİ)              -->
+                <!-- ════════════════════════════════════════════════════════════════ -->
+                <StackPanel Visibility="{Binding IsMatrixTabVisible}">
+                    <!-- Quarter & Filter Controls -->
+                    <Border Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,15">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <TextBlock Text="Yıl:" FontWeight="Bold" Foreground="#4a5568" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <ComboBox ItemsSource="{Binding Years}" SelectedItem="{Binding SelectedYear}" Width="80" Height="30"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                                <TextBlock Text="Çeyrek:" FontWeight="Bold" Foreground="#4a5568" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <ComboBox ItemsSource="{Binding Quarters}" SelectedItem="{Binding SelectedQuarter}" Width="80" Height="30"/>
+                            </StackPanel>
+
+                            <!-- Legend including Hourly Leaves Badge -->
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Background="#5b21b6" Width="14" Height="14" CornerRadius="3" Margin="0,0,4,0"/>
+                                <TextBlock Text="Takip" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#4a5568" Margin="0,0,10,0"/>
+
+                                <Border Background="#065f46" Width="14" Height="14" CornerRadius="3" Margin="0,0,4,0"/>
+                                <TextBlock Text="Tahsis" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#4a5568" Margin="0,0,10,0"/>
+
+                                <Border Background="#1e40af" Width="14" Height="14" CornerRadius="3" Margin="0,0,4,0"/>
+                                <TextBlock Text="Teminat" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#4a5568" Margin="0,0,10,0"/>
+
+                                <Border Background="#ed8936" Width="14" Height="14" CornerRadius="3" Margin="0,0,4,0"/>
+                                <TextBlock Text="⏳ Onay Bekliyor" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#c05621" Margin="0,0,10,0"/>
+
+                                <Border Background="#cbd5e1" BorderBrush="#94a3b8" BorderThickness="1" Width="14" Height="14" CornerRadius="3" Margin="0,0,4,0"/>
+                                <TextBlock Text="Hafta Sonu" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#4a5568" Margin="0,0,10,0"/>
+
+                                <Border Background="#fee2e2" BorderBrush="#f87171" BorderThickness="1" Width="14" Height="14" CornerRadius="3" Margin="0,0,4,0"/>
+                                <TextBlock Text="Resmi Tatil" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#4a5568"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Timeline Scrollable Canvas Matrix -->
+                    <Border Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="20">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" PanningMode="Both" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+                            <StackPanel MinWidth="750">
+                                <!-- Calendar Header Section -->
+                                <StackPanel Margin="0,0,0,10">
+                                    <!-- Month Headers Row -->
+                                    <Grid Margin="0,0,0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <ItemsControl Grid.Column="1" ItemsSource="{Binding MonthHeaders}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Width="{Binding Width}" Height="24" Background="#f8fafc" BorderBrush="#cbd5e0" BorderThickness="1" CornerRadius="4">
+                                                        <TextBlock Text="{Binding MonthName}" FontSize="11" FontWeight="Bold" Foreground="#2d3748" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+
+                                    <!-- Day Numbers Row -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0" Text="Ekipler / Personel" FontWeight="Bold" Foreground="#1a202c" VerticalAlignment="Center"/>
+
+                                        <ItemsControl Grid.Column="1" ItemsSource="{Binding DaysInQuarter}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Width="24" Height="24" Margin="1" Background="{Binding HeaderBackground}" BorderBrush="{Binding HeaderBorderColor}" BorderThickness="1" CornerRadius="3" ToolTip="{Binding TooltipText}">
+                                                        <TextBlock Text="{Binding DayNumber}" FontSize="10" Foreground="{Binding HeaderTextColor}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- Team Groups & Rows with Clock Icon for Hourly Leaves -->
+                                <ItemsControl ItemsSource="{Binding MatrixGroups}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="0,0,0,15">
+                                                <Border Background="{Binding HeaderBgColor}" BorderBrush="{Binding HeaderBorderColor}" BorderThickness="1" Padding="12,7" CornerRadius="6" Margin="0,0,0,6">
+                                                    <TextBlock FontWeight="Bold" FontSize="12">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text" Value="{Binding TeamName, StringFormat='{}📌 {0} Ekibi'}"/>
+                                                                <Setter Property="Foreground" Value="{Binding HeaderTextColor}"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding TeamName}" Value="Departman Yönetimi">
+                                                                        <Setter Property="Text" Value="Departman Yöneticisi"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Border>
+
+                                                <ItemsControl ItemsSource="{Binding Rows}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,2">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="180"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding UserName}" FontWeight="SemiBold" FontSize="11" Foreground="#1a202c"/>
+                                                                    <TextBlock Text="{Binding UserTitle}" FontSize="10" Foreground="#718096"/>
+                                                                </StackPanel>
+
+                                                                <ItemsControl Grid.Column="1" ItemsSource="{Binding Cells}">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <StackPanel Orientation="Horizontal"/>
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <Border Width="24" Height="24" Margin="1" CornerRadius="3" 
+                                                                                    Background="{Binding CellBackground}" 
+                                                                                    BorderBrush="{Binding CellBorderColor}" 
+                                                                                    BorderThickness="1" 
+                                                                                    ToolTip="{Binding TooltipText}">
+                                                                                <TextBlock Text="{Binding CellIcon}" FontSize="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+
+
+                <!-- ════════════════════════════════════════════════════════════════ -->
+                <!-- TAB 1: İZİN TALEBİ VE ONAYLI İZİNLER (FORM + İZİN LİSTELERİ)       -->
+                <!-- ════════════════════════════════════════════════════════════════ -->
+                <Grid Visibility="{Binding IsFormListTabVisible}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2.3*"/>
+                        <ColumnDefinition Width="1.2*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left Column: Active Approved & Pending Leaves Lists -->
+                    <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                        
+                        <!-- SECTION 0a: ADMIN ONAY BEKLEYEN İZİN TALEPLERİ -->
+                        <Border Visibility="{Binding AdminTabVisibility}" Background="White" BorderBrush="#ed8936" BorderThickness="1.5" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <Border Grid.Row="0" Background="#fffaf0" BorderBrush="#fbd38d" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,10">
+                                    <Grid>
+                                        <TextBlock Text="⏳ ONAY BEKLEYEN İZİN TALEPLERİ (Yöneticiniz Onayı)" FontWeight="Bold" FontSize="11" Foreground="#c05621" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding PendingLeaves.Count, StringFormat='{} (Bekleyen: {0})'}" FontWeight="Bold" FontSize="11" Foreground="#dd6b20" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+
+                                <DataGrid Grid.Row="1" ItemsSource="{Binding PendingLeaves}" SelectedItem="{Binding SelectedLeave}" AutoGenerateColumns="False" HeadersVisibility="Column" MinHeight="100" MaxHeight="300" Height="Auto" ScrollViewer.CanContentScroll="False" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Personel" Binding="{Binding User.FullName}" Width="1.3*" FontWeight="Bold"/>
+                                        <DataGridTextColumn Header="Ekip / Rol" Binding="{Binding User.Title}" Width="1.1*"/>
+                                        
+                                        <!-- İzin Türü Badge -->
+                                        <DataGridTemplateColumn Header="İzin Türü" Width="110">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Border CornerRadius="8" Padding="6,2" HorizontalAlignment="Center">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Background" Value="#dcfce7"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsHourly}" Value="True">
+                                                                        <Setter Property="Background" Value="#f3e8ff"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <TextBlock Text="{Binding LeaveTypeDisplay}" FontSize="10.5" FontWeight="Bold">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="#166534"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsHourly}" Value="True">
+                                                                            <Setter Property="Foreground" Value="#6b21a8"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <!-- Tarih / Saat Aralığı -->
+                                        <DataGridTextColumn Header="Tarih / Saat Aralığı" Binding="{Binding FormattedDateRange}" Width="1.6*" FontWeight="SemiBold"/>
+
+                                        <DataGridTemplateColumn Header="Çakışma / Not" Width="1.8*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel VerticalAlignment="Center" Margin="4,2">
+                                                        <Border Visibility="{Binding IsSpecialRequest, Converter={StaticResource BoolToVisConverter}}" Background="#fef3c7" BorderBrush="#d97706" BorderThickness="1" CornerRadius="3" Padding="4,1" Margin="0,0,0,2">
+                                                            <TextBlock Text="⭐ Özel İzin (%50 Çakışma)" FontSize="10" FontWeight="Bold" Foreground="#b45309"/>
+                                                        </Border>
+                                                        <TextBlock Text="{Binding RequestNote}" FontSize="10" Foreground="#4b5563" TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <DataGridTemplateColumn Header="İşlem" Width="200">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <Button Content="✏️ Değiştir" Command="{Binding DataContext.EditLeaveCommand, RelativeSource={RelativeSource AncestorType={x:Type local:LeavesView}}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Padding="6,2" FontSize="10" Margin="0,0,4,0">
+                                                            <Button.Visibility>
+                                                                <MultiBinding Converter="{StaticResource LeaveEditVisConverter}">
+                                                                    <Binding Path="User.FullName"/>
+                                                                    <Binding Path="DataContext.CurrentUserName" RelativeSource="{RelativeSource AncestorType={x:Type local:LeavesView}}"/>
+                                                                    <Binding Path="DataContext.IsCurrentUserAdmin" RelativeSource="{RelativeSource AncestorType={x:Type local:LeavesView}}"/>
+                                                                </MultiBinding>
+                                                            </Button.Visibility>
+                                                        </Button>
+                                                        <Button Content="✅ Onayla" Command="{Binding DataContext.ApproveCommand, RelativeSource={RelativeSource AncestorType={x:Type local:LeavesView}}}" CommandParameter="{Binding}" Visibility="{Binding DataContext.AdminTabVisibility, RelativeSource={RelativeSource AncestorType={x:Type local:LeavesView}}}" Style="{StaticResource ApproveBtnStyle}" Margin="0,0,4,0"/>
+                                                        <Button Content="❌ Reddet" Command="{Binding DataContext.RejectCommand, RelativeSource={RelativeSource AncestorType={x:Type local:LeavesView}}}" CommandParameter="{Binding}" Visibility="{Binding DataContext.AdminTabVisibility, RelativeSource={RelativeSource AncestorType={x:Type local:LeavesView}}}" Style="{StaticResource RejectBtnStyle}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
+
+                            <!-- SECTION 0b: KENDİ BEKLEYEN TALEBİM (Normal kullanıcı görür) -->
+                            <Border Visibility="{Binding MyPendingLeavesVisibility}" Background="White" BorderBrush="#fed7aa" BorderThickness="1.5" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Border Grid.Row="0" Background="#fff7ed" BorderBrush="#fed7aa" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,10">
+                                        <TextBlock Text="⏳ ONAY BEKLEYEN İZİN TALEBİNİZ" FontWeight="Bold" FontSize="11" Foreground="#c2410c"/>
+                                    </Border>
+
+                                    <DataGrid Grid.Row="1" ItemsSource="{Binding MyPendingLeaves}" SelectedItem="{Binding SelectedLeave}" AutoGenerateColumns="False" HeadersVisibility="Column" MinHeight="80" MaxHeight="250" Height="Auto" ScrollViewer.CanContentScroll="False" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+                                        <DataGrid.Columns>
+                                            <DataGridTemplateColumn Header="İzin Türü" Width="110">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Border CornerRadius="8" Padding="6,2" HorizontalAlignment="Center">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Background" Value="#dcfce7"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsHourly}" Value="True">
+                                                                            <Setter Property="Background" Value="#f3e8ff"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <TextBlock Text="{Binding LeaveTypeDisplay}" FontSize="10.5" FontWeight="Bold">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="#166534"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsHourly}" Value="True">
+                                                                                <Setter Property="Foreground" Value="#6b21a8"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <DataGridTextColumn Header="Tarih / Saat Aralığı" Binding="{Binding FormattedDateRange}" Width="1.8*" FontWeight="SemiBold"/>
+
+                                            <DataGridTemplateColumn Header="Durum" Width="120">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Border Background="#fef3c7" BorderBrush="#d97706" BorderThickness="1" CornerRadius="4" Padding="6,2" HorizontalAlignment="Center">
+                                                            <TextBlock Text="⏳ Onay Bekliyor" FontSize="10" FontWeight="Bold" Foreground="#b45309"/>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                            <DataGridTemplateColumn Header="İşlem" Width="130">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="✏️ Değişiklik Yap" Command="{Binding DataContext.EditLeaveCommand, RelativeSource={RelativeSource AncestorType={x:Type local:LeavesView}}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Padding="8,3" FontSize="10" HorizontalAlignment="Center"/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
+
+                            <!-- SECTION 0: DEPARTMAN YÖNETİMİ ONAYLI İZİNLERİ -->
+                            <Border Background="White" BorderBrush="#fca5a5" BorderThickness="1.5" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <Border Grid.Row="0" Background="#ffeef0" BorderBrush="#fca5a5" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,10">
+                                        <TextBlock Text="👑 DEPARTMAN YÖNETİMİ ONAYLI İZİNLERİ" FontWeight="Bold" FontSize="11" Foreground="#991b1b"/>
+                                    </Border>
+
+                                    <DataGrid Grid.Row="1" ItemsSource="{Binding DepartmanLeaves}" SelectedItem="{Binding SelectedLeave}" MinHeight="100" MaxHeight="300" Height="Auto" AutoGenerateColumns="False" HeadersVisibility="Column" ScrollViewer.CanContentScroll="False" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Personel" Binding="{Binding User.FullName}" Width="1.4*" FontWeight="Bold"/>
+                                            
+                                            <DataGridTemplateColumn Header="İzin Türü" Width="110">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Border CornerRadius="8" Padding="6,2" HorizontalAlignment="Center">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Background" Value="#dcfce7"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsHourly}" Value="True">
+                                                                            <Setter Property="Background" Value="#f3e8ff"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <TextBlock Text="{Binding LeaveTypeDisplay}" FontSize="10.5" FontWeight="Bold">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="#166534"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsHourly}" Value="True">
+                                                                                <Setter Property="Foreground" Value="#6b21a8"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <DataGridTextColumn Header="Tarih / Saat Aralığı" Binding="{Binding FormattedDateRange}" Width="1.8*" FontWeight="SemiBold"/>
+                                            <DataGridTextColumn Header="Onaylayan" Binding="{Binding ApprovedByUserName, TargetNullValue='-'}" Width="1.3*"/>
+                                            <DataGridTemplateColumn Header="İşlem" Width="120">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="✏️ Değişiklik Yap" Command="{Binding DataContext.EditLeaveCommand, RelativeSource={RelativeSource AncestorType={x:Type local:LeavesView}}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Padding="8,3" FontSize="10" HorizontalAlignment="Center">
+                                                            <Button.Visibility>
+                                                                <MultiBinding Converter="{StaticResource LeaveEditVisConverter}">
+                                                                    <Binding Path="User.FullName"/>
+                                                                    <Binding Path="DataContext.CurrentUserName" RelativeSource="{RelativeSource AncestorType={x:Type local:LeavesView}}"/>
+                                                                    <Binding Path="DataContext.IsCurrentUserAdmin" RelativeSource="{RelativeSource AncestorType={x:Type local:LeavesView}}"/>
+                                                                </MultiBinding>
+                                                            </Button.Visibility>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
+
+                            <!-- SECTION 1: TAKİP EKİBİ ONAYLI İZİNLERİ -->
+                            <Border Background="White" BorderBrush="#ddd6fe" BorderThickness="1.5" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <Border Grid.Row="0" Background="#f5f3ff" BorderBrush="#ddd6fe" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,10">
+                                        <TextBlock Text="🟣 TAKİP EKİBİ ONAYLI İZİNLERİ" FontWeight="Bold" FontSize="11" Foreground="#5b21b6"/>
+                                    </Border>
+
+                                    <DataGrid Grid.Row="1" ItemsSource="{Binding TakipLeaves}" SelectedItem="{Binding SelectedLeave}" MinHeight="100" MaxHeight="300" Height="Auto" AutoGenerateColumns="False" HeadersVisibility="Column" ScrollViewer.CanContentScroll="False" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Personel" Binding="{Binding User.FullName}" Width="1.4*" FontWeight="Bold"/>
+                                            
+                                            <DataGridTemplateColumn Header="İzin Türü" Width="110">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Border CornerRadius="8" Padding="6,2" HorizontalAlignment="Center">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Background" Value="#dcfce7"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsHourly}" Value="True">
+                                                                            <Setter Property="Background" Value="#f3e8ff"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <TextBlock Text="{Binding LeaveTypeDisplay}" FontSize="10.5" FontWeight="Bold">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="#166534"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsHourly}" Value="True">
+                                                                                <Setter Property="Foreground" Value="#6b21a8"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <DataGridTextColumn Header="Tarih / Saat Aralığı" Binding="{Binding FormattedDateRange}" Width="1.8*" FontWeight="SemiBold"/>
+                                            <DataGridTextColumn Header="Onaylayan" Binding="{Binding ApprovedByUserName, TargetNullValue='-'}" Width="1.3*"/>
+                                            <DataGridTemplateColumn Header="İşlem" Width="120">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="✏️ Değişiklik Yap" Command="{Binding DataContext.EditLeaveCommand, RelativeSource={RelativeSource AncestorType={x:Type local:LeavesView}}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Padding="8,3" FontSize="10" HorizontalAlignment="Center">
+                                                            <Button.Visibility>
+                                                                <MultiBinding Converter="{StaticResource LeaveEditVisConverter}">
+                                                                    <Binding Path="User.FullName"/>
+                                                                    <Binding Path="DataContext.CurrentUserName" RelativeSource="{RelativeSource AncestorType={x:Type local:LeavesView}}"/>
+                                                                    <Binding Path="DataContext.IsCurrentUserAdmin" RelativeSource="{RelativeSource AncestorType={x:Type local:LeavesView}}"/>
+                                                                </MultiBinding>
+                                                            </Button.Visibility>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
+
+                            <!-- SECTION 2: TAHSİS EKİBİ ONAYLI İZİNLERİ -->
+                            <Border Background="White" BorderBrush="#a7f3d0" BorderThickness="1.5" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Border Grid.Row="0" Background="#ecfdf5" BorderBrush="#a7f3d0" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,10">
+                                        <TextBlock Text="🟢 TAHSİS EKİBİ ONAYLI İZİNLERİ" FontWeight="Bold" FontSize="11" Foreground="#065f46"/>
+                                    </Border>
+
+                                    <DataGrid Grid.Row="1" ItemsSource="{Binding TahsisLeaves}" SelectedItem="{Binding SelectedLeave}" MinHeight="100" MaxHeight="300" Height="Auto" AutoGenerateColumns="False" HeadersVisibility="Column" ScrollViewer.CanContentScroll="False" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Personel" Binding="{Binding User.FullName}" Width="1.4*" FontWeight="Bold"/>
+                                            
+                                            <DataGridTemplateColumn Header="İzin Türü" Width="110">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Border CornerRadius="8" Padding="6,2" HorizontalAlignment="Center">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Background" Value="#dcfce7"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsHourly}" Value="True">
+                                                                            <Setter Property="Background" Value="#f3e8ff"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <TextBlock Text="{Binding LeaveTypeDisplay}" FontSize="10.5" FontWeight="Bold">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="#166534"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsHourly}" Value="True">
+                                                                                <Setter Property="Foreground" Value="#6b21a8"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <DataGridTextColumn Header="Tarih / Saat Aralığı" Binding="{Binding FormattedDateRange}" Width="1.8*" FontWeight="SemiBold"/>
+                                            <DataGridTextColumn Header="Onaylayan" Binding="{Binding ApprovedByUserName, TargetNullValue='-'}" Width="1.3*"/>
+                                            <DataGridTemplateColumn Header="İşlem" Width="120">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="✏️ Değişiklik Yap" Command="{Binding DataContext.EditLeaveCommand, RelativeSource={RelativeSource AncestorType={x:Type local:LeavesView}}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Padding="8,3" FontSize="10" HorizontalAlignment="Center">
+                                                            <Button.Visibility>
+                                                                <MultiBinding Converter="{StaticResource LeaveEditVisConverter}">
+                                                                    <Binding Path="User.FullName"/>
+                                                                    <Binding Path="DataContext.CurrentUserName" RelativeSource="{RelativeSource AncestorType={x:Type local:LeavesView}}"/>
+                                                                    <Binding Path="DataContext.IsCurrentUserAdmin" RelativeSource="{RelativeSource AncestorType={x:Type local:LeavesView}}"/>
+                                                                </MultiBinding>
+                                                            </Button.Visibility>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
+
+                            <!-- SECTION 3: TEMİNAT EKİBİ ONAYLI İZİNLERİ -->
+                            <Border Background="White" BorderBrush="#bfdbfe" BorderThickness="1.5" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Border Grid.Row="0" Background="#eff6ff" BorderBrush="#bfdbfe" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,10">
+                                        <TextBlock Text="🔵 TEMİNAT EKİBİ ONAYLI İZİNLERİ" FontWeight="Bold" FontSize="11" Foreground="#1e40af"/>
+                                    </Border>
+
+                                    <DataGrid Grid.Row="1" ItemsSource="{Binding TeminatLeaves}" SelectedItem="{Binding SelectedLeave}" MinHeight="100" MaxHeight="300" Height="Auto" AutoGenerateColumns="False" HeadersVisibility="Column" ScrollViewer.CanContentScroll="False" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Personel" Binding="{Binding User.FullName}" Width="1.4*" FontWeight="Bold"/>
+                                            
+                                            <DataGridTemplateColumn Header="İzin Türü" Width="110">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Border CornerRadius="8" Padding="6,2" HorizontalAlignment="Center">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Background" Value="#dcfce7"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsHourly}" Value="True">
+                                                                            <Setter Property="Background" Value="#f3e8ff"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <TextBlock Text="{Binding LeaveTypeDisplay}" FontSize="10.5" FontWeight="Bold">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="#166534"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsHourly}" Value="True">
+                                                                                <Setter Property="Foreground" Value="#6b21a8"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <DataGridTextColumn Header="Tarih / Saat Aralığı" Binding="{Binding FormattedDateRange}" Width="1.8*" FontWeight="SemiBold"/>
+                                            <DataGridTextColumn Header="Onaylayan" Binding="{Binding ApprovedByUserName, TargetNullValue='-'}" Width="1.3*"/>
+                                            <DataGridTemplateColumn Header="İşlem" Width="120">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="✏️ Değişiklik Yap" Command="{Binding DataContext.EditLeaveCommand, RelativeSource={RelativeSource AncestorType={x:Type local:LeavesView}}}" CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Padding="8,3" FontSize="10" HorizontalAlignment="Center">
+                                                            <Button.Visibility>
+                                                                <MultiBinding Converter="{StaticResource LeaveEditVisConverter}">
+                                                                    <Binding Path="User.FullName"/>
+                                                                    <Binding Path="DataContext.CurrentUserName" RelativeSource="{RelativeSource AncestorType={x:Type local:LeavesView}}"/>
+                                                                    <Binding Path="DataContext.IsCurrentUserAdmin" RelativeSource="{RelativeSource AncestorType={x:Type local:LeavesView}}"/>
+                                                                </MultiBinding>
+                                                            </Button.Visibility>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
+
+                            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource ZiraatRed}" Margin="0,10,0,0" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Right Column: Add/Edit Leave Form -->
+                        <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="20" VerticalAlignment="Top">
+                            <StackPanel>
+                                <TextBlock Text="{Binding FormTitleText}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource ZiraatRed}" Margin="0,0,0,15"/>
+
+                                <!-- Personel Seçimi -->
+                                <TextBlock Text="Personel (Talep Sahibi)" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,6"/>
+                                <ComboBox ItemsSource="{Binding UsersList}" 
+                                          SelectedValue="{Binding SelectedUserId}" 
+                                          SelectedValuePath="Id" 
+                                          DisplayMemberPath="FullName" 
+                                          IsEnabled="{Binding IsUserSelectorEnabled}"
+                                          Margin="0,0,0,15"/>
+                                          
+                                 <!-- İzin Tipi Seçimi -->
+                                 <TextBlock Text="İzin Tipi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,6"/>
+                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                     <RadioButton Content="Tam Gün" IsChecked="{Binding IsDaily, Mode=TwoWay}" GroupName="LeaveType" Margin="0,0,20,0" FontWeight="SemiBold"/>
+                                     <RadioButton Content="Saatlik" IsChecked="{Binding IsHourly, Mode=TwoWay}" GroupName="LeaveType" FontWeight="SemiBold"/>
+                                 </StackPanel>
+
+                                 <!-- Tam Gün İzin Bölümü -->
+                                 <StackPanel Visibility="{Binding IsDailyVisible}">
+                                     <!-- Başlangıç Tarihi -->
+                                     <TextBlock Text="İzin Başlangıç Tarihi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,6"/>
+                                     <DatePicker SelectedDate="{Binding StartDate}" Height="32" Margin="0,0,0,15"/>
+
+                                     <!-- Bitiş Tarihi -->
+                                     <TextBlock Text="İzin Bitiş Tarihi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,6"/>
+                                     <DatePicker SelectedDate="{Binding EndDate}" Height="32" Margin="0,0,0,15"/>
+                                 </StackPanel>
+
+                                 <!-- Saatlik İzin Bölümü -->
+                                 <StackPanel Visibility="{Binding IsHourlyVisible}">
+                                     <!-- İzin Günü -->
+                                     <TextBlock Text="İzin Tarihi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,6"/>
+                                     <DatePicker SelectedDate="{Binding HourlyDate}" Height="32" Margin="0,0,0,15"/>
+
+                                     <!-- Saat Aralığı -->
+                                     <Grid Margin="0,0,0,15">
+                                         <Grid.ColumnDefinitions>
+                                             <ColumnDefinition Width="*"/>
+                                             <ColumnDefinition Width="*"/>
+                                         </Grid.ColumnDefinitions>
+                                         
+                                         <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                             <TextBlock Text="Başlangıç" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,6" FontSize="11"/>
+                                             <ComboBox ItemsSource="{Binding StartHours}" SelectedItem="{Binding SelectedStartHour}" Height="32"/>
+                                         </StackPanel>
+
+                                         <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                             <TextBlock Text="Bitiş" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,6" FontSize="11"/>
+                                             <ComboBox ItemsSource="{Binding FilteredEndHours}" SelectedItem="{Binding SelectedEndHour}" Height="32"/>
+                                         </StackPanel>
+                                     </Grid>
+                                 </StackPanel>
+
+                                <!-- Rule Box: %50 Capacity Rule -->
+                                <Border BorderBrush="#cbd5e1" BorderThickness="1" Background="#f8fafc" Padding="10" Margin="0,5,0,15" CornerRadius="6">
+                                    <StackPanel>
+                                        <TextBlock Text="ℹ️ İK &amp; Ekip Rol Kuralları:" FontWeight="Bold" FontSize="11" Foreground="#334155" Margin="0,0,0,4"/>
+                                        <TextBlock Text="• Aynı ekipteki aynı rolün (örn. Takip Developer) %50 veya fazlası aynı tarihlerde izinliyse otomatik çakışma uyarısı verilir." FontSize="10" Foreground="#475569" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                                        <TextBlock Text="• Ekip üyeleri çakışan tarihlerde 'Özel İzin Talebi' oluşturabilir. İzin, yönetici onaylarsa aktifleşir." FontSize="10" Foreground="#475569" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Form Actions -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0" Content="{Binding SaveButtonText}" Command="{Binding SaveCommand}" IsEnabled="{Binding IsSaveButtonEnabled}" Margin="0,0,5,0"/>
+                                    <Button Grid.Column="1" Content="İzni Sil" Command="{Binding DeleteCommand}" Background="#e53e3e" Margin="5,0,0,0">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Name="Border" CornerRadius="5" Background="{TemplateBinding Background}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Border" Property="Background" Value="#fc8181"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </ScrollViewer>
+    </UserControl>

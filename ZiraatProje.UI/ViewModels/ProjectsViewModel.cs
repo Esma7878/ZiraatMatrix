@@ -229,7 +229,7 @@ namespace ZiraatProje.UI.ViewModels
             "Teminat"
         };
 
-        private string _selectedTeam = "Takip";
+        private string _selectedTeam = string.Empty;
         public string SelectedTeam
         {
             get => _selectedTeam;
@@ -500,10 +500,47 @@ namespace ZiraatProje.UI.ViewModels
             set { _personMonthlyCostRows = value; OnPropertyChanged(); }
         }
 
+        private decimal _totalManDayBudget;
+        public decimal TotalManDayBudget
+        {
+            get => _totalManDayBudget;
+            set
+            {
+                _totalManDayBudget = value;
+                OnPropertyChanged();
+                RecalculateTotals();
+            }
+        }
+
         public decimal TotalInternalManDays => PersonMonthlyCostRows.Sum(r => r.TotalManDays);
+        
+        public bool IsBudgetExceeded => TotalManDayBudget > 0 && TotalInternalManDays > TotalManDayBudget;
+
+        public bool IsBudgetCritical => TotalManDayBudget > 0 && !IsBudgetExceeded && TotalInternalManDays >= (TotalManDayBudget * 0.85m);
+
+        public bool HasBudgetWarning => IsBudgetExceeded || IsBudgetCritical;
+
+        public string BudgetWarningMessage
+        {
+            get
+            {
+                if (IsBudgetExceeded)
+                {
+                    decimal excess = TotalInternalManDays - TotalManDayBudget;
+                    return $"⚠️ BÜTÇE AŞIMI UYARISI: Girilen toplam adam/gün ({TotalInternalManDays:N0}), tanımlanan proje bütçesini ({TotalManDayBudget:N0}) AŞMAKTADIR! ({excess:N0} Adam/Gün Aşım)";
+                }
+                if (IsBudgetCritical)
+                {
+                    decimal pct = TotalManDayBudget > 0 ? (TotalInternalManDays / TotalManDayBudget) * 100m : 0m;
+                    return $"⚡ KRİTİK BÜTÇE SEVİYESİ: Girilen toplam adam/gün ({TotalInternalManDays:N0}), proje bütçesinin ({TotalManDayBudget:N0}) %{pct:N0}'sine ulaştı.";
+                }
+                return string.Empty;
+            }
+        }
+
         public string TotalProjectCostFormatted => ExternalCost > 0 
-            ? $"{TotalInternalManDays:N0} Adam/Gün (İç) | {ExternalCost:N0} (Dış)" 
-            : $"{TotalInternalManDays:N0} Adam/Gün";
+            ? $"{TotalInternalManDays:N0} / {(TotalManDayBudget > 0 ? TotalManDayBudget.ToString("N0") : "Bütçe Yok")} Adam/Gün | {ExternalCost:N0} TL (Dış)" 
+            : $"{TotalInternalManDays:N0} / {(TotalManDayBudget > 0 ? TotalManDayBudget.ToString("N0") : "Bütçe Yok")} Adam/Gün";
 
         // Status & Helper Texts
         private string _statusMessage = string.Empty;
@@ -622,19 +659,18 @@ namespace ZiraatProje.UI.ViewModels
             try
             {
                 _allUsers = _services.GetAllUsers() ?? new List<User>();
-                var teamUsers = _allUsers;
-                string targetTeam = !string.IsNullOrWhiteSpace(SelectedTeam) ? SelectedTeam : LoggedTeam;
-                if (!string.IsNullOrWhiteSpace(targetTeam))
+
+                if (string.IsNullOrWhiteSpace(SelectedTeam))
                 {
-                    var filtered = _allUsers.Where(u => string.Equals(u.Team, targetTeam, StringComparison.OrdinalIgnoreCase)).ToList();
-                    if (filtered.Any()) teamUsers = filtered;
+                    AnalystUserItems = new ObservableCollection<SelectableUserItem>();
+                    DeveloperUserItems = new ObservableCollection<SelectableUserItem>();
+                    return;
                 }
 
-                var analysts = teamUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yönetici", StringComparison.OrdinalIgnoreCase)).ToList();
-                var developers = teamUsers.Where(u => (u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yazılımcı", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Mühendis", StringComparison.OrdinalIgnoreCase)).ToList();
+                var teamUsers = _allUsers.Where(u => string.Equals(u.Team, SelectedTeam, StringComparison.OrdinalIgnoreCase)).ToList();
 
-                if (!analysts.Any()) analysts = teamUsers.Take(2).ToList();
-                if (!developers.Any()) developers = teamUsers.Skip(2).ToList();
+                var analysts = teamUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
+                var developers = teamUsers.Where(u => (u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yazılımcı", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Mühendis", StringComparison.OrdinalIgnoreCase)).ToList();
 
                 AnalystUserItems = new ObservableCollection<SelectableUserItem>(
                     analysts.Select(u => new SelectableUserItem
@@ -714,6 +750,10 @@ namespace ZiraatProje.UI.ViewModels
         {
             OnPropertyChanged(nameof(TotalInternalManDays));
             OnPropertyChanged(nameof(TotalProjectCostFormatted));
+            OnPropertyChanged(nameof(IsBudgetExceeded));
+            OnPropertyChanged(nameof(IsBudgetCritical));
+            OnPropertyChanged(nameof(HasBudgetWarning));
+            OnPropertyChanged(nameof(BudgetWarningMessage));
         }
 
         public void LoadProjects()
@@ -767,7 +807,7 @@ namespace ZiraatProje.UI.ViewModels
                     {
                         var u = _allUsers.FirstOrDefault(usr => usr.Id == uid);
                         string name = u?.FullName ?? $"Personel #{uid}";
-                        string role = (u?.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase) || (u?.Title ?? "").Contains("Yönetici", StringComparison.OrdinalIgnoreCase) ? "Analist" : "Yazılımcı";
+                        string role = (u?.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase) ? "Analist" : "Yazılımcı";
 
                         decimal uM1 = dbCosts.FirstOrDefault(c => c.UserId == uid && c.Month == m1)?.ManDays ?? 0m;
                         decimal uM2 = dbCosts.FirstOrDefault(c => c.UserId == uid && c.Month == m2)?.ManDays ?? 0m;
@@ -844,6 +884,9 @@ namespace ZiraatProje.UI.ViewModels
             Gmy = SelectedProject.Gmy ?? string.Empty;
             BusinessUnit = SelectedProject.BusinessUnit ?? string.Empty;
             Description = SelectedProject.Description ?? string.Empty;
+            TotalManDayBudget = SelectedProject.TotalManDayBudget;
+
+            SelectedTeam = SelectedProject.Team ?? string.Empty;
 
             var stakeholdersList = (SelectedProject.Stakeholders ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
             foreach (var sh in StakeholderItems)
@@ -934,7 +977,25 @@ namespace ZiraatProje.UI.ViewModels
                 p.AssignedAnalystNames = DisplayAnalystSummary;
                 p.AssignedDeveloperNames = DisplayDeveloperSummary;
                 p.AssignedUserNames = $"{DisplayAnalystSummary} | {DisplayDeveloperSummary}";
-                p.TotalManDayBudget = TotalInternalManDays;
+
+                // If TotalManDayBudget is not set manually, default to TotalInternalManDays
+                if (TotalManDayBudget <= 0m && TotalInternalManDays > 0m)
+                {
+                    TotalManDayBudget = TotalInternalManDays;
+                }
+                p.TotalManDayBudget = TotalManDayBudget;
+
+                if (IsBudgetExceeded)
+                {
+                    decimal excess = TotalInternalManDays - TotalManDayBudget;
+                    var confirm = MessageBox.Show(
+                        $"⚠️ BÜTÇE AŞIMI TESPİT EDİLDİ!\n\nGirilen toplam adam/gün maliyeti ({TotalInternalManDays:N0}), tanımlanan proje bütçesini ({TotalManDayBudget:N0}) {excess:N0} adam/gün AŞMAKTADIR.\n\nYine de bu kaydı bu şekilde onaylayıp kaydetmek istiyor musunuz?",
+                        "Bütçe Aşımı Uyarısı",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
+
+                    if (confirm != MessageBoxResult.Yes) return;
+                }
 
                 int startMonth = (SelectedQuarter - 1) * 3 + 1;
                 var monthlyCosts = new List<ProjectMonthlyCost>();
@@ -999,6 +1060,8 @@ namespace ZiraatProje.UI.ViewModels
             Gmy = string.Empty;
             BusinessUnit = string.Empty;
             Description = string.Empty;
+            SelectedTeam = string.Empty;
+            TotalManDayBudget = 0m;
 
             foreach (var item in AnalystUserItems) item.IsSelected = false;
             foreach (var item in DeveloperUserItems) item.IsSelected = false;

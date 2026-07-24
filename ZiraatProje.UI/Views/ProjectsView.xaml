@@ -599,27 +599,66 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- SECTION 4: Dış Maliyet & Total Summary Box -->
-                            <Grid Margin="0,0,0,15">
+                            <!-- SECTION 4: Bütçe, Dış Maliyet & Total Summary Box -->
+                            <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
                                     <ColumnDefinition Width="1*"/>
                                     <ColumnDefinition Width="1.4*"/>
                                 </Grid.ColumnDefinitions>
 
+                                <!-- Proje Bütçesi (Adam/Gün) -->
+                                <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                    <TextBlock Text="Proje Bütçesi (Adam/Gün)" FontWeight="Bold" Foreground="#1e40af" Margin="0,0,0,4" FontSize="11.5"/>
+                                    <TextBox Text="{Binding TotalManDayBudget, UpdateSourceTrigger=PropertyChanged, StringFormat=\{0:0.##\}}" Height="32" FontWeight="Bold" Foreground="#1e40af"/>
+                                </StackPanel>
+
                                 <!-- Dış Maliyet -->
-                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                    <TextBlock Text="Dış Maliyet" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4" FontSize="11.5"/>
+                                <StackPanel Grid.Column="1" Margin="3,0,6,0">
+                                    <TextBlock Text="Dış Maliyet (TL)" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4" FontSize="11.5"/>
                                     <TextBox Text="{Binding ExternalCost, UpdateSourceTrigger=PropertyChanged}" Height="32"/>
                                 </StackPanel>
 
                                 <!-- Total Summary Box -->
-                                <Border Grid.Column="1" Background="#f1f5f9" BorderBrush="#cbd5e1" BorderThickness="1" CornerRadius="6" Padding="12,6" Margin="8,0,0,0">
+                                <Border Grid.Column="2" Background="#f1f5f9" BorderBrush="#cbd5e1" BorderThickness="1" CornerRadius="6" Padding="10,4" Margin="3,0,0,0">
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="💰 Toplam Hesaplanan Maliyet:" FontSize="11" FontWeight="Bold" Foreground="#475569"/>
-                                        <TextBlock Text="{Binding TotalProjectCostFormatted}" FontSize="13" FontWeight="ExtraBold" Foreground="#0f172a"/>
+                                        <TextBlock Text="💰 Toplam Harcanan / Bütçe:" FontSize="10.5" FontWeight="Bold" Foreground="#475569"/>
+                                        <TextBlock Text="{Binding TotalProjectCostFormatted}" FontSize="12" FontWeight="ExtraBold" Foreground="#0f172a"/>
                                     </StackPanel>
                                 </Border>
                             </Grid>
+
+                            <!-- Dynamic Bütçe Uyarısı / Aşım Banner'ı -->
+                            <Border Visibility="{Binding HasBudgetWarning, Converter={StaticResource BoolToVisConverter}}" 
+                                    CornerRadius="6" Padding="10,8" Margin="0,0,0,15">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="#fef2f2"/>
+                                        <Setter Property="BorderBrush" Value="#fca5a5"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBudgetCritical}" Value="True">
+                                                <Setter Property="Background" Value="#fffbeb"/>
+                                                <Setter Property="BorderBrush" Value="#fcd34d"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding BudgetWarningMessage}" FontWeight="Bold" FontSize="11.5">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#dc2626"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsBudgetCritical}" Value="True">
+                                                        <Setter Property="Foreground" Value="#b45309"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
 
                             <!-- SECTION 5: Paydaş Departmanlar -->
                             <TextBlock Text="🏢 Paydaş Departmanlar" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,6" FontSize="11.5"/>

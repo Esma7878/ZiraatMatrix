@@ -380,7 +380,12 @@ namespace ZiraatProje.UI.ViewModels
         public string CurrentUserName
         {
             get => _currentUserName;
-            set { _currentUserName = value; OnPropertyChanged(); }
+            set
+            {
+                _currentUserName = value;
+                OnPropertyChanged();
+                AutoSelectCurrentUser();
+            }
         }
 
         // Data lists
@@ -516,12 +521,37 @@ namespace ZiraatProje.UI.ViewModels
             }
         }
 
+        private User? _selectedUser;
+        public User? SelectedUser
+        {
+            get => _selectedUser;
+            set
+            {
+                _selectedUser = value;
+                if (_selectedUser != null)
+                {
+                    _selectedUserId = _selectedUser.Id;
+                }
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(SelectedUserId));
+            }
+        }
+
         // Form Fields
         private int _selectedUserId;
         public int SelectedUserId
         {
             get => _selectedUserId;
-            set { _selectedUserId = value; OnPropertyChanged(); }
+            set
+            {
+                _selectedUserId = value;
+                if (UsersList != null && _selectedUserId > 0)
+                {
+                    _selectedUser = UsersList.FirstOrDefault(u => u.Id == _selectedUserId);
+                    OnPropertyChanged(nameof(SelectedUser));
+                }
+                OnPropertyChanged();
+            }
         }
 
         private DateTime _startDate = DateTime.Today;
@@ -709,6 +739,24 @@ namespace ZiraatProje.UI.ViewModels
                 OnPropertyChanged(nameof(SaveButtonText));
                 OnPropertyChanged(nameof(FormTitleText));
                 OnPropertyChanged(nameof(IsSaveButtonEnabled));
+                OnPropertyChanged(nameof(IsUserSelectorEnabled));
+            }
+        }
+
+        public bool IsUserSelectorEnabled => IsCurrentUserAdmin;
+
+        public void AutoSelectCurrentUser()
+        {
+            if (UsersList == null || !UsersList.Any()) return;
+
+            var matched = UsersList.FirstOrDefault(u => string.Equals(u.FullName, CurrentUserName, StringComparison.OrdinalIgnoreCase));
+            if (matched != null)
+            {
+                SelectedUser = matched;
+            }
+            else if (UsersList.Any())
+            {
+                SelectedUser = UsersList.First();
             }
         }
 
@@ -771,7 +819,51 @@ namespace ZiraatProje.UI.ViewModels
                 }
             }
         }
-        public bool IsUserSelectorEnabled => IsCurrentUserAdmin;
+
+        // ── Akıllı İzin Öneri Asistanı Properties ─────────────────────────
+        private readonly SmartLeaveRecommendationService _aiRecommendationService = new SmartLeaveRecommendationService();
+
+        private int _aiDesiredWorkingDays = 5;
+        public int AiDesiredWorkingDays
+        {
+            get => _aiDesiredWorkingDays;
+            set { _aiDesiredWorkingDays = value; OnPropertyChanged(); }
+        }
+
+        private int _aiSelectedTargetMonth = DateTime.Now.Month;
+        public int AiSelectedTargetMonth
+        {
+            get => _aiSelectedTargetMonth;
+            set { _aiSelectedTargetMonth = value; OnPropertyChanged(); }
+        }
+
+        private int _aiSelectedTargetYear = DateTime.Now.Year;
+        public int AiSelectedTargetYear
+        {
+            get => _aiSelectedTargetYear;
+            set { _aiSelectedTargetYear = value; OnPropertyChanged(); }
+        }
+
+        private ObservableCollection<LeaveRecommendationOption> _aiRecommendations = new ObservableCollection<LeaveRecommendationOption>();
+        public ObservableCollection<LeaveRecommendationOption> AiRecommendations
+        {
+            get => _aiRecommendations;
+            set
+            {
+                _aiRecommendations = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasAiRecommendations));
+            }
+        }
+
+        public bool HasAiRecommendations => AiRecommendations != null && AiRecommendations.Count > 0;
+
+        private bool _isAiCardExpanded = false;
+        public bool IsAiCardExpanded
+        {
+            get => _isAiCardExpanded;
+            set { _isAiCardExpanded = value; OnPropertyChanged(); }
+        }
 
         public ICommand SaveCommand { get; }
         public ICommand DeleteCommand { get; }
@@ -781,6 +873,9 @@ namespace ZiraatProje.UI.ViewModels
         public ICommand EditLeaveCommand { get; }
 
         public ICommand SelectTabCommand { get; }
+        public ICommand GetAIRecommendationsCommand { get; }
+        public ICommand ApplyRecommendationCommand { get; }
+        public ICommand ToggleAiCardCommand { get; }
 
         private int _selectedTabIndex = 0;
         public int SelectedTabIndex
@@ -841,8 +936,63 @@ namespace ZiraatProje.UI.ViewModels
                 _services.MarkNotificationsSeenForUser(CurrentUserName);
             });
 
+            GetAIRecommendationsCommand = new RelayCommand(ExecuteGetAIRecommendations);
+            ApplyRecommendationCommand = new RelayCommand(ExecuteApplyRecommendation);
+            ToggleAiCardCommand = new RelayCommand(_ => { IsAiCardExpanded = !IsAiCardExpanded; });
+
             UpdateEndHoursFilter();
             LoadData();
+        }
+
+        private void ExecuteGetAIRecommendations(object? param)
+        {
+            try
+            {
+                var users = _services.GetAllUsers();
+                var leaves = _services.GetAllLeaves();
+                var shifts = _services.GetAllShifts();
+                var currentUser = users.FirstOrDefault(u => string.Equals(u.FullName, CurrentUserName, StringComparison.OrdinalIgnoreCase));
+
+                if (currentUser == null)
+                {
+                    currentUser = users.FirstOrDefault() ?? new User { Name = "Personel", Team = "Takip", Title = "Developer" };
+                }
+
+                var recommendations = _aiRecommendationService.GetRecommendations(
+                    currentUser,
+                    AiDesiredWorkingDays,
+                    AiSelectedTargetYear,
+                    AiSelectedTargetMonth,
+                    users,
+                    leaves,
+                    shifts);
+
+                AiRecommendations = new ObservableCollection<LeaveRecommendationOption>(recommendations);
+                IsAiCardExpanded = true;
+                if (!HasAiRecommendations)
+                {
+                    StatusMessage = "🤖 Belirtilen ay için uygun izin önerisi bulunamadı.";
+                }
+                else
+                {
+                    StatusMessage = $"🤖 {AiRecommendations.Count} adet akıllı izin önerisi oluşturuldu!";
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Akıllı Öneri oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ExecuteApplyRecommendation(object? param)
+        {
+            if (param is LeaveRecommendationOption option)
+            {
+                StartDate = option.StartDate;
+                EndDate = option.EndDate;
+                IsHourly = false;
+                StatusMessage = $"🤖 Akıllı Asistan Önerisi Formda Seçildi: {option.FormattedRange}";
+            }
         }
 
         private void LoadData()
@@ -851,6 +1001,7 @@ namespace ZiraatProje.UI.ViewModels
             {
                 var allUsers = _services.GetAllUsers();
                 UsersList = new ObservableCollection<User>(allUsers);
+                AutoSelectCurrentUser();
                 var allLeaves = _services.GetAllLeaves();
                 LeavesList = new ObservableCollection<Leave>(allLeaves);
 

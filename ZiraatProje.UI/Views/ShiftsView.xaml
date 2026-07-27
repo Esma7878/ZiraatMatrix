@@ -44,9 +44,91 @@
         </Grid.RowDefinitions>
 
         <!-- View Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,15">
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
             <TextBlock Text="Nöbet Takvimi" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Burgundy}"/>
             <TextBlock Text="Ana yaygınlaştırma dönemsel nöbetleri, özelleştirilmiş geçiş nöbetleri ve görsel nöbet takvimi" FontSize="13" Foreground="{StaticResource TextGray}" Margin="0,4,0,0"/>
+
+            <!-- 🤖 AI AKILLI NÖBET DAĞITIM ASİSTANI -->
+            <Border Background="#f8fafc" BorderBrush="#7c3aed" BorderThickness="1.5" CornerRadius="10" Padding="14" Margin="0,10,0,5">
+                <StackPanel>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="🤖" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="AI Akıllı Nöbet Dağıtım &amp; Atama Asistanı" FontWeight="Bold" FontSize="13" Foreground="#1e293b" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Command="{Binding ToggleAiShiftCardCommand}" Padding="8,3" FontSize="11">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+                                    <Setter Property="Content" Value="✨ Nöbet Önerisi Al"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsAiShiftCardExpanded}" Value="True">
+                                            <Setter Property="Content" Value="▲ Gizle"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+
+                    <StackPanel Visibility="{Binding IsAiShiftCardExpanded, Converter={StaticResource BoolToVisConverter}}">
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,10" VerticalAlignment="Center">
+                            <TextBlock Text="Nöbet Tarihi:" FontSize="11" Foreground="#475569" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <DatePicker SelectedDate="{Binding AiShiftTargetDate}" Height="30" Width="120" Margin="0,0,12,0"/>
+
+                            <TextBlock Text="Ekip Filtresi:" FontSize="11" Foreground="#475569" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <ComboBox ItemsSource="{Binding AiShiftTeamFilterOptions}" SelectedItem="{Binding AiShiftSelectedTeam}" Height="30" Width="110" Margin="0,0,12,0"/>
+
+                            <Button Command="{Binding GetAIShiftRecommendationsCommand}" Content="⚡ Adil Nöbetçi Adaylarını Hesapla" Height="30" Padding="12,0" Background="#7c3aed" Foreground="White" FontWeight="Bold">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Name="Border" CornerRadius="6" Background="{TemplateBinding Background}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="#6d28d9"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Recommendations List -->
+                        <ItemsControl ItemsSource="{Binding AiShiftRecommendations}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="White" BorderBrush="#cbd5e1" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                    <TextBlock Text="{Binding CandidateUser.FullName}" FontWeight="Bold" FontSize="12" Foreground="#0f172a" Margin="0,0,8,0"/>
+                                                    <Border Background="#f1f5f9" BorderBrush="#cbd5e1" BorderThickness="1" CornerRadius="10" Padding="6,1" Margin="0,0,8,0">
+                                                        <TextBlock Text="{Binding TeamBadgeText}" FontSize="10" FontWeight="Bold" Foreground="#334155"/>
+                                                    </Border>
+                                                    <Border Background="#f0fdf4" BorderBrush="#bbf7d0" BorderThickness="1" CornerRadius="10" Padding="6,1">
+                                                        <TextBlock Text="{Binding BadgeText}" FontSize="10" FontWeight="Bold" Foreground="#15803d"/>
+                                                    </Border>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding RecommendationReason}" FontSize="10.5" Foreground="#475569"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding StatusBadge}" FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </StackPanel>
 
         <!-- Main Tabbed Layout -->
@@ -465,28 +547,6 @@
                                                                                 Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
                                                                                 CommandParameter="{Binding ExternalLink}"
                                                                                 Style="{StaticResource SmallLinkButton}"/>
-                                                                    </DataTemplate>
-                                                                </DataGridTemplateColumn.CellTemplate>
-                                                            </DataGridTemplateColumn>
-
-                                                            <!-- İşlem (Nöbeti Bitti) -->
-                                                            <DataGridTemplateColumn Header="İşlem" Width="95">
-                                                                <DataGridTemplateColumn.CellTemplate>
-                                                                    <DataTemplate>
-                                                                        <Button Content="✔️ Bitti" 
-                                                                                Command="{Binding DataContext.FinishMonthlyReleaseCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
-                                                                                CommandParameter="{Binding}"
-                                                                                Visibility="{Binding FinishShiftVisibility}"
-                                                                                PreviewMouseDown="FinishButton_PreviewMouseDown"
-                                                                                Background="#10b981" Foreground="White" FontWeight="Bold" FontSize="11" Height="26" Width="78" Cursor="Hand">
-                                                                            <Button.Template>
-                                                                                <ControlTemplate TargetType="Button">
-                                                                                    <Border Background="{TemplateBinding Background}" CornerRadius="5">
-                                                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                                                    </Border>
-                                                                                </ControlTemplate>
-                                                                            </Button.Template>
-                                                                        </Button>
                                                                     </DataTemplate>
                                                                 </DataGridTemplateColumn.CellTemplate>
                                                             </DataGridTemplateColumn>

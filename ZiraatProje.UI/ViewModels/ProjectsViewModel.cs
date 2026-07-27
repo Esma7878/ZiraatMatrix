@@ -559,6 +559,52 @@ namespace ZiraatProje.UI.ViewModels
         public string FormTitleText => SelectedProject == null ? "🆕 Yeni Proje Talebi Oluştur" : "✏️ Proje Talebini Güncelle";
         public string SaveButtonText => SelectedProject == null ? "Proje Talebini Kaydet" : "Değişiklikleri Güncelle";
 
+        // ── AI Geliştirici / Efor Öneri Asistanı Properties ───────────────
+        private ObservableCollection<ProjectAllocationRecommendation> _aiProjectAllocations = new ObservableCollection<ProjectAllocationRecommendation>();
+        public ObservableCollection<ProjectAllocationRecommendation> AiProjectAllocations
+        {
+            get => _aiProjectAllocations;
+            set
+            {
+                _aiProjectAllocations = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasAiProjectAllocations));
+            }
+        }
+
+        public bool HasAiProjectAllocations => AiProjectAllocations != null && AiProjectAllocations.Count > 0;
+
+        private bool _isAiProjectCardExpanded = false;
+        public bool IsAiProjectCardExpanded
+        {
+            get => _isAiProjectCardExpanded;
+            set { _isAiProjectCardExpanded = value; OnPropertyChanged(); }
+        }
+
+        public ICommand GetAIProjectAllocationsCommand { get; set; }
+        public ICommand ToggleAiProjectCardCommand { get; set; }
+
+        private void ExecuteGetAIProjectAllocations(object? param)
+        {
+            try
+            {
+                var users = _services.GetAllUsers();
+                var projects = _services.GetAllProjects();
+
+                var recommendations = ZiraatMatrixAiEngine.Instance.Projects.GetDeveloperAllocationRecommendations(
+                    string.Empty,
+                    users,
+                    projects);
+
+                AiProjectAllocations = new ObservableCollection<ProjectAllocationRecommendation>(recommendations.Take(5));
+                IsAiProjectCardExpanded = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Akıllı Geliştirici Önerisi oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         // Commands
         public ICommand SaveProjectCommand { get; }
         public ICommand DeleteProjectCommand { get; }
@@ -590,6 +636,9 @@ namespace ZiraatProje.UI.ViewModels
                     if (string.IsNullOrWhiteSpace(LoggedTeam)) LoggedTeam = userObj.Team ?? string.Empty;
                 }
             }
+
+            GetAIProjectAllocationsCommand = new RelayCommand(ExecuteGetAIProjectAllocations);
+            ToggleAiProjectCardCommand = new RelayCommand(_ => { IsAiProjectCardExpanded = !IsAiProjectCardExpanded; });
 
             SaveProjectCommand = new RelayCommand(ExecuteSaveProject);
             DeleteProjectCommand = new RelayCommand(ExecuteDeleteProject, _ => SelectedProject != null);

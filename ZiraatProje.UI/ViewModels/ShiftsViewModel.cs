@@ -92,7 +92,20 @@ namespace ZiraatProje.UI.ViewModels
         public ObservableCollection<TeamAssignmentCompartment> TeamCompartments { get; set; } = new ObservableCollection<TeamAssignmentCompartment>();
         public bool IsFinished { get; set; }
         public bool IsReleaseDatePassed => ReleaseDate.Date <= DateTime.Today;
-        public Visibility FinishShiftVisibility => (ReleaseDate.Date <= DateTime.Today && !IsFinished) ? Visibility.Visible : Visibility.Collapsed;
+
+        public bool IsWeekly => !string.IsNullOrWhiteSpace(MonthName) && MonthName.StartsWith("Haftalık", StringComparison.OrdinalIgnoreCase);
+
+        public Visibility FinishShiftVisibility
+        {
+            get
+            {
+                // Haftalık nöbetlerde manuel "✓ Bitti" butonu yazmasın/görünmesin! Pazar gece 24.00 sonrasında otomatik geçmişe geçer.
+                if (IsWeekly) return Visibility.Collapsed;
+
+                // Aylık yaygınlaştırma ve özel nöbetlerde tarih gelip geçince manuel "✓ Bitti" butonu aktif olur.
+                return (ReleaseDate.Date <= DateTime.Today && !IsFinished) ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
 
         public string DisplayWeekLabel
         {
@@ -1613,7 +1626,75 @@ namespace ZiraatProje.UI.ViewModels
                 }
             });
 
+            GetAIShiftRecommendationsCommand = new RelayCommand(ExecuteGetAIShiftRecommendations);
+            ToggleAiShiftCardCommand = new RelayCommand(_ => { IsAiShiftCardExpanded = !IsAiShiftCardExpanded; });
+
             LoadData();
+        }
+
+        // ── AI Akıllı Nöbet Asistanı Properties & Methods ─────────────────
+        private DateTime _aiShiftTargetDate = DateTime.Today.AddDays(1);
+        public DateTime AiShiftTargetDate
+        {
+            get => _aiShiftTargetDate;
+            set { _aiShiftTargetDate = value; OnPropertyChanged(); }
+        }
+
+        private ObservableCollection<ShiftRecommendationOption> _aiShiftRecommendations = new ObservableCollection<ShiftRecommendationOption>();
+        public ObservableCollection<ShiftRecommendationOption> AiShiftRecommendations
+        {
+            get => _aiShiftRecommendations;
+            set
+            {
+                _aiShiftRecommendations = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasAiShiftRecommendations));
+            }
+        }
+
+        public bool HasAiShiftRecommendations => AiShiftRecommendations != null && AiShiftRecommendations.Count > 0;
+
+        private bool _isAiShiftCardExpanded = false;
+        public bool IsAiShiftCardExpanded
+        {
+            get => _isAiShiftCardExpanded;
+            set { _isAiShiftCardExpanded = value; OnPropertyChanged(); }
+        }
+
+        public ICommand GetAIShiftRecommendationsCommand { get; set; }
+        public ICommand ToggleAiShiftCardCommand { get; set; }
+
+        private string _aiShiftSelectedTeam = "Tüm Ekipler";
+        public string AiShiftSelectedTeam
+        {
+            get => _aiShiftSelectedTeam;
+            set { _aiShiftSelectedTeam = value; OnPropertyChanged(); }
+        }
+
+        public List<string> AiShiftTeamFilterOptions { get; } = new List<string> { "Tüm Ekipler", "Takip", "Tahsis", "Teminat" };
+
+        private void ExecuteGetAIShiftRecommendations(object? param)
+        {
+            try
+            {
+                var users = _services.GetAllUsers();
+                var shifts = _services.GetAllShifts();
+                var leaves = _services.GetAllLeaves();
+
+                var recommendations = ZiraatMatrixAiEngine.Instance.Shifts.GetShiftRecommendationsForDate(
+                    AiShiftTargetDate,
+                    AiShiftSelectedTeam,
+                    users,
+                    shifts,
+                    leaves);
+
+                AiShiftRecommendations = new ObservableCollection<ShiftRecommendationOption>(recommendations.Take(3));
+                IsAiShiftCardExpanded = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Akıllı Nöbet Önerisi oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void LoadData()
@@ -1666,6 +1747,17 @@ namespace ZiraatProje.UI.ViewModels
 
                 foreach (var ms in allReleases)
                 {
+                    // Haftalık nöbetlerde (Pzt-Paz): Pazar gece 24.00 (Pazartesi 00:00) geçilince otomatik geçmişe geçer!
+                    bool isWeeklyShift = !string.IsNullOrWhiteSpace(ms.MonthName) && ms.MonthName.StartsWith("Haftalık", StringComparison.OrdinalIgnoreCase);
+                    DateTime weekSunday = ms.ReleaseDate.Date.AddDays(6);
+                    bool isWeeklyAutoFinished = isWeeklyShift && (DateTime.Today > weekSunday);
+
+                    if (isWeeklyAutoFinished && !ms.IsFinished)
+                    {
+                        ms.IsFinished = true;
+                        _services.UpdateMonthlyReleaseShift(ms);
+                    }
+
                     var item = new DisplayMonthlyReleaseShift
                     {
                         Id = ms.Id,
@@ -1850,12 +1942,35 @@ namespace ZiraatProje.UI.ViewModels
                         // Use week index from year start for consistent rotation across weeks
                         int weekIndex = weekNo - 1 + (weekMonday.Year - 2026) * 52;
 
-                        var analystName = analysts.Count > 0
-                            ? analysts[((weekIndex % analysts.Count) + analysts.Count) % analysts.Count].FullName
-                            : "—";
-                        var devName = developers.Count > 0
-                            ? developers[((weekIndex % developers.Count) + developers.Count) % developers.Count].FullName
-                            : "—";
+                        // Filter out employees on leave during this week
+                        var activeLeaves = _services.GetAllLeaves().Where(l => l.Status != "Rejected" && l.Status != "Reddedildi").ToList();
+                        Func<User, bool> isOnLeaveInWeek = u => activeLeaves.Any(l => (l.UserId == u.Id || (l.User != null && string.Equals(l.User.FullName, u.FullName, StringComparison.OrdinalIgnoreCase))) && l.StartDate.Date <= weekSunday.Date && l.EndDate.Date >= weekMonday.Date);
+
+                        var availableAnalysts = analysts.Where(u => !isOnLeaveInWeek(u)).ToList();
+                        if (!availableAnalysts.Any()) availableAnalysts = analysts;
+
+                        var availableDevs = developers.Where(u => !isOnLeaveInWeek(u)).ToList();
+                        if (!availableDevs.Any()) availableDevs = developers;
+
+                        var selectedAnalystUser = availableAnalysts.Count > 0
+                            ? availableAnalysts[((weekIndex % availableAnalysts.Count) + availableAnalysts.Count) % availableAnalysts.Count]
+                            : null;
+
+                        var selectedDevUser = availableDevs.Count > 0
+                            ? availableDevs[((weekIndex % availableDevs.Count) + availableDevs.Count) % availableDevs.Count]
+                            : null;
+
+                        string analystName = selectedAnalystUser?.FullName ?? "—";
+                        if (selectedAnalystUser != null && isOnLeaveInWeek(selectedAnalystUser))
+                        {
+                            analystName += " ⚠️ (İzinli)";
+                        }
+
+                        string devName = selectedDevUser?.FullName ?? "—";
+                        if (selectedDevUser != null && isOnLeaveInWeek(selectedDevUser))
+                        {
+                            devName += " ⚠️ (İzinli)";
+                        }
 
                         card.Weeks.Add(new WeeklyRotationWeekEntry
                         {
@@ -1944,6 +2059,29 @@ namespace ZiraatProje.UI.ViewModels
                                 UpdatedByUserName = w.UpdatedByUserName,
                                 UpdatedAt = w.UpdatedAt,
                                 TeamCompartments = w.TeamCompartments
+                            });
+                        }
+                    }
+
+                    // 2b. Team Weekly Duty Shifts
+                    foreach (var tw in TeamWeeklyDutyList)
+                    {
+                        if (tw.ReleaseDate.Date == currentDate.Date)
+                        {
+                            dayItem.Items.Add(new ShiftCalendarItem
+                            {
+                                Id = tw.Id,
+                                Category = "Haftalık",
+                                Title = tw.MonthName,
+                                Date = tw.ReleaseDate,
+                                RawAssignedUsers = tw.RawAssignedUsers,
+                                JiraTicketNo = tw.JiraTicketNo,
+                                ExternalLink = tw.ExternalLink,
+                                CreatedByUserName = tw.CreatedByUserName,
+                                CreatedAt = tw.CreatedAt,
+                                UpdatedByUserName = tw.UpdatedByUserName,
+                                UpdatedAt = tw.UpdatedAt,
+                                TeamCompartments = tw.TeamCompartments
                             });
                         }
                     }
@@ -2314,6 +2452,7 @@ namespace ZiraatProje.UI.ViewModels
                     };
                     _services.AddMonthlyReleaseShift(item);
                     StatusMessage = "Yaygınlaştırma nöbeti eklendi.";
+                    MessageBox.Show("✅ Nöbet kaydı başarıyla eklendi ve takvime yansıtıldı!", "Nöbet Eklendi", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
@@ -2422,6 +2561,7 @@ namespace ZiraatProje.UI.ViewModels
                         };
                         _services.AddCustomShift(item);
                         StatusMessage = "Nöbet kaydı başarıyla Diğer Nöbet Listesine eklendi.";
+                        MessageBox.Show("✅ Nöbet kaydı başarıyla eklendi ve takvime yansıtıldı!", "Nöbet Eklendi", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
@@ -2508,6 +2648,11 @@ namespace ZiraatProje.UI.ViewModels
                 foreach (var row in BulkWeeklyShiftRows)
                 {
                     if (!row.IsSelected || row.SelectedAnalyst == null || row.SelectedDeveloper == null) continue;
+
+                    if (CheckUserLeaveConflict(row.SelectedAnalyst, row.WeekStart, row.WeekEnd) || CheckUserLeaveConflict(row.SelectedDeveloper, row.WeekStart, row.WeekEnd))
+                    {
+                        continue;
+                    }
 
                     string monthName = $"Haftalık: Hafta {row.WeekNumber} ({row.WeekStart:dd.MM} - {row.WeekEnd:dd.MM.yyyy})";
                     string assignedUsers = $"{row.SelectedAnalyst.FullName}, {row.SelectedDeveloper.FullName}";
@@ -2596,6 +2741,7 @@ namespace ZiraatProje.UI.ViewModels
                     _services.AddMonthlyReleaseShift(item);
                     targetId = item.Id;
                     StatusMessage = "Haftalık nöbet kaydı başarıyla eklendi.";
+                    MessageBox.Show("✅ Nöbet kaydı başarıyla eklendi ve takvime yansıtıldı!", "Nöbet Eklendi", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {

@@ -57,52 +57,129 @@
                 </Grid.RowDefinitions>
 
                 <!-- View Header & Top Action Bar -->
-                <Grid Grid.Row="0" Margin="0,0,0,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                <StackPanel Grid.Row="0" Margin="0,0,0,12">
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock Text="Proje Yönetimi &amp; Çeyreklik Talep Planlaması" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Burgundy}"/>
-                        <TextBlock Text="Çeyrek bazında projeleri listeleyin, tıklayarak ay ve kişi bazlı detaylı adam/gün dağılımını inceleyin" FontSize="13" Foreground="#718096" Margin="0,4,0,0"/>
-                    </StackPanel>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Proje Yönetimi &amp; Çeyreklik Talep Planlaması" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Burgundy}"/>
+                            <TextBlock Text="Çeyrek bazında projeleri listeleyin, tıklayarak ay ve kişi bazlı detaylı adam/gün dağılımını inceleyin" FontSize="13" Foreground="#718096" Margin="0,4,0,0"/>
+                        </StackPanel>
 
-                    <!-- Top Right Action Controls: Search Box & New Request Button -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Compact Search Box -->
-                        <Border Background="White" BorderBrush="#cbd5e1" BorderThickness="1.5" CornerRadius="6" Width="210" Height="36" Padding="8,0" Margin="0,0,12,0">
-                            <Grid VerticalAlignment="Center">
+                        <!-- Top Right Action Controls: Search Box & New Request Button -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                            <!-- Compact Search Box -->
+                            <Border Background="White" BorderBrush="#cbd5e1" BorderThickness="1.5" CornerRadius="6" Width="220" Height="36" Padding="8,0" Margin="0,0,12,0">
+                                <Grid VerticalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0" Text="🔍" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="#64748b"/>
+
+                                    <TextBox Grid.Column="1" 
+                                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                                             BorderThickness="0" Background="Transparent" 
+                                             VerticalAlignment="Center" FontSize="11.5" Foreground="#1e293b"
+                                             ToolTip="Pergel No veya Proje Adı yazarak filtreleyin"/>
+
+                                    <Button Grid.Column="2" Content="✕" 
+                                            Command="{Binding ClearSearchCommand}" 
+                                            Visibility="{Binding SearchText, Converter={StaticResource BoolToVisConverter}}" 
+                                            Background="Transparent" BorderThickness="0" 
+                                            Foreground="#94a3b8" FontWeight="Bold" FontSize="11" 
+                                            Padding="4,0" VerticalAlignment="Center" Cursor="Hand"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Main Top Button: New Request Dialog Trigger (Visible only for Admin & Analysts) -->
+                            <Button Content="➕ Yeni Talep Oluştur" 
+                                    Command="{Binding OpenCreateFormCommand}" 
+                                    Visibility="{Binding CreateProjectButtonVisibility}" 
+                                    Height="36" Padding="16,0" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 🤖 AI AKILLI GELİŞTİRİCİ & EFOR ÖNERİ ASİSTANI -->
+                    <Border Background="#f8fafc" BorderBrush="#7c3aed" BorderThickness="1.5" CornerRadius="10" Padding="12,10">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,4">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-
-                                <TextBlock Grid.Column="0" Text="🔍" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="#64748b"/>
-
-                                <TextBox Grid.Column="1" 
-                                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                                         BorderThickness="0" Background="Transparent" 
-                                         VerticalAlignment="Center" FontSize="11.5" Foreground="#1e293b"
-                                         ToolTip="Pergel No veya Proje Adı yazarak filtreleyin"/>
-
-                                <Button Grid.Column="2" Content="✕" 
-                                        Command="{Binding ClearSearchCommand}" 
-                                        Visibility="{Binding SearchText, Converter={StaticResource BoolToVisConverter}}" 
-                                        Background="Transparent" BorderThickness="0" 
-                                        Foreground="#94a3b8" FontWeight="Bold" FontSize="11" 
-                                        Padding="4,0" VerticalAlignment="Center" Cursor="Hand"/>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="🤖" FontSize="15" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="AI Akıllı Geliştirici Atama &amp; Efor Öneri Asistanı" FontWeight="Bold" FontSize="12.5" Foreground="#1e293b" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Command="{Binding ToggleAiProjectCardCommand}" Padding="8,3" FontSize="11">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+                                            <Setter Property="Content" Value="✨ En Boşta Geliştiricileri Öner"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsAiProjectCardExpanded}" Value="True">
+                                                    <Setter Property="Content" Value="▲ Gizle"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
                             </Grid>
-                        </Border>
 
-                        <!-- Main Top Button: New Request Dialog Trigger (Visible only for Admin & Analysts) -->
-                        <Button Content="➕ Yeni Talep Oluştur" 
-                                Command="{Binding OpenCreateFormCommand}" 
-                                Visibility="{Binding CreateProjectButtonVisibility}" 
-                                Height="36" Padding="16,0" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Grid>
+                            <StackPanel Visibility="{Binding IsAiProjectCardExpanded, Converter={StaticResource BoolToVisConverter}}">
+                                <Button Command="{Binding GetAIProjectAllocationsCommand}" Content="⚡ Geliştirici Doluluk &amp; Efor Analizi Yap" Height="30" Margin="0,6,0,10" Background="#7c3aed" Foreground="White" FontWeight="Bold">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Name="Border" CornerRadius="6" Background="{TemplateBinding Background}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Border" Property="Background" Value="#6d28d9"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <!-- Recommendations List -->
+                                <ItemsControl ItemsSource="{Binding AiProjectAllocations}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="White" BorderBrush="#cbd5e1" BorderThickness="1" CornerRadius="8" Padding="8,6" Margin="0,0,0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                                            <TextBlock Text="{Binding CandidateUser.FullName}" FontWeight="Bold" FontSize="11.5" Foreground="#0f172a" Margin="0,0,8,0"/>
+                                                            <TextBlock Text="{Binding CandidateUser.Title}" FontSize="10.5" Foreground="#64748b" Margin="0,0,6,0"/>
+                                                            <Border Background="#f1f5f9" BorderBrush="#cbd5e1" BorderThickness="1" CornerRadius="10" Padding="6,1" Margin="0,0,8,0">
+                                                                <TextBlock Text="{Binding TeamBadgeText}" FontSize="9.5" FontWeight="Bold" Foreground="#334155"/>
+                                                            </Border>
+                                                            <Border Background="#eff6ff" BorderBrush="#bfdbfe" BorderThickness="1" CornerRadius="10" Padding="6,1">
+                                                                <TextBlock Text="{Binding WorkloadBadge}" FontSize="9.5" FontWeight="Bold" Foreground="#1d4ed8"/>
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding RecommendationReason}" FontSize="10" Foreground="#475569"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="1" Text="{Binding StatusBadge}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
 
                 <!-- Quarter Selection Bar -->
                 <Border Grid.Row="1" Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,15">

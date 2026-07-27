@@ -247,6 +247,20 @@ namespace ZiraatProje.UI.ViewModels
             set { _upcomingReleaseList = value; OnPropertyChanged(); }
         }
 
+        private ExecutiveDigestReport? _aiExecutiveReport;
+        public ExecutiveDigestReport? AiExecutiveReport
+        {
+            get => _aiExecutiveReport;
+            set
+            {
+                _aiExecutiveReport = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasAiExecutiveReport));
+            }
+        }
+
+        public bool HasAiExecutiveReport => AiExecutiveReport != null;
+
         private ObservableCollection<TeamSummaryItem> _teamSummaryList = new ObservableCollection<TeamSummaryItem>();
         public ObservableCollection<TeamSummaryItem> TeamSummaryList
         {
@@ -698,6 +712,9 @@ namespace ZiraatProje.UI.ViewModels
                         }
                     }
                 }
+
+                // Generate AI Executive Digest & Risk Summary
+                AiExecutiveReport = ZiraatMatrixAiEngine.Instance.Digest.GenerateDailyDigest(allUsers, leaves, shifts, allProjects, monthlyReleases, customShifts);
             }
             catch (Exception)
             {

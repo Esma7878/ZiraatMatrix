@@ -216,7 +216,47 @@ namespace ZiraatProje.UI.ViewModels
         public ICommand SelectUserToChatCommand { get; }
         public ICommand SwitchToDirectTabCommand { get; }
         public ICommand SwitchToGroupTabCommand { get; }
-        public ICommand CreateGroupCommand { get; }
+        // ── AI Chat Kanal Özetleme Properties & Methods ───────────────────
+        private ChatChannelSummary? _aiChannelSummary;
+        public ChatChannelSummary? AiChannelSummary
+        {
+            get => _aiChannelSummary;
+            set
+            {
+                _aiChannelSummary = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasAiChannelSummary));
+            }
+        }
+
+        public bool HasAiChannelSummary => AiChannelSummary != null;
+
+        private bool _isAiChatCardExpanded = false;
+        public bool IsAiChatCardExpanded
+        {
+            get => _isAiChatCardExpanded;
+            set { _isAiChatCardExpanded = value; OnPropertyChanged(); }
+        }
+
+        public ICommand SummarizeChannelCommand { get; }
+        public ICommand ToggleAiChatCardCommand { get; }
+
+        private void ExecuteSummarizeChannel(object? param)
+        {
+            try
+            {
+                if (SelectedChannel == null) return;
+
+                var rawDbMessages = _services.GetChatMessagesForChannel(CurrentUserId, SelectedChannel.TargetType, SelectedChannel.TargetUserId, SelectedChannel.TargetTeam);
+
+                AiChannelSummary = ZiraatMatrixAiEngine.Instance.Chat.SummarizeChannel(SelectedChannel.Title, rawDbMessages);
+                IsAiChatCardExpanded = true;
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Kanal Özetlenirken hata: {ex.Message}", "Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
 
         public ChatViewModel(int currentUserId, string currentUserName, string userTeam, bool isAdmin)
         {
@@ -237,7 +277,8 @@ namespace ZiraatProje.UI.ViewModels
             SelectUserToChatCommand = new RelayCommand(param => { if (param is UserSelectableChatItem u) StartChatWithUser(u.User); });
             SwitchToDirectTabCommand = new RelayCommand(_ => IsGroupCreationTab = false);
             SwitchToGroupTabCommand = new RelayCommand(_ => IsGroupCreationTab = true);
-            CreateGroupCommand = new RelayCommand(_ => ExecuteCreateGroup());
+            SummarizeChannelCommand = new RelayCommand(ExecuteSummarizeChannel);
+            ToggleAiChatCardCommand = new RelayCommand(_ => { IsAiChatCardExpanded = !IsAiChatCardExpanded; });
 
             BuildChannelList();
 

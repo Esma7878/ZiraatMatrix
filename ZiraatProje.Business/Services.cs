@@ -41,6 +41,11 @@ namespace ZiraatProje.Business
             if (context.Teams.Any(t => t.TeamName.ToLower().Trim() == team.TeamName.ToLower().Trim()))
                 throw new ValidationException("Bu isimde bir ekip zaten mevcut.");
 
+            if (string.IsNullOrWhiteSpace(team.Color))
+            {
+                team.Color = TeamColorHelper.GetDefaultColorForTeam(team.TeamName);
+            }
+
             context.Teams.Add(team);
             context.SaveChanges();
         }

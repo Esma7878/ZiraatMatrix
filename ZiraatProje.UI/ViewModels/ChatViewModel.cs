@@ -301,27 +301,37 @@ namespace ZiraatProje.UI.ViewModels
             // 2. Team Channels
             if (!string.IsNullOrWhiteSpace(UserTeam))
             {
-                if (UserTeam.Equals("Departman Yönetimi", StringComparison.OrdinalIgnoreCase))
+                var allDbTeams = _services.GetAllTeams();
+
+                if (UserTeam.Equals("Departman Yönetimi", StringComparison.OrdinalIgnoreCase) || UserTeam.Equals("Yönetim", StringComparison.OrdinalIgnoreCase))
                 {
-                    Channels.Add(new ChatChannelItem { Title = "📌 Takip Ekibi Kanalı", Subtitle = "Takip ekibi özel dahili yazışma odası", Icon = "🟪", TargetType = "Team", TargetTeam = "Takip", BadgeColor = "#10b981" });
-                    Channels.Add(new ChatChannelItem { Title = "📌 Tahsis Ekibi Kanalı", Subtitle = "Tahsis ekibi özel dahili yazışma odası", Icon = "🟩", TargetType = "Team", TargetTeam = "Tahsis", BadgeColor = "#10b981" });
-                    Channels.Add(new ChatChannelItem { Title = "📌 Teminat Ekibi Kanalı", Subtitle = "Teminat ekibi özel dahili yazışma odası", Icon = "🟦", TargetType = "Team", TargetTeam = "Teminat", BadgeColor = "#10b981" });
+                    foreach (var t in allDbTeams)
+                    {
+                        if (t.TeamName.Equals("Departman Yönetimi", StringComparison.OrdinalIgnoreCase)) continue;
+                        Channels.Add(new ChatChannelItem
+                        {
+                            Title = $"📌 {t.TeamName} Ekibi Kanalı",
+                            Subtitle = $"{t.TeamName} ekibi özel dahili yazışma odası",
+                            Icon = "📌",
+                            TargetType = "Team",
+                            TargetTeam = t.TeamName,
+                            BadgeColor = !string.IsNullOrWhiteSpace(t.Color) ? t.Color : "#7c3aed"
+                        });
+                    }
                 }
                 else
                 {
-                    string icon = UserTeam switch {
-                        var t when t.Equals("Takip", StringComparison.OrdinalIgnoreCase) => "🟪",
-                        var t when t.Equals("Tahsis", StringComparison.OrdinalIgnoreCase) => "🟩",
-                        var t when t.Equals("Teminat", StringComparison.OrdinalIgnoreCase) => "🟦",
-                        _ => "📌"
-                    };
-                    string targetTeamName = UserTeam switch {
-                        var t when t.Equals("Takip", StringComparison.OrdinalIgnoreCase) => "Takip",
-                        var t when t.Equals("Tahsis", StringComparison.OrdinalIgnoreCase) => "Tahsis",
-                        var t when t.Equals("Teminat", StringComparison.OrdinalIgnoreCase) => "Teminat",
-                        _ => UserTeam
-                    };
-                    Channels.Add(new ChatChannelItem { Title = $"📌 {targetTeamName} Ekibi Kanalı", Subtitle = $"{targetTeamName} ekibi özel dahili yazışma odası", Icon = icon, TargetType = "Team", TargetTeam = targetTeamName, BadgeColor = "#10b981" });
+                    var userTeamObj = allDbTeams.FirstOrDefault(t => t.TeamName.Equals(UserTeam, StringComparison.OrdinalIgnoreCase));
+                    string badgeCol = userTeamObj?.Color ?? "#7c3aed";
+                    Channels.Add(new ChatChannelItem
+                    {
+                        Title = $"📌 {UserTeam} Ekibi Kanalı",
+                        Subtitle = $"{UserTeam} ekibi özel dahili yazışma odası",
+                        Icon = "📌",
+                        TargetType = "Team",
+                        TargetTeam = UserTeam,
+                        BadgeColor = badgeCol
+                    });
                 }
             }
 

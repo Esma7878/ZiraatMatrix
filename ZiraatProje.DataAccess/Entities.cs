@@ -8,6 +8,7 @@ namespace ZiraatProje.DataAccess
     {
         public int Id { get; set; }
         public string TeamName { get; set; } = string.Empty;
+        public string Color { get; set; } = "#7c3aed";
     }
 
     public class User

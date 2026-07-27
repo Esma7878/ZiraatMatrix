@@ -244,6 +244,20 @@ namespace ZiraatProje.DataAccess
                 context.Database.ExecuteSqlRaw("UPDATE Projects SET AssignedAnalystNames = ISNULL(AssignedAnalystNames, '')");
                 context.Database.ExecuteSqlRaw("UPDATE Projects SET AssignedDeveloperNames = ISNULL(AssignedDeveloperNames, '')");
                 context.Database.ExecuteSqlRaw("UPDATE Projects SET AssignedUserIds = ISNULL(AssignedUserIds, '')");
+
+                context.Database.ExecuteSqlRaw(@"
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'Teams') AND name = 'Color')
+                    BEGIN
+                        ALTER TABLE Teams ADD Color NVARCHAR(50) NULL;
+                    END
+                ");
+
+                context.Database.ExecuteSqlRaw(@"
+                    UPDATE Teams SET Color = '#7c3aed' WHERE (Color IS NULL OR Color = '') AND LOWER(TeamName) = 'takip';
+                    UPDATE Teams SET Color = '#059669' WHERE (Color IS NULL OR Color = '') AND LOWER(TeamName) = 'tahsis';
+                    UPDATE Teams SET Color = '#2563eb' WHERE (Color IS NULL OR Color = '') AND LOWER(TeamName) = 'teminat';
+                    UPDATE Teams SET Color = '#7c3aed' WHERE Color IS NULL OR Color = '';
+                ");
             }
             catch { }
 
@@ -291,9 +305,9 @@ namespace ZiraatProje.DataAccess
             // 1. Seed Teams
             var teams = new Team[]
             {
-                new Team { TeamName = "Takip" },
-                new Team { TeamName = "Tahsis" },
-                new Team { TeamName = "Teminat" }
+                new Team { TeamName = "Takip", Color = "#7c3aed" },
+                new Team { TeamName = "Tahsis", Color = "#059669" },
+                new Team { TeamName = "Teminat", Color = "#2563eb" }
             };
             context.Teams.AddRange(teams);
             context.SaveChanges();

@@ -41,101 +41,37 @@ namespace ZiraatProje.UI.ViewModels
     public class TeamUserGroup
     {
         public string TeamName { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
         public ObservableCollection<SelectableUserItem> Users { get; set; } = new ObservableCollection<SelectableUserItem>();
 
-        public string HeaderColor => TeamName switch
-        {
-            "Takip" => "#7c3aed",
-            "Tahsis" => "#059669",
-            "Teminat" => "#2563eb",
-            _ => "#bc171d"
-        };
-
-        public string BgColor => TeamName switch
-        {
-            "Takip" => "#f5f3ff",
-            "Tahsis" => "#ecfdf5",
-            "Teminat" => "#eff6ff",
-            _ => "#f8fafc"
-        };
-
-        public string BorderColor => TeamName switch
-        {
-            "Takip" => "#ddd6fe",
-            "Tahsis" => "#a7f3d0",
-            "Teminat" => "#bfdbfe",
-            _ => "#cbd5e0"
-        };
+        public string HeaderColor => TeamColorHelper.GetHeaderColor(Color, TeamName);
+        public string BgColor => TeamColorHelper.GetBgColor(Color, TeamName);
+        public string BorderColor => TeamColorHelper.GetBorderColor(Color, TeamName);
     }
 
     public class ShiftDetailTeamGroup
     {
         public string TeamName { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
         public List<User> UserList { get; set; } = new List<User>();
         public bool HasUsers => UserList != null && UserList.Count > 0;
 
-        public string HeaderColor => TeamName switch
-        {
-            "Takip" => "#5b21b6",
-            "Tahsis" => "#065f46",
-            "Teminat" => "#1e40af",
-            _ => "#bc171d"
-        };
-
-        public string BgColor => TeamName switch
-        {
-            "Takip" => "#f5f3ff",
-            "Tahsis" => "#ecfdf5",
-            "Teminat" => "#eff6ff",
-            _ => "#f8fafc"
-        };
-
-        public string BorderColor => TeamName switch
-        {
-            "Takip" => "#ddd6fe",
-            "Tahsis" => "#a7f3d0",
-            "Teminat" => "#bfdbfe",
-            _ => "#cbd5e0"
-        };
+        public string HeaderColor => TeamColorHelper.GetTextColor(Color, TeamName);
+        public string BgColor => TeamColorHelper.GetBgColor(Color, TeamName);
+        public string BorderColor => TeamColorHelper.GetBorderColor(Color, TeamName);
     }
 
     public class TeamAssignmentCompartment
     {
         public string TeamName { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
         public string UserNames { get; set; } = string.Empty;
         public bool HasUsers => !string.IsNullOrWhiteSpace(UserNames);
 
-        public string HeaderColor => TeamName switch
-        {
-            "Takip" => "#7c3aed",
-            "Tahsis" => "#059669",
-            "Teminat" => "#2563eb",
-            _ => "#2d3748"
-        };
-
-        public string BgColor => TeamName switch
-        {
-            "Takip" => "#f5f3ff",
-            "Tahsis" => "#ecfdf5",
-            "Teminat" => "#eff6ff",
-            _ => "#f8fafc"
-        };
-
-        public string BorderColor => TeamName switch
-        {
-            "Takip" => "#ddd6fe",
-            "Tahsis" => "#a7f3d0",
-            "Teminat" => "#bfdbfe",
-            _ => "#cbd5e0"
-        };
-
-        public string TextColor => TeamName switch
-        {
-            "Takip" => "#5b21b6",
-            "Tahsis" => "#065f46",
-            "Teminat" => "#1e40af",
-            _ => "#4a5568"
-        };
+        public string HeaderColor => TeamColorHelper.GetHeaderColor(Color, TeamName);
+        public string BgColor => TeamColorHelper.GetBgColor(Color, TeamName);
+        public string BorderColor => TeamColorHelper.GetBorderColor(Color, TeamName);
+        public string TextColor => TeamColorHelper.GetTextColor(Color, TeamName);
     }
 
     public class DisplayMonthlyReleaseShift
@@ -223,29 +159,12 @@ namespace ZiraatProje.UI.ViewModels
     public class WeeklyRotationTeamCard
     {
         public string TeamName { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
         public ObservableCollection<WeeklyRotationWeekEntry> Weeks { get; set; } = new();
 
-        public string HeaderColor => TeamName switch
-        {
-            "Takip" => "#7c3aed",
-            "Tahsis" => "#059669",
-            "Teminat" => "#2563eb",
-            _ => "#374151"
-        };
-        public string HeaderBg => TeamName switch
-        {
-            "Takip" => "#f5f3ff",
-            "Tahsis" => "#ecfdf5",
-            "Teminat" => "#eff6ff",
-            _ => "#f9fafb"
-        };
-        public string BorderColor => TeamName switch
-        {
-            "Takip" => "#ddd6fe",
-            "Tahsis" => "#a7f3d0",
-            "Teminat" => "#bfdbfe",
-            _ => "#e5e7eb"
-        };
+        public string HeaderColor => TeamColorHelper.GetHeaderColor(Color, TeamName);
+        public string HeaderBg => TeamColorHelper.GetBgColor(Color, TeamName);
+        public string BorderColor => TeamColorHelper.GetBorderColor(Color, TeamName);
         public string Emoji => TeamName switch
         {
             "Takip" => "📋",
@@ -1876,7 +1795,10 @@ namespace ZiraatProje.UI.ViewModels
         {
             try
             {
-                var teamNames = new[] { "Takip", "Tahsis", "Teminat" };
+                var allTeamsList = _services.GetAllTeams();
+                var teamNames = allTeamsList.Select(t => t.TeamName).ToList();
+                if (teamNames.Count == 0) teamNames = new List<string> { "Takip", "Tahsis", "Teminat" };
+
                 var analystTitles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                     { "Analist", "Analyst", "Kıdemli Analist", "Senior Analist" };
                 var developerTitles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -1914,7 +1836,8 @@ namespace ZiraatProje.UI.ViewModels
                     else if (analysts.Count == 0) analysts = developers;
                     else if (developers.Count == 0) developers = analysts;
 
-                    var card = new WeeklyRotationTeamCard { TeamName = teamName };
+                    var tEnt = allTeamsList.FirstOrDefault(t => string.Equals(t.TeamName, teamName, StringComparison.OrdinalIgnoreCase));
+                    var card = new WeeklyRotationTeamCard { TeamName = teamName, Color = tEnt?.Color ?? string.Empty };
 
                     for (int w = 0; w < 8; w++)
                     {

@@ -14,7 +14,24 @@ namespace ZiraatProje.UI.ViewModels
     public class DirectoryTeamGroup
     {
         public string TeamName { get; set; } = string.Empty;
+        public string Color { get; set; } = "#7c3aed";
+        public string HeaderColor => TeamColorHelper.GetHeaderColor(Color, TeamName);
+        public string BgColor => TeamColorHelper.GetBgColor(Color, TeamName);
+        public string BorderColor => TeamColorHelper.GetBorderColor(Color, TeamName);
+        public string TextColor => TeamColorHelper.GetTextColor(Color, TeamName);
         public ObservableCollection<User> Members { get; set; } = new ObservableCollection<User>();
+    }
+
+    public class PresetColorOption : BaseViewModel
+    {
+        public string ColorHex { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set { _isSelected = value; OnPropertyChanged(); }
+        }
     }
 
     public class UsersViewModel : BaseViewModel
@@ -97,6 +114,82 @@ namespace ZiraatProje.UI.ViewModels
             set { _newTeamName = value; OnPropertyChanged(); }
         }
 
+        private string _newTeamColor = "#d97706";
+        public string NewTeamColor
+        {
+            get => _newTeamColor;
+            set
+            {
+                _newTeamColor = value;
+                OnPropertyChanged();
+                UpdatePresetColorsSelection();
+            }
+        }
+
+        private readonly List<PresetColorOption> _allCandidateColors = new List<PresetColorOption>
+        {
+            new PresetColorOption { ColorHex = "#d97706", Name = "Amber / Turuncu" },
+            new PresetColorOption { ColorHex = "#0891b2", Name = "Turkuaz" },
+            new PresetColorOption { ColorHex = "#db2777", Name = "Canlı Pembe" },
+            new PresetColorOption { ColorHex = "#0d9488", Name = "Teal / Camgöbeği" },
+            new PresetColorOption { ColorHex = "#475569", Name = "Füme / Slate" }
+        };
+
+        public ObservableCollection<PresetColorOption> PresetColors { get; } = new ObservableCollection<PresetColorOption>();
+
+        public void RefreshPresetColors()
+        {
+            var takenColors = TeamsList.Select(t => t.Color?.ToLower().Trim()).Where(c => !string.IsNullOrEmpty(c)).ToHashSet();
+            // Reserved system colors (Takip: Mor #7c3aed, Tahsis: Yeşil #059669, Teminat: Mavi #2563eb, Yönetim: Kırmızı #bc171d / #e11d48, Mor varyantları #8b5cf6 / #a855f7, Mavi/İndigo #4f46e5)
+            takenColors.Add("#7c3aed");
+            takenColors.Add("#059669");
+            takenColors.Add("#2563eb");
+            takenColors.Add("#bc171d");
+            takenColors.Add("#e11d48");
+            takenColors.Add("#e53e3e");
+            takenColors.Add("#8b5cf6");
+            takenColors.Add("#a855f7");
+            takenColors.Add("#4f46e5");
+
+            PresetColors.Clear();
+            foreach (var c in _allCandidateColors)
+            {
+                if (!takenColors.Contains(c.ColorHex.ToLower()))
+                {
+                    PresetColors.Add(new PresetColorOption
+                    {
+                        ColorHex = c.ColorHex,
+                        Name = c.Name,
+                        IsSelected = false
+                    });
+                }
+            }
+
+            if (PresetColors.Count > 0)
+            {
+                var match = PresetColors.FirstOrDefault(p => string.Equals(p.ColorHex, NewTeamColor, StringComparison.OrdinalIgnoreCase));
+                if (match != null)
+                {
+                    match.IsSelected = true;
+                }
+                else
+                {
+                    PresetColors[0].IsSelected = true;
+                    _newTeamColor = PresetColors[0].ColorHex;
+                    OnPropertyChanged(nameof(NewTeamColor));
+                }
+            }
+        }
+
+        private void UpdatePresetColorsSelection()
+        {
+            foreach (var p in PresetColors)
+            {
+                p.IsSelected = string.Equals(p.ColorHex, NewTeamColor, StringComparison.OrdinalIgnoreCase);
+            }
+            OnPropertyChanged(nameof(PresetColors));
+        }
+
         // Form Toggle States for Responsive Full-Width Grid
         private bool _isUserFormOpen;
         public bool IsUserFormOpen
@@ -175,11 +268,40 @@ namespace ZiraatProje.UI.ViewModels
             set { _team = value; OnPropertyChanged(); }
         }
 
+        private string _emailPrefix = string.Empty;
+        public string EmailPrefix
+        {
+            get => _emailPrefix;
+            set
+            {
+                var val = value ?? string.Empty;
+                if (val.Contains("@"))
+                {
+                    val = val.Split('@')[0];
+                }
+                _emailPrefix = val.Trim();
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(Email));
+            }
+        }
+
         private string _email = string.Empty;
         public string Email
         {
-            get => _email;
-            set { _email = value; OnPropertyChanged(); }
+            get => string.IsNullOrWhiteSpace(EmailPrefix) ? string.Empty : $"{EmailPrefix}@ziraatteknoloji.com";
+            set
+            {
+                _email = value;
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    EmailPrefix = value.Split('@')[0];
+                }
+                else
+                {
+                    EmailPrefix = string.Empty;
+                }
+                OnPropertyChanged();
+            }
         }
 
         private string _userPhone = string.Empty;
@@ -260,6 +382,7 @@ namespace ZiraatProje.UI.ViewModels
         public ICommand ClearFormCommand { get; }
         public ICommand AddTeamCommand { get; }
         public ICommand RemoveTeamCommand { get; }
+        public ICommand SelectPresetColorCommand { get; }
         public ICommand SelectContactUserCommand { get; }
         public ICommand CloseContactCardCommand { get; }
         public ICommand OpenUserFormCommand { get; }
@@ -278,6 +401,17 @@ namespace ZiraatProje.UI.ViewModels
             ClearFormCommand = new RelayCommand(ExecuteClearForm);
             AddTeamCommand = new RelayCommand(ExecuteAddTeam);
             RemoveTeamCommand = new RelayCommand(ExecuteRemoveTeam);
+            SelectPresetColorCommand = new RelayCommand(param =>
+            {
+                if (param is PresetColorOption option)
+                {
+                    NewTeamColor = option.ColorHex;
+                }
+                else if (param is string colorHex)
+                {
+                    NewTeamColor = colorHex;
+                }
+            });
             SelectContactUserCommand = new RelayCommand(param =>
             {
                 if (param is User u)
@@ -298,6 +432,7 @@ namespace ZiraatProje.UI.ViewModels
             OpenTeamFormCommand = new RelayCommand(_ =>
             {
                 IsUserFormOpen = false;
+                RefreshPresetColors();
                 IsTeamFormOpen = true;
             });
             CloseTeamFormCommand = new RelayCommand(_ => { IsTeamFormOpen = false; });
@@ -311,11 +446,13 @@ namespace ZiraatProje.UI.ViewModels
             try
             {
                 var teams = _services.GetAllTeams();
+                TeamColorHelper.RegisterTeams(teams);
                 TeamsList = new ObservableCollection<Team>(teams);
                 if (string.IsNullOrEmpty(Team) && TeamsList.Count > 0)
                 {
                     Team = TeamsList[0].TeamName;
                 }
+                RefreshPresetColors();
             }
             catch (Exception ex)
             {
@@ -333,7 +470,7 @@ namespace ZiraatProje.UI.ViewModels
                     return;
                 }
 
-                _services.AddTeam(new Team { TeamName = NewTeamName.Trim() });
+                _services.AddTeam(new Team { TeamName = NewTeamName.Trim(), Color = NewTeamColor });
                 StatusMessage = $"'{NewTeamName}' ekibi başarıyla eklendi.";
                 NewTeamName = string.Empty;
                 LoadTeams();
@@ -394,6 +531,7 @@ namespace ZiraatProje.UI.ViewModels
                     managerGroup = new DirectoryTeamGroup
                     {
                         TeamName = "Departman Yönetimi",
+                        Color = "#bc171d",
                         Members = new ObservableCollection<User>(deptMembers)
                     };
                 }
@@ -409,6 +547,7 @@ namespace ZiraatProje.UI.ViewModels
                     groups.Add(new DirectoryTeamGroup
                     {
                         TeamName = t.TeamName,
+                        Color = t.Color,
                         Members = new ObservableCollection<User>(members)
                     });
                 }
@@ -422,6 +561,7 @@ namespace ZiraatProje.UI.ViewModels
                     groups.Add(new DirectoryTeamGroup
                     {
                         TeamName = "Diğer Ekipler",
+                        Color = "#718096",
                         Members = new ObservableCollection<User>(remainingUsers)
                     });
                 }

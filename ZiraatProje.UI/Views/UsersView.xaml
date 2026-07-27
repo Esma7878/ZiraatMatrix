@@ -10,6 +10,7 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <helpers:TeamColorConverter x:Key="TeamColorConverter"/>
     </UserControl.Resources>
 
     <Grid Background="Transparent" Margin="25">
@@ -73,32 +74,7 @@
                                 <GroupStyle>
                                     <GroupStyle.HeaderTemplate>
                                         <DataTemplate>
-                                            <Border BorderThickness="0,0,0,2" Padding="12,8">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="#f8fafc"/>
-                                                        <Setter Property="BorderBrush" Value="#cbd5e0"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Name}" Value="Takip">
-                                                                <Setter Property="Background" Value="#f5f3ff"/>
-                                                                <Setter Property="BorderBrush" Value="#ddd6fe"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Name}" Value="Tahsis">
-                                                                <Setter Property="Background" Value="#ecfdf5"/>
-                                                                <Setter Property="BorderBrush" Value="#a7f3d0"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Name}" Value="Teminat">
-                                                                <Setter Property="Background" Value="#eff6ff"/>
-                                                                <Setter Property="BorderBrush" Value="#bfdbfe"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Name}" Value="Departman Yönetimi">
-                                                                <Setter Property="Background" Value="#fff5f5"/>
-                                                                <Setter Property="BorderBrush" Value="#fca5a5"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-
+                                            <Border Background="{Binding Name, Converter={StaticResource TeamColorConverter}, ConverterParameter=bg}" BorderBrush="{Binding Name, Converter={StaticResource TeamColorConverter}, ConverterParameter=border}" BorderThickness="0,0,0,2" Padding="12,8">
                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                     <TextBlock FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0">
                                                         <TextBlock.Style>
@@ -122,50 +98,20 @@
                                                         </TextBlock.Style>
                                                     </TextBlock>
 
-                                                    <TextBlock FontWeight="Bold" FontSize="14" VerticalAlignment="Center">
+                                                    <TextBlock FontWeight="Bold" FontSize="14" VerticalAlignment="Center" Foreground="{Binding Name, Converter={StaticResource TeamColorConverter}, ConverterParameter=text}">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">
                                                                 <Setter Property="Text" Value="{Binding Name, StringFormat='\{0\} Ekibi'}"/>
-                                                                <Setter Property="Foreground" Value="#2d3748"/>
                                                                 <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding Name}" Value="Takip">
-                                                                        <Setter Property="Foreground" Value="#5b21b6"/>
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding Name}" Value="Tahsis">
-                                                                        <Setter Property="Foreground" Value="#065f46"/>
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding Name}" Value="Teminat">
-                                                                        <Setter Property="Foreground" Value="#1e40af"/>
-                                                                    </DataTrigger>
                                                                     <DataTrigger Binding="{Binding Name}" Value="Departman Yönetimi">
                                                                         <Setter Property="Text" Value="Departman Yöneticisi"/>
-                                                                        <Setter Property="Foreground" Value="#991b1b"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
                                                         </TextBlock.Style>
                                                     </TextBlock>
 
-                                                    <Border CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                                        <Border.Style>
-                                                            <Style TargetType="Border">
-                                                                <Setter Property="Background" Value="#718096"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding Name}" Value="Takip">
-                                                                        <Setter Property="Background" Value="#7c3aed"/>
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding Name}" Value="Tahsis">
-                                                                        <Setter Property="Background" Value="#059669"/>
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding Name}" Value="Teminat">
-                                                                        <Setter Property="Background" Value="#2563eb"/>
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding Name}" Value="Departman Yönetimi">
-                                                                        <Setter Property="Background" Value="#bc171d"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Border.Style>
+                                                    <Border Background="{Binding Name, Converter={StaticResource TeamColorConverter}, ConverterParameter=header}" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding ItemCount, StringFormat='\{0\} Personel'}" Foreground="White" FontSize="11" FontWeight="Bold"/>
                                                     </Border>
                                                 </StackPanel>
@@ -189,69 +135,10 @@
                                 <DataGridTemplateColumn Header="Ekip" Width="1.3*">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Border CornerRadius="12" Padding="8,3" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="#edf2f7"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Team}" Value="Takip">
-                                                                <Setter Property="Background" Value="#f5f3ff"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Team}" Value="Tahsis">
-                                                                <Setter Property="Background" Value="#ecfdf5"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Team}" Value="Teminat">
-                                                                <Setter Property="Background" Value="#eff6ff"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Team}" Value="Departman Yönetimi">
-                                                                <Setter Property="Background" Value="#ffeef0"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
+                                            <Border Background="{Binding Team, Converter={StaticResource TeamColorConverter}, ConverterParameter=bg}" BorderBrush="{Binding Team, Converter={StaticResource TeamColorConverter}, ConverterParameter=border}" BorderThickness="1" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <TextBlock FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
-                                                                <Setter Property="Text" Value="🏢"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding Team}" Value="Takip">
-                                                                        <Setter Property="Text" Value="🟣"/>
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding Team}" Value="Tahsis">
-                                                                        <Setter Property="Text" Value="🟢"/>
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding Team}" Value="Teminat">
-                                                                        <Setter Property="Text" Value="🔵"/>
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding Team}" Value="Departman Yönetimi">
-                                                                        <Setter Property="Text" Value="👑"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </TextBlock.Style>
-                                                    </TextBlock>
-                                                    <TextBlock Text="{Binding DisplayTeamName}" FontWeight="Bold" FontSize="11">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
-                                                                <Setter Property="Foreground" Value="#4a5568"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding Team}" Value="Takip">
-                                                                        <Setter Property="Foreground" Value="#6d28d9"/>
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding Team}" Value="Tahsis">
-                                                                        <Setter Property="Foreground" Value="#047857"/>
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding Team}" Value="Teminat">
-                                                                        <Setter Property="Foreground" Value="#1d4ed8"/>
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding Team}" Value="Departman Yönetimi">
-                                                                        <Setter Property="Foreground" Value="#991b1b"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </TextBlock.Style>
-                                                    </TextBlock>
+                                                    <Border Width="8" Height="8" CornerRadius="4" Background="{Binding Team, Converter={StaticResource TeamColorConverter}, ConverterParameter=header}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding DisplayTeamName}" FontWeight="Bold" FontSize="11" Foreground="{Binding Team, Converter={StaticResource TeamColorConverter}, ConverterParameter=text}"/>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>
@@ -300,7 +187,19 @@
 
                                 <!-- E-Posta -->
                                 <TextBlock Text="E-Posta Adresi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,5"/>
-                                <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,0,0,12"/>
+                                <Border Background="White" BorderBrush="#cbd5e1" BorderThickness="1" CornerRadius="6" Height="34" Margin="0,0,0,12">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" Text="{Binding EmailPrefix, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Padding="10,6" BorderThickness="0" Background="Transparent" FontSize="13" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="1" Background="#f1f5f9" Padding="10,0" BorderBrush="#cbd5e1" BorderThickness="1,0,0,0" CornerRadius="0,5,5,0">
+                                            <TextBlock Text="@ziraatteknoloji.com" FontWeight="Bold" Foreground="#475569" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
 
                                 <!-- Telefon Numarası -->
                                 <TextBlock Text="Telefon Numarası" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,5"/>
@@ -384,7 +283,7 @@
 
                                 <!-- Add Team Input Row -->
                                 <TextBlock Text="Yeni Ekip Adı" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,5"/>
-                                <Grid Margin="0,0,0,12">
+                                <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
@@ -392,6 +291,48 @@
                                     <TextBox Grid.Column="0" Text="{Binding NewTeamName, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,0,8,0" VerticalContentAlignment="Center"/>
                                     <Button Grid.Column="1" Content="+ Ekip Ekle" Command="{Binding AddTeamCommand}" Style="{StaticResource NormalLoginButton}" Width="100" Height="34" FontSize="12"/>
                                 </Grid>
+
+                                <!-- Ekip Rengi Seçimi Palette -->
+                                <TextBlock Text="Ekip Rengi Seçin:" FontSize="12" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,6"/>
+                                <ItemsControl ItemsSource="{Binding PresetColors}" Margin="0,0,0,12">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding DataContext.SelectPresetColorCommand, RelativeSource={RelativeSource AncestorType={x:Type local:UsersView}}}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Cursor="Hand" Margin="0,0,8,6" Padding="0" ToolTip="{Binding Name}">
+                                                <Border Width="26" Height="26" CornerRadius="13" Background="{Binding ColorHex}">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="BorderThickness" Value="1"/>
+                                                            <Setter Property="BorderBrush" Value="#cbd5e0"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                    <Setter Property="BorderThickness" Value="2.5"/>
+                                                                    <Setter Property="BorderBrush" Value="#1a202c"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="✓" Foreground="White" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Border>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
 
                                 <!-- Existing Teams Chips -->
                                 <TextBlock Text="Mevcut Ekipler:" FontSize="12" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,6"/>
@@ -405,6 +346,7 @@
                                         <DataTemplate>
                                             <Border Background="White" BorderBrush="#cbd5e0" BorderThickness="1" CornerRadius="16" Padding="10,5" Margin="0,0,8,8">
                                                 <StackPanel Orientation="Horizontal">
+                                                    <Border Width="12" Height="12" CornerRadius="6" Background="{Binding Color}" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                                     <TextBlock Text="{Binding TeamName}" FontWeight="Bold" Foreground="#2d3748" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                                     <Button Content="✕" Command="{Binding DataContext.RemoveTeamCommand, RelativeSource={RelativeSource AncestorType={x:Type local:UsersView}}}" CommandParameter="{Binding}" Background="Transparent" Foreground="#e53e3e" FontWeight="Bold" FontSize="12" BorderThickness="0" Cursor="Hand" Padding="0" VerticalAlignment="Center"/>
                                                 </StackPanel>
@@ -527,32 +469,7 @@
 
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border CornerRadius="10" Margin="6,0,6,15" Padding="18" VerticalAlignment="Top" BorderThickness="1.5">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="White"/>
-                                        <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding TeamName}" Value="Takip">
-                                                <Setter Property="Background" Value="#f5f3ff"/>
-                                                <Setter Property="BorderBrush" Value="#ddd6fe"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding TeamName}" Value="Tahsis">
-                                                <Setter Property="Background" Value="#ecfdf5"/>
-                                                <Setter Property="BorderBrush" Value="#a7f3d0"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding TeamName}" Value="Teminat">
-                                                <Setter Property="Background" Value="#eff6ff"/>
-                                                <Setter Property="BorderBrush" Value="#bfdbfe"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding TeamName}" Value="Departman Yönetimi">
-                                                <Setter Property="Background" Value="#ffeef0"/>
-                                                <Setter Property="BorderBrush" Value="#fca5a5"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-
+                                <Border Background="{Binding BgColor}" BorderBrush="{Binding BorderColor}" CornerRadius="10" Margin="6,0,6,15" Padding="18" VerticalAlignment="Top" BorderThickness="1.5">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
@@ -562,26 +479,7 @@
 
                                     <!-- Team Card Title -->
                                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-                                        <Border Width="36" Height="36" CornerRadius="8">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="#cbd5e0"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding TeamName}" Value="Takip">
-                                                            <Setter Property="Background" Value="#7c3aed"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding TeamName}" Value="Tahsis">
-                                                            <Setter Property="Background" Value="#059669"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding TeamName}" Value="Teminat">
-                                                            <Setter Property="Background" Value="#2563eb"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding TeamName}" Value="Departman Yönetimi">
-                                                            <Setter Property="Background" Value="#bc171d"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
+                                        <Border Width="36" Height="36" CornerRadius="8" Background="{Binding HeaderColor}">
                                             <TextBlock FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
@@ -605,24 +503,13 @@
                                             </TextBlock>
                                         </Border>
                                         <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                                            <TextBlock FontSize="16" FontWeight="Bold">
+                                            <TextBlock FontSize="16" FontWeight="Bold" Foreground="{Binding TextColor}">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Text" Value="{Binding TeamName, StringFormat='{} {0} Ekibi'}"/>
-                                                        <Setter Property="Foreground" Value="#2d3748"/>
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding TeamName}" Value="Takip">
-                                                                <Setter Property="Foreground" Value="#5b21b6"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding TeamName}" Value="Tahsis">
-                                                                <Setter Property="Foreground" Value="#065f46"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding TeamName}" Value="Teminat">
-                                                                <Setter Property="Foreground" Value="#1e40af"/>
-                                                            </DataTrigger>
                                                             <DataTrigger Binding="{Binding TeamName}" Value="Departman Yönetimi">
                                                                 <Setter Property="Text" Value="Departman Yöneticisi"/>
-                                                                <Setter Property="Foreground" Value="#991b1b"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>

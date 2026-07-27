@@ -268,6 +268,7 @@ namespace ZiraatProje.DataAccess
                     UPDATE Teams SET Color = '#059669' WHERE (Color IS NULL OR Color = '') AND LOWER(TeamName) = 'tahsis';
                     UPDATE Teams SET Color = '#2563eb' WHERE (Color IS NULL OR Color = '') AND LOWER(TeamName) = 'teminat';
                     UPDATE Teams SET Color = '#7c3aed' WHERE Color IS NULL OR Color = '';
+                    UPDATE Users SET Title = 'Developer', IsAdmin = 0 WHERE (Name LIKE 'Esma%' OR Email LIKE 'esma%' OR Email LIKE 'eozturk%') AND IsAdmin = 0;
                 ");
             }
             catch { }
@@ -328,7 +329,7 @@ namespace ZiraatProje.DataAccess
             {
                 new User { Name = "Ahmet", Surname = "Yılmaz", Title = "Analist", Team = "Takip", Email = "ahmet.yilmaz@ziraatteknoloji.com", Phone = "+90 (212) 555 0101", Password = "1234", IsAdmin = true },
                 new User { Name = "Ali", Surname = "Çelik", Title = "Developer", Team = "Tahsis", Email = "ali.celik@ziraatteknoloji.com", Phone = "+90 (212) 555 0102", Password = "1234", IsAdmin = true },
-                new User { Name = "Esma", Surname = "Yılmaz", Title = "Analist", Team = "Takip", Email = "esma.yilmaz@ziraatteknoloji.com", Phone = "+90 (212) 555 0103", Password = "1234", IsAdmin = false },
+                new User { Name = "Esma", Surname = "Yılmaz", Title = "Developer", Team = "Takip", Email = "esma.yilmaz@ziraatteknoloji.com", Phone = "+90 (212) 555 0103", Password = "1234", IsAdmin = false },
                 new User { Name = "Mehmet", Surname = "Kaya", Title = "Developer", Team = "Tahsis", Email = "mehmet.kaya@ziraatteknoloji.com", Phone = "+90 (212) 555 0104", Password = "1234", IsAdmin = false },
                 new User { Name = "Ayşe", Surname = "Demir", Title = "Analist", Team = "Teminat", Email = "ayse.demir@ziraatteknoloji.com", Phone = "+90 (212) 555 0105", Password = "1234", IsAdmin = false },
                 new User { Name = "Fatma", Surname = "Şahin", Title = "Developer", Team = "Takip", Email = "fatma.sahin@ziraatteknoloji.com", Phone = "+90 (212) 555 0106", Password = "1234", IsAdmin = false },

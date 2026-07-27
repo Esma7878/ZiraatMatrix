@@ -654,11 +654,15 @@ namespace ZiraatProje.UI.ViewModels
 
             if (!string.IsNullOrWhiteSpace(loggedUserName))
             {
-                var userObj = _services.GetAllUsers().FirstOrDefault(u => u.FullName.Equals(loggedUserName, StringComparison.OrdinalIgnoreCase));
+                var userObj = _services.GetAllUsers().FirstOrDefault(u =>
+                    u.FullName.Equals(loggedUserName, StringComparison.OrdinalIgnoreCase) ||
+                    (!string.IsNullOrWhiteSpace(u.Name) && loggedUserName.Contains(u.Name, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrWhiteSpace(u.Email) && u.Email.StartsWith(loggedUserName, StringComparison.OrdinalIgnoreCase)));
+
                 if (userObj != null)
                 {
                     LoggedUserTitle = userObj.Title ?? string.Empty;
-                    if (userObj.IsAdmin) IsUserAdmin = true;
+                    IsUserAdmin = userObj.IsAdmin;
                     if (string.IsNullOrWhiteSpace(LoggedTeam)) LoggedTeam = userObj.Team ?? string.Empty;
                 }
             }
@@ -677,6 +681,7 @@ namespace ZiraatProje.UI.ViewModels
 
             OpenCreateFormCommand = new RelayCommand(_ =>
             {
+                if (!CanCreateOrEditProjects) return;
                 ClearForm();
                 if (SelectedTeamFilter != "Tüm Ekipler" && !string.IsNullOrWhiteSpace(SelectedTeamFilter))
                 {
@@ -694,6 +699,7 @@ namespace ZiraatProje.UI.ViewModels
 
             OpenEditFormCommand = new RelayCommand(param =>
             {
+                if (!CanCreateOrEditProjects) return;
                 if (param is ProjectDisplayItem item)
                 {
                     SelectedProjectDisplay = item;

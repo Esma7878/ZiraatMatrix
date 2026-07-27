@@ -340,22 +340,50 @@
 
                             <!-- Çeyreğin 3 Ayı için Aylık Toplamlar (BindingProxy ile Dinamik Ay Başlıkları) -->
                             <DataGridTextColumn Header="{Binding Data.Month1Header, Source={StaticResource DataContextProxy}}" 
-                                                Binding="{Binding Month1ManDaysTotal, StringFormat=\{0:N0\}}" Width="85"/>
+                                                Binding="{Binding Month1ManDaysTotal, StringFormat=\{0:N0\}}" Width="85">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
                             <DataGridTextColumn Header="{Binding Data.Month2Header, Source={StaticResource DataContextProxy}}" 
-                                                Binding="{Binding Month2ManDaysTotal, StringFormat=\{0:N0\}}" Width="85"/>
+                                                Binding="{Binding Month2ManDaysTotal, StringFormat=\{0:N0\}}" Width="85">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
                             <DataGridTextColumn Header="{Binding Data.Month3Header, Source={StaticResource DataContextProxy}}" 
-                                                Binding="{Binding Month3ManDaysTotal, StringFormat=\{0:N0\}}" Width="85"/>
+                                                Binding="{Binding Month3ManDaysTotal, StringFormat=\{0:N0\}}" Width="85">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
                             <!-- Toplam Adam/Gün -->
-                            <DataGridTextColumn Header="Adam/Gün" Binding="{Binding TotalInternalManDays, StringFormat=\{0:N0\}}" Width="90" FontWeight="Bold"/>
+                            <DataGridTextColumn Header="Adam/Gün" Binding="{Binding TotalInternalManDays, StringFormat=\{0:N0\}}" Width="90" FontWeight="Bold">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
                             <!-- Dış Maliyet (Sadece Sayı Gösterimi) -->
                             <DataGridTemplateColumn Header="Dış Maliyet" Width="110">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock VerticalAlignment="Center" FontWeight="SemiBold">
+                                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" FontWeight="SemiBold">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Text" Value="{Binding Project.ExternalCost, StringFormat='\{0:N0\}'}"/>
@@ -374,14 +402,22 @@
                             </DataGridTemplateColumn>
 
                             <!-- Paydaşlar -->
-                            <DataGridTextColumn Header="Paydaşlar" Binding="{Binding Project.Stakeholders}" Width="1.2*"/>
+                            <DataGridTextColumn Header="Paydaşlar" Binding="{Binding Project.Stakeholders}" Width="1.2*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
 
                             <!-- İşlemler Button (Visible only for Admin & Analysts) -->
-                            <DataGridTemplateColumn Header="İşlem" Width="100" Visibility="{Binding DataContext.CreateProjectButtonVisibility, RelativeSource={RelativeSource AncestorType={x:Type local:ProjectsView}}}">
+                            <DataGridTemplateColumn Header="İşlem" Width="100" Visibility="{Binding Data.CreateProjectButtonVisibility, Source={StaticResource DataContextProxy}}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Content="✏️ Düzenle" Height="26" Padding="10,0" FontSize="11" 
-                                                Command="{Binding DataContext.OpenEditFormCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ProjectsView}}}"
+                                                Visibility="{Binding Data.CreateProjectButtonVisibility, Source={StaticResource DataContextProxy}}"
+                                                Command="{Binding Data.OpenEditFormCommand, Source={StaticResource DataContextProxy}}"
                                                 CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

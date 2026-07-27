@@ -923,7 +923,7 @@
                         <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource ZiraatRed}" FontWeight="Bold" FontSize="11" Margin="0,0,0,12" HorizontalAlignment="Center"/>
 
                         <!-- Login Button -->
-                        <Button Style="{StaticResource NormalLoginButton}" Content="Giriş Yap" Command="{Binding LoginCommand}" IsDefault="True" Height="40"/>
+                        <Button Style="{StaticResource NormalLoginButton}" Content="Giriş Yap" Command="{Binding LoginCommand}" Height="40"/>
 
                         <!-- Forgot Password / First Login Link Button -->
                         <Button Style="{StaticResource LinkButton}" Content="🔑 Şifremi Unuttum / İlk Giriş Şifre Yenileme" Command="{Binding ShowResetPasswordCommand}" Margin="0,16,0,0" HorizontalAlignment="Center" Foreground="{StaticResource ZiraatRed}"/>

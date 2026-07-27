@@ -1026,42 +1026,96 @@ namespace ZiraatProje.Business
             return query.OrderBy(m => m.SentAt).ToList();
         }
 
+        public static string GetChannelKey(int currentUserId, string targetType, int? targetUserId = null, string targetTeam = "")
+        {
+            if (targetType == "General")
+                return "General";
+            if (targetType == "Team")
+                return $"Team:{(targetTeam ?? "").Trim().ToLower()}";
+            if (targetType == "Group")
+                return $"Group:{(targetTeam ?? "").Trim()}";
+            if (targetType == "Direct" && targetUserId.HasValue)
+            {
+                int u1 = Math.Min(currentUserId, targetUserId.Value);
+                int u2 = Math.Max(currentUserId, targetUserId.Value);
+                return $"Direct:{u1}_{u2}";
+            }
+            return targetType;
+        }
+
         public void MarkMessagesAsRead(int currentUserId, string targetType, int? targetUserId = null, string targetTeam = "")
         {
             using var context = CreateContext();
-            var query = context.ChatMessages.AsQueryable();
+            string channelKey = GetChannelKey(currentUserId, targetType, targetUserId, targetTeam);
+
+            var channelMsgs = GetChatMessagesForChannel(currentUserId, targetType, targetUserId, targetTeam);
+            int maxMsgId = channelMsgs.Any() ? channelMsgs.Max(m => m.Id) : 0;
+
+            if (maxMsgId > 0)
+            {
+                var state = context.ChatMessageReadStates.FirstOrDefault(s => s.UserId == currentUserId && s.ChannelKey == channelKey);
+                if (state == null)
+                {
+                    state = new ChatMessageReadState
+                    {
+                        UserId = currentUserId,
+                        ChannelKey = channelKey,
+                        LastReadMessageId = maxMsgId,
+                        LastReadAt = DateTime.Now
+                    };
+                    context.ChatMessageReadStates.Add(state);
+                }
+                else if (maxMsgId > state.LastReadMessageId)
+                {
+                    state.LastReadMessageId = maxMsgId;
+                    state.LastReadAt = DateTime.Now;
+                }
+            }
 
             if (targetType == "Direct" && targetUserId.HasValue)
             {
                 int otherId = targetUserId.Value;
-                query = query.Where(m => m.TargetType == "Direct" && m.SenderUserId == otherId && m.ReceiverUserId == currentUserId && !m.IsRead);
-            }
-            else if (targetType == "Team")
-            {
-                query = query.Where(m => m.TargetType == "Team" && m.TargetTeam == targetTeam && m.SenderUserId != currentUserId && !m.IsRead);
-            }
-            else if (targetType == "Group" && !string.IsNullOrWhiteSpace(targetTeam))
-            {
-                query = query.Where(m => m.TargetType == "Group" && m.TargetTeam == targetTeam && m.SenderUserId != currentUserId && !m.IsRead);
-            }
-            else if (targetType == "General")
-            {
-                query = query.Where(m => m.TargetType == "General" && m.SenderUserId != currentUserId && !m.IsRead);
-            }
-            else
-            {
-                return;
-            }
-
-            var unreadList = query.ToList();
-            if (unreadList.Any())
-            {
-                foreach (var m in unreadList)
+                var unreadDirects = context.ChatMessages.Where(m => m.TargetType == "Direct" && m.SenderUserId == otherId && m.ReceiverUserId == currentUserId && !m.IsRead).ToList();
+                foreach (var m in unreadDirects)
                 {
                     m.IsRead = true;
                 }
-                context.SaveChanges();
             }
+
+            context.SaveChanges();
+        }
+
+        public int GetUnreadMessageCountForChannel(int currentUserId, string targetType, int? targetUserId = null, string targetTeam = "")
+        {
+            using var context = CreateContext();
+            string channelKey = GetChannelKey(currentUserId, targetType, targetUserId, targetTeam);
+
+            var readState = context.ChatMessageReadStates.AsNoTracking().FirstOrDefault(s => s.UserId == currentUserId && s.ChannelKey == channelKey);
+            int lastReadId = readState?.LastReadMessageId ?? 0;
+
+            if (targetType == "General")
+            {
+                return context.ChatMessages.AsNoTracking()
+                    .Count(m => m.TargetType == "General" && m.SenderUserId != currentUserId && m.Id > lastReadId);
+            }
+            else if (targetType == "Team")
+            {
+                return context.ChatMessages.AsNoTracking()
+                    .Count(m => m.TargetType == "Team" && m.TargetTeam.ToLower() == targetTeam.ToLower() && m.SenderUserId != currentUserId && m.Id > lastReadId);
+            }
+            else if (targetType == "Group" && !string.IsNullOrWhiteSpace(targetTeam))
+            {
+                return context.ChatMessages.AsNoTracking()
+                    .Count(m => m.TargetType == "Group" && m.TargetTeam == targetTeam && m.SenderUserId != currentUserId && m.Id > lastReadId);
+            }
+            else if (targetType == "Direct" && targetUserId.HasValue)
+            {
+                int otherId = targetUserId.Value;
+                return context.ChatMessages.AsNoTracking()
+                    .Count(m => m.TargetType == "Direct" && m.SenderUserId == otherId && m.ReceiverUserId == currentUserId && m.Id > lastReadId && !m.IsRead);
+            }
+
+            return 0;
         }
 
         public List<User> GetActiveDirectChatUsersForUser(int currentUserId)
@@ -1117,27 +1171,23 @@ namespace ZiraatProje.Business
             var user = context.Users.AsNoTracking().FirstOrDefault(u => u.Id == currentUserId);
             string actualTeam = user?.Team ?? userTeam;
 
-            var countDirect = context.ChatMessages
-                .AsNoTracking()
-                .Count(m => m.TargetType == "Direct" && m.ReceiverUserId == currentUserId && !m.IsRead);
+            int countGeneral = GetUnreadMessageCountForChannel(currentUserId, "General");
+            int countTeam = string.IsNullOrWhiteSpace(actualTeam) ? 0 : GetUnreadMessageCountForChannel(currentUserId, "Team", null, actualTeam);
 
-            var countGeneral = context.ChatMessages
-                .AsNoTracking()
-                .Count(m => m.TargetType == "General" && m.SenderUserId != currentUserId && !m.IsRead);
-
-            var countTeam = string.IsNullOrWhiteSpace(actualTeam) ? 0 : context.ChatMessages
-                .AsNoTracking()
-                .Count(m => m.TargetType == "Team" && m.TargetTeam.ToLower() == actualTeam.ToLower() && m.SenderUserId != currentUserId && !m.IsRead);
+            int countDirect = 0;
+            var directPartners = GetActiveDirectChatUsersForUser(currentUserId);
+            foreach (var partner in directPartners)
+            {
+                countDirect += GetUnreadMessageCountForChannel(currentUserId, "Direct", partner.Id);
+            }
 
             int countGroups = 0;
             try
             {
                 var myGroupIds = GetChatGroupsForUser(currentUserId).Select(g => g.Id.ToString()).ToList();
-                if (myGroupIds.Any())
+                foreach (var gId in myGroupIds)
                 {
-                    countGroups = context.ChatMessages
-                        .AsNoTracking()
-                        .Count(m => m.TargetType == "Group" && myGroupIds.Contains(m.TargetTeam) && m.SenderUserId != currentUserId && !m.IsRead);
+                    countGroups += GetUnreadMessageCountForChannel(currentUserId, "Group", null, gId);
                 }
             }
             catch { }

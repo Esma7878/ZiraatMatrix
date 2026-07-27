@@ -22,7 +22,8 @@ namespace ZiraatProje.Business
         public List<ProjectAllocationRecommendation> GetDeveloperAllocationRecommendations(
             string requiredTitle,
             IEnumerable<User> allUsers,
-            IEnumerable<Project> allProjects)
+            IEnumerable<Project> allProjects,
+            string? teamFilter = null)
         {
             var results = new List<ProjectAllocationRecommendation>();
             if (allUsers == null) return results;
@@ -30,6 +31,14 @@ namespace ZiraatProje.Business
             var activeProjects = allProjects?.Where(p => p.ProjectStatus != "Tamamlandı" && p.ProjectStatus != "İptal").ToList() ?? new List<Project>();
 
             var candidateUsers = allUsers.Where(u => !u.IsAdmin).ToList();
+
+            // Apply team filter if specified
+            if (!string.IsNullOrWhiteSpace(teamFilter) && teamFilter != "Tüm Ekipler")
+            {
+                candidateUsers = candidateUsers.Where(u =>
+                    string.Equals(u.Team, teamFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
             if (!string.IsNullOrWhiteSpace(requiredTitle))
             {
                 var titleFiltered = candidateUsers.Where(u => string.Equals(u.Title, requiredTitle, StringComparison.OrdinalIgnoreCase)).ToList();

@@ -141,6 +141,17 @@ namespace ZiraatProje.DataAccess
                     );
                 END
 
+                IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ChatMessageReadStates')
+                BEGIN
+                    CREATE TABLE ChatMessageReadStates (
+                        Id INT IDENTITY(1,1) PRIMARY KEY,
+                        UserId INT NOT NULL,
+                        ChannelKey NVARCHAR(100) NOT NULL,
+                        LastReadMessageId INT NOT NULL,
+                        LastReadAt DATETIME2 NOT NULL
+                    );
+                END
+
                 DELETE FROM Leaves 
                 WHERE Id NOT IN (
                     SELECT MIN(Id) 

@@ -132,20 +132,17 @@
                             </Grid>
 
                             <StackPanel Visibility="{Binding IsAiProjectCardExpanded, Converter={StaticResource BoolToVisConverter}}">
-                                <Button Command="{Binding GetAIProjectAllocationsCommand}" Content="⚡ Geliştirici Doluluk &amp; Efor Analizi Yap" Height="30" Margin="0,6,0,10" Background="#7c3aed" Foreground="White" FontWeight="Bold">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Name="Border" CornerRadius="6" Background="{TemplateBinding Background}">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="Border" Property="Background" Value="#6d28d9"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
+                                <!-- Ekip Seçici (kompakt) -->
+                                <StackPanel Orientation="Horizontal" Margin="0,6,0,10" VerticalAlignment="Center">
+                                    <Border Background="#ede9fe" CornerRadius="6,0,0,6" Padding="10,0" Height="30">
+                                        <TextBlock Text="🏷️ Ekip" FontSize="11" FontWeight="Bold" Foreground="#5b21b6" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ComboBox ItemsSource="{Binding AiTeamFilterList}"
+                                              SelectedItem="{Binding SelectedAiTeamFilter}"
+                                              Width="130" Height="30"
+                                              FontSize="11.5" Padding="8,4"
+                                              BorderBrush="#c4b5fd" Background="White"/>
+                                </StackPanel>
 
                                 <!-- Recommendations List -->
                                 <ItemsControl ItemsSource="{Binding AiProjectAllocations}">

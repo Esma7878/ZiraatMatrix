@@ -16,6 +16,7 @@ namespace ZiraatProje.DataAccess
         public DbSet<CustomShift> CustomShifts { get; set; } = null!;
         public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
         public DbSet<ChatGroup> ChatGroups { get; set; } = null!;
+        public DbSet<ChatMessageReadState> ChatMessageReadStates { get; set; } = null!;
 
         public AppDbContext()
         {

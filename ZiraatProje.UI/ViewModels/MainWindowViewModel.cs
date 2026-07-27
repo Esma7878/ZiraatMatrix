@@ -281,7 +281,9 @@ namespace ZiraatProje.UI.ViewModels
                 }
                 else
                 {
-                    ErrorMessage = "Geçersiz e-posta adresi veya şifre!";
+                    ErrorMessage = "E-posta veya şifre yanlış, yeniden deneyiniz.";
+                    LoginPassword = string.Empty;
+                    ShowLoginPasswordText = false;
                 }
             });
 

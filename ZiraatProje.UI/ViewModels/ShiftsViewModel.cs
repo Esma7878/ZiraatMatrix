@@ -1637,7 +1637,14 @@ namespace ZiraatProje.UI.ViewModels
         public DateTime AiShiftTargetDate
         {
             get => _aiShiftTargetDate;
-            set { _aiShiftTargetDate = value; OnPropertyChanged(); }
+            set
+            {
+                _aiShiftTargetDate = value;
+                OnPropertyChanged();
+                // Kart açıksa tarih değişince otomatik yenile
+                if (IsAiShiftCardExpanded)
+                    ExecuteGetAIShiftRecommendations(null);
+            }
         }
 
         private ObservableCollection<ShiftRecommendationOption> _aiShiftRecommendations = new ObservableCollection<ShiftRecommendationOption>();
@@ -1668,7 +1675,14 @@ namespace ZiraatProje.UI.ViewModels
         public string AiShiftSelectedTeam
         {
             get => _aiShiftSelectedTeam;
-            set { _aiShiftSelectedTeam = value; OnPropertyChanged(); }
+            set
+            {
+                _aiShiftSelectedTeam = value;
+                OnPropertyChanged();
+                // Kart açıksa ekip değişince otomatik yenile
+                if (IsAiShiftCardExpanded)
+                    ExecuteGetAIShiftRecommendations(null);
+            }
         }
 
         public List<string> AiShiftTeamFilterOptions { get; } = new List<string> { "Tüm Ekipler", "Takip", "Tahsis", "Teminat" };
@@ -1680,15 +1694,17 @@ namespace ZiraatProje.UI.ViewModels
                 var users = _services.GetAllUsers();
                 var shifts = _services.GetAllShifts();
                 var leaves = _services.GetAllLeaves();
+                var customShifts = _services.GetAllCustomShifts();
 
                 var recommendations = ZiraatMatrixAiEngine.Instance.Shifts.GetShiftRecommendationsForDate(
                     AiShiftTargetDate,
                     AiShiftSelectedTeam,
                     users,
                     shifts,
-                    leaves);
+                    leaves,
+                    customShifts);
 
-                AiShiftRecommendations = new ObservableCollection<ShiftRecommendationOption>(recommendations.Take(3));
+                AiShiftRecommendations = new ObservableCollection<ShiftRecommendationOption>(recommendations.Take(6));
                 IsAiShiftCardExpanded = true;
             }
             catch (Exception ex)

@@ -608,24 +608,20 @@ namespace ZiraatProje.UI.ViewModels
                 }
                 else
                 {
-                    var msgs = _services.GetChatMessagesForChannel(CurrentUserId, chan.TargetType, chan.TargetUserId, chan.TargetTeam);
                     int prevUnread = chan.UnreadCount;
-                    if (chan.TargetType == "Direct")
-                    {
-                        chan.UnreadCount = msgs.Count(m => m.ReceiverUserId == CurrentUserId && !m.IsRead);
-                    }
-                    else
-                    {
-                        chan.UnreadCount = msgs.Count(m => m.SenderUserId != CurrentUserId && !m.IsRead);
-                    }
+                    chan.UnreadCount = _services.GetUnreadMessageCountForChannel(CurrentUserId, chan.TargetType, chan.TargetUserId, chan.TargetTeam);
 
                     // Trigger notification banner ONLY if new unread message arrived in a DIFFERENT channel!
-                    if (chan.UnreadCount > prevUnread && msgs.Any() && !IsSameChannel(chan, SelectedChannel))
+                    if (chan.UnreadCount > prevUnread && !IsSameChannel(chan, SelectedChannel))
                     {
-                        var lastMsg = msgs.Last();
-                        string senderName = lastMsg.SenderUser?.FullName ?? "Bir çalışma arkadaşınız";
-                        string preview = lastMsg.MessageText.Length > 40 ? lastMsg.MessageText.Substring(0, 40) + "..." : lastMsg.MessageText;
-                        NotificationBannerText = $"🔔 {senderName} yeni bir mesaj gönderdi: \"{preview}\"";
+                        var msgs = _services.GetChatMessagesForChannel(CurrentUserId, chan.TargetType, chan.TargetUserId, chan.TargetTeam);
+                        if (msgs.Any())
+                        {
+                            var lastMsg = msgs.Last();
+                            string senderName = lastMsg.SenderUser?.FullName ?? "Bir çalışma arkadaşınız";
+                            string preview = lastMsg.MessageText.Length > 40 ? lastMsg.MessageText.Substring(0, 40) + "..." : lastMsg.MessageText;
+                            NotificationBannerText = $"🔔 {senderName} yeni bir mesaj gönderdi: \"{preview}\"";
+                        }
                     }
                 }
             }

@@ -581,6 +581,29 @@ namespace ZiraatProje.UI.ViewModels
             set { _isAiProjectCardExpanded = value; OnPropertyChanged(); }
         }
 
+        // AI Asistan – Ekip Filtresi
+        public ObservableCollection<string> AiTeamFilterList { get; } = new ObservableCollection<string>
+        {
+            "Tüm Ekipler",
+            "Takip",
+            "Tahsis",
+            "Teminat"
+        };
+
+        private string _selectedAiTeamFilter = "Tüm Ekipler";
+        public string SelectedAiTeamFilter
+        {
+            get => _selectedAiTeamFilter;
+            set
+            {
+                _selectedAiTeamFilter = value;
+                OnPropertyChanged();
+                // Kart açıksa ekip değişince otomatik yenile
+                if (IsAiProjectCardExpanded)
+                    ExecuteGetAIProjectAllocations(null);
+            }
+        }
+
         public ICommand GetAIProjectAllocationsCommand { get; set; }
         public ICommand ToggleAiProjectCardCommand { get; set; }
 
@@ -591,12 +614,15 @@ namespace ZiraatProje.UI.ViewModels
                 var users = _services.GetAllUsers();
                 var projects = _services.GetAllProjects();
 
+                var teamFilter = SelectedAiTeamFilter == "Tüm Ekipler" ? null : SelectedAiTeamFilter;
+
                 var recommendations = ZiraatMatrixAiEngine.Instance.Projects.GetDeveloperAllocationRecommendations(
                     string.Empty,
                     users,
-                    projects);
+                    projects,
+                    teamFilter);
 
-                AiProjectAllocations = new ObservableCollection<ProjectAllocationRecommendation>(recommendations.Take(5));
+                AiProjectAllocations = new ObservableCollection<ProjectAllocationRecommendation>(recommendations.Take(8));
                 IsAiProjectCardExpanded = true;
             }
             catch (Exception ex)

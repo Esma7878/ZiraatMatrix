@@ -37,6 +37,13 @@ namespace ZiraatProje.UI
                     if (TxtNewPassword != null) TxtNewPassword.Password = string.Empty;
                     if (TxtNewPasswordConfirm != null) TxtNewPasswordConfirm.Password = string.Empty;
                 }
+                else if (e.PropertyName == nameof(MainWindowViewModel.LoginPassword))
+                {
+                    if (TxtPassword != null && TxtPassword.Password != vm.LoginPassword)
+                    {
+                        TxtPassword.Password = vm.LoginPassword ?? string.Empty;
+                    }
+                }
             };
             DataContext = vm;
         }
@@ -120,6 +127,7 @@ namespace ZiraatProje.UI
         {
             if (e.Key == System.Windows.Input.Key.Enter)
             {
+                e.Handled = true;
                 if (DataContext is MainWindowViewModel vm)
                 {
                     if (vm.IsResetPasswordMode)

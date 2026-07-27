@@ -177,6 +177,15 @@ namespace ZiraatProje.DataAccess
         public virtual User? ReceiverUser { get; set; }
     }
 
+    public class ChatMessageReadState
+    {
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public string ChannelKey { get; set; } = string.Empty;
+        public int LastReadMessageId { get; set; }
+        public DateTime LastReadAt { get; set; } = DateTime.Now;
+    }
+
     public class MonthlyReleaseShift
     {
         public int Id { get; set; }

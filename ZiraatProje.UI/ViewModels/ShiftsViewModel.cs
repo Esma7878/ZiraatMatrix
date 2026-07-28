@@ -226,13 +226,6 @@ namespace ZiraatProje.UI.ViewModels
             get => _selectedAnalyst;
             set
             {
-                if (value != null && CheckLeaveConflictFunc != null && CheckLeaveConflictFunc(value, WeekStart, WeekEnd))
-                {
-                    _selectedAnalyst = null;
-                    OnPropertyChanged();
-                    OnChangedAction?.Invoke();
-                    return;
-                }
                 _selectedAnalyst = value;
                 OnPropertyChanged();
                 OnChangedAction?.Invoke();
@@ -245,13 +238,6 @@ namespace ZiraatProje.UI.ViewModels
             get => _selectedDeveloper;
             set
             {
-                if (value != null && CheckLeaveConflictFunc != null && CheckLeaveConflictFunc(value, WeekStart, WeekEnd))
-                {
-                    _selectedDeveloper = null;
-                    OnPropertyChanged();
-                    OnChangedAction?.Invoke();
-                    return;
-                }
                 _selectedDeveloper = value;
                 OnPropertyChanged();
                 OnChangedAction?.Invoke();
@@ -510,6 +496,8 @@ namespace ZiraatProje.UI.ViewModels
         // --- Weekly Shift Side Form Properties (Manual Analyst + Developer selection per team) ---
         public List<string> TeamsList { get; } = new List<string> { "Takip", "Tahsis", "Teminat" };
 
+        private bool _isPopulatingForm = false;
+
         private bool _isWeeklySaveEnabled = false;
         public bool IsWeeklySaveEnabled
         {
@@ -595,8 +583,15 @@ namespace ZiraatProje.UI.ViewModels
         public ObservableCollection<BulkWeeklyShiftRow> BulkWeeklyShiftRows
         {
             get => _bulkWeeklyShiftRows;
-            set { _bulkWeeklyShiftRows = value; OnPropertyChanged(); }
+            set
+            {
+                _bulkWeeklyShiftRows = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasNoBulkWeeklyRows));
+            }
         }
+
+        public bool HasNoBulkWeeklyRows => BulkWeeklyShiftRows == null || !BulkWeeklyShiftRows.Any();
 
         public bool CheckUserLeaveConflict(User? user, DateTime startDate, DateTime endDate)
         {
@@ -660,29 +655,55 @@ namespace ZiraatProje.UI.ViewModels
 
             var rows = new ObservableCollection<BulkWeeklyShiftRow>();
 
-            for (int w = 0; w < 8; w++)
-            {
-                var monday = thisMonday.AddDays(w * 7);
-                var sunday = monday.AddDays(6);
-                int weekNo = cal.GetWeekOfYear(monday, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+            // Get all existing active weekly shifts from database
+            var existingShifts = _services.GetAllMonthlyReleaseShifts()
+                .Where(s => !s.IsFinished && !string.IsNullOrWhiteSpace(s.MonthName) && s.MonthName.Contains("Haftalık", StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
-                var rowItem = new BulkWeeklyShiftRow
+            try
+            {
+                _isPopulatingForm = true;
+                for (int w = 0; w < 16; w++) // Check upcoming weeks
                 {
-                    WeekNumber = weekNo,
-                    WeekStart = monday,
-                    WeekEnd = sunday,
-                    Analysts = new ObservableCollection<User>(analysts),
-                    Developers = new ObservableCollection<User>(devs),
-                    CheckLeaveConflictFunc = CheckUserLeaveConflict,
-                    SelectedAnalyst = null,
-                    SelectedDeveloper = null,
-                    IsSelected = false
-                };
-                rowItem.OnChangedAction = OnWeeklyFormChanged;
-                rows.Add(rowItem);
+                    var monday = thisMonday.AddDays(w * 7);
+                    var sunday = monday.AddDays(6);
+                    int weekNo = cal.GetWeekOfYear(monday, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+
+                    // Check if this week ALREADY has an assigned shift for this team (e.g. Takip)
+                    bool isAlreadyAssignedForTeam = existingShifts.Any(s =>
+                        s.ReleaseDate.Date.AddDays(-((7 + ((int)s.ReleaseDate.DayOfWeek - (int)DayOfWeek.Monday)) % 7)) == monday.Date &&
+                        (s.MonthName.Contains(WeeklyFormTeam, StringComparison.OrdinalIgnoreCase) ||
+                         HasTeamMemberAssigned(s.AssignedUsers, WeeklyFormTeam))
+                    );
+
+                    // If ALREADY assigned for this team, DO NOT show it in the bulk entry form!
+                    if (isAlreadyAssignedForTeam) continue;
+
+                    var rowItem = new BulkWeeklyShiftRow
+                    {
+                        WeekNumber = weekNo,
+                        WeekStart = monday,
+                        WeekEnd = sunday,
+                        Analysts = new ObservableCollection<User>(analysts),
+                        Developers = new ObservableCollection<User>(devs),
+                        CheckLeaveConflictFunc = CheckUserLeaveConflict,
+                        SelectedAnalyst = null,
+                        SelectedDeveloper = null,
+                        IsSelected = false
+                    };
+                    rowItem.OnChangedAction = OnWeeklyFormChanged;
+                    rows.Add(rowItem);
+
+                    if (rows.Count >= 8) break; // Limit to up to 8 unassigned weeks
+                }
+            }
+            finally
+            {
+                _isPopulatingForm = false;
             }
 
             BulkWeeklyShiftRows = rows;
+            OnPropertyChanged(nameof(HasNoBulkWeeklyRows));
             ValidateWeeklyForm();
         }
 
@@ -730,10 +751,18 @@ namespace ZiraatProje.UI.ViewModels
             get => _selectedWeeklyFormAnalyst;
             set
             {
-                if (value != null && SelectedWeekOption != null)
+                if (!_isPopulatingForm && value != null)
                 {
-                    if (CheckUserLeaveConflict(value, SelectedWeekOption.StartDate, SelectedWeekOption.EndDate))
+                    if (!string.IsNullOrWhiteSpace(WeeklyFormTeam) && !string.Equals(value.Team, WeeklyFormTeam, StringComparison.OrdinalIgnoreCase))
                     {
+                        MessageBox.Show(
+                            $"⚠️ UYUMSUZ EKİP PERSONELİ ENGELİ!\n\n" +
+                            $"'{WeeklyFormTeam} Ekibi' haftalık nöbetine sadece bu ekibe ait personeller atanabilir.\n\n" +
+                            $"Seçilen '{value.FullName}' isimli personel '{value.Team}' ekibindedir.",
+                            "Ekip Uyumsuzluğu",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning
+                        );
                         _selectedWeeklyFormAnalyst = null;
                         OnPropertyChanged();
                         OnWeeklyFormChanged();
@@ -752,10 +781,18 @@ namespace ZiraatProje.UI.ViewModels
             get => _selectedWeeklyFormDeveloper;
             set
             {
-                if (value != null && SelectedWeekOption != null)
+                if (!_isPopulatingForm && value != null)
                 {
-                    if (CheckUserLeaveConflict(value, SelectedWeekOption.StartDate, SelectedWeekOption.EndDate))
+                    if (!string.IsNullOrWhiteSpace(WeeklyFormTeam) && !string.Equals(value.Team, WeeklyFormTeam, StringComparison.OrdinalIgnoreCase))
                     {
+                        MessageBox.Show(
+                            $"⚠️ UYUMSUZ EKİP PERSONELİ ENGELİ!\n\n" +
+                            $"'{WeeklyFormTeam} Ekibi' haftalık nöbetine sadece bu ekibe ait personeller atanabilir.\n\n" +
+                            $"Seçilen '{value.FullName}' isimli personel '{value.Team}' ekibindedir.",
+                            "Ekip Uyumsuzluğu",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning
+                        );
                         _selectedWeeklyFormDeveloper = null;
                         OnPropertyChanged();
                         OnWeeklyFormChanged();
@@ -859,7 +896,15 @@ namespace ZiraatProje.UI.ViewModels
 
         public void UpdateAvailableWeeksList()
         {
-            var allWeeks = GenerateAllWeeksForYear(2026);
+            var allWeeks = GenerateAllWeeksForYear(DateTime.Today.Year);
+
+            // Filter out past weeks (keep ONLY current week and future weeks)
+            var today = DateTime.Today;
+            int dow = (int)today.DayOfWeek;
+            int off = dow == 0 ? -6 : 1 - dow;
+            DateTime currentWeekMonday = today.AddDays(off).Date;
+
+            var futureWeeks = allWeeks.Where(w => w.StartDate.Date >= currentWeekMonday).ToList();
 
             var assignedWeekMondays = new HashSet<DateTime>();
             if (WeeklyReleaseList != null)
@@ -873,20 +918,20 @@ namespace ZiraatProje.UI.ViewModels
 
                     if (belongsToTeam)
                     {
-                        int dow = (int)w.ReleaseDate.DayOfWeek;
-                        int off = dow == 0 ? -6 : 1 - dow;
-                        assignedWeekMondays.Add(w.ReleaseDate.AddDays(off).Date);
+                        int d = (int)w.ReleaseDate.DayOfWeek;
+                        int o = d == 0 ? -6 : 1 - d;
+                        assignedWeekMondays.Add(w.ReleaseDate.AddDays(o).Date);
                     }
                 }
             }
 
-            var available = allWeeks.Where(w => !assignedWeekMondays.Contains(w.StartDate.Date)).ToList();
+            var available = futureWeeks.Where(w => !assignedWeekMondays.Contains(w.StartDate.Date)).ToList();
 
             if (SelectedWeeklyRelease != null)
             {
-                int dow = (int)SelectedWeeklyRelease.ReleaseDate.DayOfWeek;
-                int off = dow == 0 ? -6 : 1 - dow;
-                DateTime releaseMonday = SelectedWeeklyRelease.ReleaseDate.AddDays(off).Date;
+                int d = (int)SelectedWeeklyRelease.ReleaseDate.DayOfWeek;
+                int o = d == 0 ? -6 : 1 - d;
+                DateTime releaseMonday = SelectedWeeklyRelease.ReleaseDate.AddDays(o).Date;
 
                 var existingOption = allWeeks.FirstOrDefault(w => w.StartDate.Date == releaseMonday);
                 if (existingOption != null)
@@ -902,8 +947,10 @@ namespace ZiraatProje.UI.ViewModels
             }
 
             AvailableWeeksList = new ObservableCollection<WeekOptionItem>(available);
-            var upcoming = AvailableWeeksList.FirstOrDefault(w => w.EndDate.Date >= DateTime.Today);
-            SelectedWeekOption = upcoming ?? AvailableWeeksList.FirstOrDefault();
+            if (SelectedWeekOption == null || !available.Any(w => w.StartDate.Date == SelectedWeekOption.StartDate.Date))
+            {
+                SelectedWeekOption = available.FirstOrDefault();
+            }
         }
 
         public void UpdateWeeklyFormUserLists()
@@ -1034,62 +1081,70 @@ namespace ZiraatProje.UI.ViewModels
 
                 if (_selectedWeeklyRelease != null)
                 {
-                    _selectedMonthlyRelease = null;
-                    _selectedCustomShift = null;
-                    OnPropertyChanged(nameof(SelectedMonthlyRelease));
-                    OnPropertyChanged(nameof(SelectedCustomShift));
-                    OnPropertyChanged(nameof(IsMonthlySelected));
-                    OnPropertyChanged(nameof(IsCustomSelected));
-                    OnPropertyChanged(nameof(MonthlySaveButtonText));
-                    OnPropertyChanged(nameof(CustomSaveButtonText));
-
-                    if (_selectedWeeklyRelease.MonthName.StartsWith("Haftalık Yaygınlaştırma", StringComparison.OrdinalIgnoreCase))
+                    try
                     {
-                        SelectedReleaseTypeOption = "Haftalık Yaygınlaştırma";
-                        ReleaseMonthName = _selectedWeeklyRelease.MonthName;
-                        ReleaseDate = _selectedWeeklyRelease.ReleaseDate;
-                        ReleaseJiraNo = _selectedWeeklyRelease.JiraTicketNo;
-                        ReleaseExternalLink = _selectedWeeklyRelease.ExternalLink;
+                        _isPopulatingForm = true;
+                        _selectedMonthlyRelease = null;
+                        _selectedCustomShift = null;
+                        OnPropertyChanged(nameof(SelectedMonthlyRelease));
+                        OnPropertyChanged(nameof(SelectedCustomShift));
+                        OnPropertyChanged(nameof(IsMonthlySelected));
+                        OnPropertyChanged(nameof(IsCustomSelected));
+                        OnPropertyChanged(nameof(MonthlySaveButtonText));
+                        OnPropertyChanged(nameof(CustomSaveButtonText));
 
-                        foreach (var month in MonthsList)
+                        if (_selectedWeeklyRelease.MonthName.StartsWith("Haftalık Yaygınlaştırma", StringComparison.OrdinalIgnoreCase))
                         {
-                            if (_selectedWeeklyRelease.MonthName.Contains(month, StringComparison.OrdinalIgnoreCase))
+                            SelectedReleaseTypeOption = "Haftalık Yaygınlaştırma";
+                            ReleaseMonthName = _selectedWeeklyRelease.MonthName;
+                            ReleaseDate = _selectedWeeklyRelease.ReleaseDate;
+                            ReleaseJiraNo = _selectedWeeklyRelease.JiraTicketNo;
+                            ReleaseExternalLink = _selectedWeeklyRelease.ExternalLink;
+
+                            foreach (var month in MonthsList)
                             {
-                                _selectedMonth = month;
-                                OnPropertyChanged(nameof(SelectedMonth));
-                                UpdateMonthWeeksList();
-                                break;
+                                if (_selectedWeeklyRelease.MonthName.Contains(month, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    _selectedMonth = month;
+                                    OnPropertyChanged(nameof(SelectedMonth));
+                                    UpdateMonthWeeksList();
+                                    break;
+                                }
                             }
+
+                            SyncCheckboxesFromUserString(_selectedWeeklyRelease.RawAssignedUsers, ReleaseTeamUserGroups);
+                            SelectedTabIndex = 0; // Switch to Yaygınlaştırma Nöbeti tab
+                            IsFormOpen = true;
+                            return;
                         }
 
-                        SyncCheckboxesFromUserString(_selectedWeeklyRelease.RawAssignedUsers, ReleaseTeamUserGroups);
-                        SelectedTabIndex = 0; // Switch to Yaygınlaştırma Nöbeti tab
+                        WeeklyFormDescription = _selectedWeeklyRelease.MonthName;
+                        WeeklyFormDate = _selectedWeeklyRelease.ReleaseDate;
+                        WeeklyFormJiraNo = _selectedWeeklyRelease.JiraTicketNo;
+                        WeeklyFormLink = _selectedWeeklyRelease.ExternalLink;
+
+                        var comp = _selectedWeeklyRelease.TeamCompartments.FirstOrDefault(c => c.HasUsers);
+                        if (comp != null && TeamsList.Contains(comp.TeamName))
+                        {
+                            WeeklyFormTeam = comp.TeamName;
+                        }
+
+                        var names = _selectedWeeklyRelease.RawAssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(n => n.Trim()).ToList();
+                        var analyst = WeeklyTeamAnalysts.FirstOrDefault(a => names.Any(n => string.Equals(a.FullName, n, StringComparison.OrdinalIgnoreCase)));
+                        if (analyst != null) SelectedWeeklyFormAnalyst = analyst;
+
+                        var dev = WeeklyTeamDevelopers.FirstOrDefault(d => names.Any(n => string.Equals(d.FullName, n, StringComparison.OrdinalIgnoreCase)));
+                        if (dev != null) SelectedWeeklyFormDeveloper = dev;
+
+                        UpdateAvailableWeeksList();
+                        IsBulkWeeklyMode = false; // Switch to Single Edit Mode!
+                        SelectedTabIndex = 2; // Switch to Haftalık Nöbet side form tab!
                         IsFormOpen = true;
-                        return;
                     }
-
-                    WeeklyFormDescription = _selectedWeeklyRelease.MonthName;
-                    WeeklyFormDate = _selectedWeeklyRelease.ReleaseDate;
-                    WeeklyFormJiraNo = _selectedWeeklyRelease.JiraTicketNo;
-                    WeeklyFormLink = _selectedWeeklyRelease.ExternalLink;
-
-                    var comp = _selectedWeeklyRelease.TeamCompartments.FirstOrDefault(c => c.HasUsers);
-                    if (comp != null && TeamsList.Contains(comp.TeamName))
+                    finally
                     {
-                        WeeklyFormTeam = comp.TeamName;
+                        _isPopulatingForm = false;
                     }
-
-                    var names = _selectedWeeklyRelease.RawAssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(n => n.Trim()).ToList();
-                    var analyst = WeeklyTeamAnalysts.FirstOrDefault(a => names.Any(n => string.Equals(a.FullName, n, StringComparison.OrdinalIgnoreCase)));
-                    if (analyst != null) SelectedWeeklyFormAnalyst = analyst;
-
-                    var dev = WeeklyTeamDevelopers.FirstOrDefault(d => names.Any(n => string.Equals(d.FullName, n, StringComparison.OrdinalIgnoreCase)));
-                    if (dev != null) SelectedWeeklyFormDeveloper = dev;
-
-                    UpdateAvailableWeeksList();
-                    IsBulkWeeklyMode = false; // Switch to Single Edit Mode!
-                    SelectedTabIndex = 2; // Switch to Haftalık Nöbet side form tab!
-                    IsFormOpen = true;
                 }
             }
         }
@@ -1361,6 +1416,48 @@ namespace ZiraatProje.UI.ViewModels
             "Özel Geçiş Nöbeti"
         };
 
+        private bool _isAddShiftTypeModalOpen = false;
+        public bool IsAddShiftTypeModalOpen
+        {
+            get => _isAddShiftTypeModalOpen;
+            set { _isAddShiftTypeModalOpen = value; OnPropertyChanged(); }
+        }
+
+        private string _newShiftTypeName = string.Empty;
+        public string NewShiftTypeName
+        {
+            get => _newShiftTypeName;
+            set { _newShiftTypeName = value; OnPropertyChanged(); }
+        }
+
+        private void ExecuteConfirmAddShiftType()
+        {
+            if (string.IsNullOrWhiteSpace(NewShiftTypeName))
+            {
+                MessageBox.Show("Lütfen geçerli bir nöbet konusu / tipi adı giriniz.", "Eksik Bilgi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string cleanName = NewShiftTypeName.Trim();
+
+            if (!ShiftTopicsList.Any(t => string.Equals(t, cleanName, StringComparison.OrdinalIgnoreCase)))
+            {
+                try
+                {
+                    _services.AddShiftType(cleanName);
+                }
+                catch
+                {
+                    // Ignore DB error if already exists
+                }
+                ShiftTopicsList.Add(cleanName);
+            }
+
+            CustomTopic = cleanName;
+            IsAddShiftTypeModalOpen = false;
+            MessageBox.Show($"✅ '{cleanName}' konusu nöbet tipleri seçeneklerine başarıyla eklendi!", "Konu Eklendi", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
         private string _customTopic = "Server Geçiş Nöbeti";
         public string CustomTopic
         {
@@ -1577,6 +1674,10 @@ namespace ZiraatProje.UI.ViewModels
         public ICommand SaveWeeklyShiftCommand { get; }
         public ICommand DeleteWeeklyShiftCommand { get; }
         public ICommand ClearWeeklyFormCommand { get; }
+        public ICommand SwitchToBulkWeeklyModeCommand { get; }
+        public ICommand OpenAddShiftTypeModalCommand { get; }
+        public ICommand ConfirmAddShiftTypeCommand { get; }
+        public ICommand CancelAddShiftTypeCommand { get; }
         public ICommand SelectWeeklyTeamFilterCommand { get; }
         public ICommand SelectFinishedFilterCommand { get; }
         public ICommand OpenLinkCommand { get; }
@@ -1608,6 +1709,15 @@ namespace ZiraatProje.UI.ViewModels
             SaveWeeklyShiftCommand = new RelayCommand(ExecuteSaveWeeklyShift);
             DeleteWeeklyShiftCommand = new RelayCommand(ExecuteDeleteWeeklyShift);
             ClearWeeklyFormCommand = new RelayCommand(_ => ClearWeeklyForm());
+            SwitchToBulkWeeklyModeCommand = new RelayCommand(_ => ExecuteSwitchToBulkWeeklyMode());
+
+            OpenAddShiftTypeModalCommand = new RelayCommand(_ =>
+            {
+                NewShiftTypeName = string.Empty;
+                IsAddShiftTypeModalOpen = true;
+            });
+            ConfirmAddShiftTypeCommand = new RelayCommand(_ => ExecuteConfirmAddShiftType());
+            CancelAddShiftTypeCommand = new RelayCommand(_ => { IsAddShiftTypeModalOpen = false; });
             SelectWeeklyTeamFilterCommand = new RelayCommand(param =>
             {
                 if (param is string teamName)
@@ -1654,6 +1764,28 @@ namespace ZiraatProje.UI.ViewModels
             ToggleAiShiftCardCommand = new RelayCommand(_ => { IsAiShiftCardExpanded = !IsAiShiftCardExpanded; });
 
             LoadData();
+        }
+
+        public void SelectConflictingShift(int shiftId, string shiftCategory)
+        {
+            LoadData();
+            if (string.Equals(shiftCategory, "Custom", StringComparison.OrdinalIgnoreCase))
+            {
+                var target = CustomShiftsList.FirstOrDefault(c => c.Id == shiftId);
+                if (target != null)
+                {
+                    SelectedCustomShift = target;
+                }
+            }
+            else
+            {
+                var target = FilteredWeeklyReleaseList.FirstOrDefault(w => w.Id == shiftId)
+                             ?? MonthlyReleaseList.FirstOrDefault(m => m.Id == shiftId);
+                if (target != null)
+                {
+                    SelectedMonthlyRelease = target;
+                }
+            }
         }
 
         // ── AI Akıllı Nöbet Asistanı Properties & Methods ─────────────────
@@ -1709,6 +1841,30 @@ namespace ZiraatProje.UI.ViewModels
             }
         }
 
+        private string _aiShiftSelectedType = "Tüm Nöbet Türleri";
+        public string AiShiftSelectedType
+        {
+            get => _aiShiftSelectedType;
+            set
+            {
+                _aiShiftSelectedType = value;
+                OnPropertyChanged();
+                if (IsAiShiftCardExpanded)
+                    ExecuteGetAIShiftRecommendations(null);
+            }
+        }
+
+        public ObservableCollection<string> AiShiftTypeFilterOptions { get; } = new ObservableCollection<string>
+        {
+            "Tüm Nöbet Türleri",
+            "Haftalık Nöbet",
+            "Yaygınlaştırma Nöbeti",
+            "Server Geçiş Nöbeti",
+            "Firewall Geçiş Nöbeti",
+            "Acil Güvenlik Yaması Nöbeti",
+            "Özel Geçiş Nöbeti"
+        };
+
         public List<string> AiShiftTeamFilterOptions { get; } = new List<string> { "Tüm Ekipler", "Takip", "Tahsis", "Teminat" };
 
         private void ExecuteGetAIShiftRecommendations(object? param)
@@ -1719,14 +1875,17 @@ namespace ZiraatProje.UI.ViewModels
                 var shifts = _services.GetAllShifts();
                 var leaves = _services.GetAllLeaves();
                 var customShifts = _services.GetAllCustomShifts();
+                var monthlyReleaseShifts = _services.GetAllMonthlyReleaseShifts();
 
                 var recommendations = ZiraatMatrixAiEngine.Instance.Shifts.GetShiftRecommendationsForDate(
                     AiShiftTargetDate,
                     AiShiftSelectedTeam,
+                    AiShiftSelectedType,
                     users,
                     shifts,
                     leaves,
-                    customShifts);
+                    customShifts,
+                    monthlyReleaseShifts);
 
                 AiShiftRecommendations = new ObservableCollection<ShiftRecommendationOption>(recommendations.Take(6));
                 IsAiShiftCardExpanded = true;
@@ -1752,24 +1911,56 @@ namespace ZiraatProje.UI.ViewModels
                     .ToList();
 
                 ShiftTopicsList.Clear();
-                foreach (var st in dbShiftTypes)
+                var defaultPresets = new List<string>
                 {
-                    ShiftTopicsList.Add(st.ShiftName);
-                }
-                if (!ShiftTopicsList.Any())
+                    "Server Geçiş Nöbeti",
+                    "Firewall Geçiş Nöbeti",
+                    "Acil Güvenlik Yaması Nöbeti",
+                    "Server & Altyapı Geçiş Nöbeti",
+                    "Özel Geçiş Nöbeti"
+                };
+
+                foreach (var preset in defaultPresets)
                 {
-                    ShiftTopicsList.Add("Firewall Geçiş Nöbeti");
-                    ShiftTopicsList.Add("Server Geçiş Nöbeti");
-                    ShiftTopicsList.Add("Acil Güvenlik Yaması");
-                    ShiftTopicsList.Add("Özel Geçiş Nöbeti");
+                    if (!ShiftTopicsList.Contains(preset))
+                        ShiftTopicsList.Add(preset);
                 }
 
-                // Yearly Reset: Delete finished shifts from previous years
+                foreach (var st in dbShiftTypes)
+                {
+                    string trimmed = st.ShiftName.Trim();
+                    if (!ShiftTopicsList.Any(t => string.Equals(t, trimmed, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        if (!string.Equals(trimmed, "zxcvdbgmjök", StringComparison.OrdinalIgnoreCase) &&
+                            !string.Equals(trimmed, "özel", StringComparison.OrdinalIgnoreCase) &&
+                            !string.Equals(trimmed, "Server Geçiş", StringComparison.OrdinalIgnoreCase) &&
+                            !string.Equals(trimmed, "Firewall Geçiş", StringComparison.OrdinalIgnoreCase) &&
+                            !string.Equals(trimmed, "Acil Güvenlik Yaması", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ShiftTopicsList.Add(trimmed);
+                        }
+                    }
+                }
+
+                foreach (var topic in ShiftTopicsList)
+                {
+                    if (!AiShiftTypeFilterOptions.Contains(topic))
+                    {
+                        AiShiftTypeFilterOptions.Add(topic);
+                    }
+                }
+
+                // Yearly Reset: Delete finished shifts from previous years (EXCEPT Yılbaşı Nöbeti which is preserved for 10 years!)
                 int currentYear = DateTime.Today.Year;
                 var rawDbReleases = _services.GetAllMonthlyReleaseShifts();
                 var oldFinished = rawDbReleases.Where(r => r.IsFinished && r.ReleaseDate.Year < currentYear).ToList();
                 foreach (var old in oldFinished)
                 {
+                    bool isYilbasi = (!string.IsNullOrWhiteSpace(old.MonthName) && old.MonthName.Contains("Yılbaşı", StringComparison.OrdinalIgnoreCase));
+                    if (isYilbasi && old.ReleaseDate.Year >= (currentYear - 10))
+                    {
+                        continue; // Keep Yılbaşı Nöbeti for up to 10 years!
+                    }
                     _services.DeleteMonthlyReleaseShift(old.Id);
                 }
 
@@ -1855,11 +2046,17 @@ namespace ZiraatProje.UI.ViewModels
                 FinishedMonthlyList = displayFinishedMonthly;
                 FinishedWeeklyList = displayFinishedWeekly;
 
-                // Delete finished custom shifts from previous years
+                // Delete finished custom shifts from previous years (EXCEPT Yılbaşı Nöbeti which is preserved for 10 years!)
                 var rawDbCustom = _services.GetAllCustomShifts();
                 var oldFinishedCustom = rawDbCustom.Where(c => c.IsFinished && c.ShiftDate.Year < currentYear).ToList();
                 foreach (var old in oldFinishedCustom)
                 {
+                    bool isYilbasi = (!string.IsNullOrWhiteSpace(old.Topic) && old.Topic.Contains("Yılbaşı", StringComparison.OrdinalIgnoreCase))
+                                  || (!string.IsNullOrWhiteSpace(old.Description) && old.Description.Contains("Yılbaşı", StringComparison.OrdinalIgnoreCase));
+                    if (isYilbasi && old.ShiftDate.Year >= (currentYear - 10))
+                    {
+                        continue; // Keep Yılbaşı Nöbeti for up to 10 years!
+                    }
                     _services.DeleteCustomShift(old.Id);
                 }
 
@@ -2192,17 +2389,6 @@ namespace ZiraatProje.UI.ViewModels
                         User = u,
                         IsSelected = false
                     };
-                    relItem.OnSelectionValidatingFunc = (user) =>
-                    {
-                        DateTime startDate = ReleaseDate.Date;
-                        DateTime endDate = ReleaseDate.Date;
-                        if (IsWeeklyReleaseTypeSelected && SelectedMonthWeekOption != null)
-                        {
-                            startDate = SelectedMonthWeekOption.StartDate.Date;
-                            endDate = SelectedMonthWeekOption.EndDate.Date;
-                        }
-                        return !CheckUserLeaveConflict(user, startDate, endDate);
-                    };
                     relGroup.Users.Add(relItem);
                 }
                 releaseGroups.Add(relGroup);
@@ -2214,11 +2400,6 @@ namespace ZiraatProje.UI.ViewModels
                     {
                         User = u,
                         IsSelected = false
-                    };
-                    custItem.OnSelectionValidatingFunc = (user) =>
-                    {
-                        DateTime targetDate = CustomShiftDate.Date;
-                        return !CheckUserLeaveConflict(user, targetDate, targetDate);
                     };
                     custGroup.Users.Add(custItem);
                 }
@@ -2372,42 +2553,51 @@ namespace ZiraatProje.UI.ViewModels
 
         private void SyncCheckboxesFromUserString(string userString, ObservableCollection<TeamUserGroup> groupList)
         {
-            if (string.IsNullOrWhiteSpace(userString))
+            try
             {
+                _isPopulatingForm = true;
+                if (string.IsNullOrWhiteSpace(userString))
+                {
+                    foreach (var group in groupList)
+                    {
+                        foreach (var item in group.Users) item.IsSelected = false;
+                    }
+                    return;
+                }
+
+                var rawTokens = userString.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                          .Select(n => n.Trim())
+                                          .ToList();
+
+                var cleanNames = new List<string>();
+                foreach (var token in rawTokens)
+                {
+                    string nameOnly = token;
+                    if (token.Contains(':'))
+                    {
+                        nameOnly = token.Substring(token.IndexOf(':') + 1).Trim();
+                    }
+                    cleanNames.Add(nameOnly.Trim());
+                }
+
                 foreach (var group in groupList)
                 {
-                    foreach (var item in group.Users) item.IsSelected = false;
+                    foreach (var item in group.Users)
+                    {
+                        string uFullName = item.User.FullName.Trim();
+                        string uCombined = $"{item.User.Name} {item.User.Surname}".Trim();
+
+                        item.IsSelected = cleanNames.Any(cn =>
+                            string.Equals(cn, uFullName, StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(cn, uCombined, StringComparison.OrdinalIgnoreCase) ||
+                            (cn.Contains(' ') && uFullName.Contains(cn, StringComparison.OrdinalIgnoreCase))
+                        );
+                    }
                 }
-                return;
             }
-
-            var rawTokens = userString.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                                      .Select(n => n.Trim())
-                                      .ToList();
-
-            var cleanNames = new List<string>();
-            foreach (var token in rawTokens)
+            finally
             {
-                string nameOnly = token;
-                if (token.Contains(':'))
-                {
-                    nameOnly = token.Substring(token.IndexOf(':') + 1).Trim();
-                }
-                cleanNames.Add(nameOnly.Trim());
-            }
-
-            foreach (var group in groupList)
-            {
-                foreach (var item in group.Users)
-                {
-                    string uFullName = item.User.FullName.Trim();
-                    string uCombined = $"{item.User.Name} {item.User.Surname}".Trim();
-
-                    item.IsSelected = cleanNames.Any(cn =>
-                        string.Equals(cn, uFullName, StringComparison.OrdinalIgnoreCase) ||
-                        string.Equals(cn, uCombined, StringComparison.OrdinalIgnoreCase) ||
-                        uFullName.Equals(cn, StringComparison.OrdinalIgnoreCase));
-                }
+                _isPopulatingForm = false;
             }
         }
 
@@ -2473,6 +2663,19 @@ namespace ZiraatProje.UI.ViewModels
                 {
                     targetStart = SelectedMonthWeekOption.StartDate.Date;
                     targetEnd = SelectedMonthWeekOption.EndDate.Date;
+                }
+
+                if (SelectedMonthlyRelease == null && SelectedWeeklyRelease == null && targetStart.Date < DateTime.Today.Date.AddDays(-((7 + ((int)DateTime.Today.DayOfWeek - (int)DayOfWeek.Monday)) % 7)))
+                {
+                    MessageBox.Show(
+                        $"⚠️ GEÇMİŞ TARİHE NÖBET ATANAMAZ!\n\n" +
+                        $"Geçmiş bir tarihe ({targetStart:dd.MM.yyyy}) yeni nöbet kaydı oluşturulamaz.\n\n" +
+                        $"Lütfen bugün ({DateTime.Today:dd.MM.yyyy}) veya gelecek bir tarih seçiniz.",
+                        "Geçersiz Tarih",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning
+                    );
+                    return;
                 }
 
                 if (!ValidateCurrentlySelectedUsers(ReleaseTeamUserGroups, targetStart, targetEnd))
@@ -2562,6 +2765,25 @@ namespace ZiraatProje.UI.ViewModels
         {
             try
             {
+                if (SelectedCustomShift == null && CustomShiftDate.Date < DateTime.Today.Date)
+                {
+                    MessageBox.Show(
+                        $"⚠️ GEÇMİŞ TARİHE NÖBET ATANAMAZ!\n\n" +
+                        $"Geçmiş bir tarihe ({CustomShiftDate:dd.MM.yyyy}) yeni nöbet kaydı oluşturulamaz.\n\n" +
+                        $"Lütfen bugün ({DateTime.Today:dd.MM.yyyy}) veya gelecek bir tarih seçiniz.",
+                        "Geçersiz Tarih",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning
+                    );
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(CustomTopic))
+                {
+                    MessageBox.Show("Lütfen bir nöbet konusu / tipi seçiniz.", "Eksik Bilgi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 if (!ValidateCurrentlySelectedUsers(CustomTeamUserGroups, CustomShiftDate.Date, CustomShiftDate.Date))
                 {
                     return;
@@ -2569,31 +2791,6 @@ namespace ZiraatProje.UI.ViewModels
 
                 string assignedUsers = GetSelectedUserNames(CustomTeamUserGroups);
                 string creator = string.IsNullOrWhiteSpace(CurrentUserName) ? "Sistem Kullanıcısı" : CurrentUserName;
-
-                if (string.IsNullOrWhiteSpace(CustomTopic))
-                {
-                    MessageBox.Show("Lütfen bir nöbet konusu / tipi seçiniz.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // If user types a brand new shift topic, save it so it's available in the dropdown for future use!
-                bool isNewShiftType = !ShiftTopicsList.Any(t => string.Equals(t, CustomTopic.Trim(), StringComparison.OrdinalIgnoreCase));
-                if (isNewShiftType)
-                {
-                    try
-                    {
-                        _services.AddShiftType(CustomTopic.Trim());
-                    }
-                    catch
-                    {
-                        // Ignore duplicate DB insert error if any
-                    }
-
-                    if (!ShiftTopicsList.Contains(CustomTopic.Trim()))
-                    {
-                        ShiftTopicsList.Add(CustomTopic.Trim());
-                    }
-                }
 
                 // SMART ROUTING: If user selects Haftalık or Aylık Yaygınlaştırma, automatically route to Ana Yaygınlaştırma Nöbet Listesi!
                 if (CustomTopic.IndexOf("Yaygınlaştırma", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -2674,34 +2871,85 @@ namespace ZiraatProje.UI.ViewModels
 
         private void ClearWeeklyForm()
         {
-            _selectedWeeklyRelease = null;
-            IsBulkWeeklyMode = true;
-            _isWeeklySavedSuccess = false;
+            try
+            {
+                _isPopulatingForm = true;
+                _selectedWeeklyRelease = null;
+                _isWeeklySavedSuccess = false;
 
-            _weeklyFormTeam = string.Empty;
-            _selectedWeeklyFormAnalyst = null;
-            _selectedWeeklyFormDeveloper = null;
-            _selectedWeekOption = null;
-            _weeklyFormDate = DateTime.Today;
-            _weeklyFormDescription = string.Empty;
-            _weeklyFormJiraNo = string.Empty;
-            _weeklyFormLink = string.Empty;
+                _selectedWeeklyFormAnalyst = null;
+                _selectedWeeklyFormDeveloper = null;
+                _selectedWeekOption = null;
+                _weeklyFormDate = DateTime.Today;
+                _weeklyFormDescription = string.Empty;
+                _weeklyFormJiraNo = string.Empty;
+                _weeklyFormLink = string.Empty;
 
-            OnPropertyChanged(nameof(SelectedWeeklyRelease));
-            OnPropertyChanged(nameof(IsWeeklySelected));
-            OnPropertyChanged(nameof(WeeklyFormTeam));
-            OnPropertyChanged(nameof(SelectedWeeklyFormAnalyst));
-            OnPropertyChanged(nameof(SelectedWeeklyFormDeveloper));
-            OnPropertyChanged(nameof(SelectedWeekOption));
-            OnPropertyChanged(nameof(WeeklyFormDescription));
-            OnPropertyChanged(nameof(WeeklyFormJiraNo));
-            OnPropertyChanged(nameof(WeeklyFormLink));
-            OnPropertyChanged(nameof(WeeklySaveButtonText));
+                OnPropertyChanged(nameof(SelectedWeeklyRelease));
+                OnPropertyChanged(nameof(IsWeeklySelected));
+                OnPropertyChanged(nameof(SelectedWeeklyFormAnalyst));
+                OnPropertyChanged(nameof(SelectedWeeklyFormDeveloper));
+                OnPropertyChanged(nameof(SelectedWeekOption));
+                OnPropertyChanged(nameof(WeeklyFormDescription));
+                OnPropertyChanged(nameof(WeeklyFormJiraNo));
+                OnPropertyChanged(nameof(WeeklyFormLink));
 
-            WeeklyTeamAnalysts.Clear();
-            WeeklyTeamDevelopers.Clear();
-            BulkWeeklyShiftRows.Clear();
+                if (string.IsNullOrWhiteSpace(WeeklyFormTeam))
+                {
+                    WeeklyFormTeam = "Takip";
+                }
 
+                if (BulkWeeklyShiftRows != null && BulkWeeklyShiftRows.Any())
+                {
+                    foreach (var row in BulkWeeklyShiftRows)
+                    {
+                        row.SelectedAnalyst = null;
+                        row.SelectedDeveloper = null;
+                        row.IsSelected = false;
+                    }
+                }
+                else
+                {
+                    BuildBulkWeeklyShiftRows();
+                }
+            }
+            finally
+            {
+                _isPopulatingForm = false;
+            }
+
+            ValidateWeeklyForm();
+        }
+
+        private void ExecuteSwitchToBulkWeeklyMode()
+        {
+            try
+            {
+                _isPopulatingForm = true;
+                _selectedWeeklyRelease = null;
+                _selectedMonthlyRelease = null;
+                _selectedCustomShift = null;
+                OnPropertyChanged(nameof(SelectedWeeklyRelease));
+                OnPropertyChanged(nameof(SelectedMonthlyRelease));
+                OnPropertyChanged(nameof(SelectedCustomShift));
+                OnPropertyChanged(nameof(IsWeeklySelected));
+                OnPropertyChanged(nameof(IsMonthlySelected));
+                OnPropertyChanged(nameof(IsCustomSelected));
+
+                IsBulkWeeklyMode = true;
+                if (string.IsNullOrWhiteSpace(WeeklyFormTeam))
+                {
+                    WeeklyFormTeam = "Takip";
+                }
+
+                BuildBulkWeeklyShiftRows();
+                SelectedTabIndex = 2; // Haftalık Nöbet tab
+                IsFormOpen = true;
+            }
+            finally
+            {
+                _isPopulatingForm = false;
+            }
             ValidateWeeklyForm();
         }
 
@@ -2709,8 +2957,31 @@ namespace ZiraatProje.UI.ViewModels
         {
             if (!IsWeeklySaveEnabled) return;
 
+            var selectedRows = BulkWeeklyShiftRows.Where(r => r.IsSelected && r.SelectedAnalyst != null && r.SelectedDeveloper != null).ToList();
+            if (!selectedRows.Any())
+            {
+                MessageBox.Show("Lütfen kaydetmek istediğiniz haftaları solundaki kutucuğu işaretleyerek seçiniz.", "Seçim Yapılmadı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
+                foreach (var row in selectedRows)
+                {
+                    if (CheckUserLeaveConflict(row.SelectedAnalyst, row.WeekStart, row.WeekEnd))
+                    {
+                        row.SelectedAnalyst = null;
+                        ValidateWeeklyForm();
+                        return;
+                    }
+
+                    if (CheckUserLeaveConflict(row.SelectedDeveloper, row.WeekStart, row.WeekEnd))
+                    {
+                        row.SelectedDeveloper = null;
+                        ValidateWeeklyForm();
+                        return;
+                    }
+                }
                 int count = 0;
                 string creator = string.IsNullOrWhiteSpace(CurrentUserName) ? "Sistem Kullanıcısı" : CurrentUserName;
 
@@ -2769,6 +3040,14 @@ namespace ZiraatProje.UI.ViewModels
             }
         }
 
+        private bool HasTeamMemberAssigned(string assignedUsers, string teamName)
+        {
+            if (string.IsNullOrWhiteSpace(assignedUsers) || string.IsNullOrWhiteSpace(teamName)) return false;
+            var names = assignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                     .Select(n => n.Contains(':') ? n.Substring(n.IndexOf(':') + 1).Trim() : n.Trim());
+            return _allUsers.Any(u => string.Equals(u.Team, teamName, StringComparison.OrdinalIgnoreCase) && names.Any(n => string.Equals(u.FullName, n, StringComparison.OrdinalIgnoreCase)));
+        }
+
         private void ExecuteSaveWeeklyShift(object? param)
         {
             if (IsBulkWeeklyMode)
@@ -2795,8 +3074,29 @@ namespace ZiraatProje.UI.ViewModels
 
                 int targetId = SelectedWeeklyRelease?.Id ?? 0;
 
-                if (targetId == 0)
+                if (targetId == 0 && SelectedWeekOption != null)
                 {
+                    var existingWeeklyShift = _services.GetAllMonthlyReleaseShifts().FirstOrDefault(s =>
+                        !s.IsFinished &&
+                        (!string.IsNullOrWhiteSpace(s.MonthName) && s.MonthName.Contains("Haftalık", StringComparison.OrdinalIgnoreCase)) &&
+                        s.ReleaseDate.Date.AddDays(-((7 + ((int)s.ReleaseDate.DayOfWeek - (int)DayOfWeek.Monday)) % 7)) == SelectedWeekOption.StartDate.Date &&
+                        (s.MonthName.Contains(WeeklyFormTeam, StringComparison.OrdinalIgnoreCase) ||
+                         HasTeamMemberAssigned(s.AssignedUsers, WeeklyFormTeam))
+                    );
+
+                    if (existingWeeklyShift != null)
+                    {
+                        MessageBox.Show(
+                            $"⚠️ BU HAFTA İÇİN ZATEN NÖBET KAYDI MEVCUT!\n\n" +
+                            $"'{WeeklyFormTeam} Ekibi' için '{SelectedWeekOption.DisplayText}' haftasına ait bir nöbet kaydı sistemde zaten mevcuttur.\n\n" +
+                            $"Aynı hafta için 2. bir nöbet kaydı oluşturulamaz. Lütfen mevcut nöbet kaydını listeden seçip güncelleyiniz.",
+                            "Zaten Mevcut Nöbet Kaydı",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning
+                        );
+                        return;
+                    }
+
                     var item = new MonthlyReleaseShift
                     {
                         MonthName = monthName,

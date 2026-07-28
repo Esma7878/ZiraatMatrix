@@ -59,6 +59,17 @@ namespace ZiraatProje.UI.ViewModels
         };
     }
 
+    public class ShiftConflictNotificationModel
+    {
+        public int ShiftId { get; set; }
+        public string ShiftCategory { get; set; } = "MonthlyRelease";
+        public string PersonnelName { get; set; } = string.Empty;
+        public string LeaveDatesText { get; set; } = string.Empty;
+        public string ShiftTitleText { get; set; } = string.Empty;
+        public string Title => "🚨 KRİTİK NÖBET-İZİN ÇAKIŞMASI TESPİT EDİLDİ!";
+        public string Message => $"'{PersonnelName}' isimli personel {LeaveDatesText} tarihleri arasında İZİNLİDİR! Ancak bu tarihlerde nöbetçi ({ShiftTitleText}) olarak kayıtlı görünmektedir. Düzeltmek için tıklayınız.";
+    }
+
     public class UpcomingReleaseItem
     {
         public DateTime ReleaseDate { get; set; }
@@ -280,6 +291,21 @@ namespace ZiraatProje.UI.ViewModels
             }
         }
 
+        private Action<int, string>? _onNavigateToShiftConflict;
+
+        private ObservableCollection<ShiftConflictNotificationModel> _shiftConflictList = new ObservableCollection<ShiftConflictNotificationModel>();
+        public ObservableCollection<ShiftConflictNotificationModel> ShiftConflictList
+        {
+            get => _shiftConflictList;
+            set
+            {
+                _shiftConflictList = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasShiftConflicts));
+            }
+        }
+        public bool HasShiftConflicts => ShiftConflictList != null && ShiftConflictList.Count > 0;
+
         public Visibility NotificationVisible =>
             (NotificationList != null && NotificationList.Count > 0) ? Visibility.Visible : Visibility.Collapsed;
 
@@ -332,13 +358,14 @@ namespace ZiraatProje.UI.ViewModels
         public System.Windows.Input.ICommand NavigateToShiftsCommand { get; }
         public System.Windows.Input.ICommand NavigateToProjectsCommand { get; }
         public System.Windows.Input.ICommand NavigateToUsersCommand { get; }
+        public System.Windows.Input.ICommand NavigateToConflictingShiftCommand { get; }
         public System.Windows.Input.ICommand CreateLeaveRequestCommand { get; }
         public System.Windows.Input.ICommand CreateShiftCommand { get; }
         public System.Windows.Input.ICommand CreateProjectCommand { get; }
         public System.Windows.Input.ICommand CreateUserCommand { get; }
         public System.Windows.Input.ICommand DismissNotificationCommand { get; }
 
-        public DashboardViewModel() : this(false, string.Empty, null, null, null, null, null, null, null, null) { }
+        public DashboardViewModel() : this(false, string.Empty, null, null, null, null, null, null, null, null, null) { }
 
         public DashboardViewModel(
             bool isAdmin, 
@@ -350,7 +377,8 @@ namespace ZiraatProje.UI.ViewModels
             Action? onCreateLeaveRequest = null,
             Action? onCreateShift = null,
             Action? onCreateProject = null,
-            Action? onCreateUser = null)
+            Action? onCreateUser = null,
+            Action<int, string>? onNavigateToShiftConflict = null)
         {
             IsAdmin = isAdmin;
             _onNavigateToLeaves = onNavigateToLeaves;
@@ -361,11 +389,23 @@ namespace ZiraatProje.UI.ViewModels
             _onCreateShift = onCreateShift;
             _onCreateProject = onCreateProject;
             _onCreateUser = onCreateUser;
+            _onNavigateToShiftConflict = onNavigateToShiftConflict;
 
             NavigateToLeavesCommand = new RelayCommand(_ => _onNavigateToLeaves?.Invoke());
             NavigateToShiftsCommand = new RelayCommand(_ => _onNavigateToShifts?.Invoke());
             NavigateToProjectsCommand = new RelayCommand(_ => _onNavigateToProjects?.Invoke());
             NavigateToUsersCommand = new RelayCommand(_ => _onNavigateToUsers?.Invoke());
+            NavigateToConflictingShiftCommand = new RelayCommand(param =>
+            {
+                if (param is ShiftConflictNotificationModel conflict)
+                {
+                    _onNavigateToShiftConflict?.Invoke(conflict.ShiftId, conflict.ShiftCategory);
+                }
+                else if (_onNavigateToShifts != null)
+                {
+                    _onNavigateToShifts.Invoke();
+                }
+            });
 
             CreateLeaveRequestCommand = new RelayCommand(_ => _onCreateLeaveRequest?.Invoke());
             CreateShiftCommand = new RelayCommand(_ => _onCreateShift?.Invoke());
@@ -410,7 +450,16 @@ namespace ZiraatProje.UI.ViewModels
                 var endOfWeek = startOfWeek.AddDays(7).Date;
 
                 var shifts = _services.GetAllShifts();
-                WeeklyShiftCount = shifts.Count(s => s.ShiftDate.Date >= startOfWeek && s.ShiftDate.Date < endOfWeek);
+                var monthlyReleasesAll = _services.GetAllMonthlyReleaseShifts().Where(m => !m.IsFinished).ToList();
+                int releaseWeeklyPersonnelCount = monthlyReleasesAll
+                    .Where(m => (m.ReleaseDate.Date >= startOfWeek && m.ReleaseDate.Date < endOfWeek) || (!string.IsNullOrWhiteSpace(m.MonthName) && m.MonthName.Contains("Haftalık")))
+                    .SelectMany(m => m.AssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                    .Select(n => n.Contains(':') ? n.Substring(n.IndexOf(':') + 1).Trim() : n.Trim())
+                    .Where(n => !string.IsNullOrWhiteSpace(n))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Count();
+
+                WeeklyShiftCount = Math.Max(shifts.Count(s => s.ShiftDate.Date >= startOfWeek && s.ShiftDate.Date < endOfWeek), releaseWeeklyPersonnelCount);
 
                 // 2. Active Leave Count (Approved leaves active today)
                 var leaves = _services.GetAllLeaves() ?? new List<Leave>();
@@ -556,43 +605,180 @@ namespace ZiraatProje.UI.ViewModels
 
                 // 8. POPULATE LIVE OPERATIONAL DASHBOARD WIDGETS
                 // A. Today On-Duty Personnel
+                var allUsers = _services.GetAllUsers();
                 var todayShifts = new List<TodayShiftItem>();
+                int weekDiff = (7 + ((int)today.DayOfWeek - (int)DayOfWeek.Monday)) % 7;
+                DateTime currentWeekStart = today.AddDays(-weekDiff).Date;
+                DateTime currentWeekEnd = currentWeekStart.AddDays(6).Date;
+
                 var monthlyReleases = _services.GetAllMonthlyReleaseShifts().Where(x => !x.IsFinished).ToList();
-                foreach (var m in monthlyReleases.Where(x => x.ReleaseDate.Date == today))
+                foreach (var m in monthlyReleases)
                 {
-                    todayShifts.Add(new TodayShiftItem
+                    bool isWeekly = (!string.IsNullOrWhiteSpace(m.MonthName) && m.MonthName.Contains("Haftalık", StringComparison.OrdinalIgnoreCase)) ||
+                                    (m.ReleaseDate.Date >= currentWeekStart && m.ReleaseDate.Date <= currentWeekEnd);
+
+                    bool isActiveToday = isWeekly
+                        ? ((m.ReleaseDate.Date >= currentWeekStart && m.ReleaseDate.Date <= currentWeekEnd) || (m.ReleaseDate.Date <= today && today <= m.ReleaseDate.Date.AddDays(6)))
+                        : (m.ReleaseDate.Date == today);
+
+                    if (isActiveToday && !string.IsNullOrWhiteSpace(m.AssignedUsers))
                     {
-                        PersonnelName = m.AssignedUsers,
-                        ShiftTitle = string.IsNullOrWhiteSpace(m.MonthName) ? "Yaygınlaştırma Nöbeti" : m.MonthName,
-                        Team = "Genel / Ortak",
-                        JiraTicketNo = m.JiraTicketNo ?? ""
-                    });
+                        var names = m.AssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(n => n.Trim());
+                        foreach (var name in names)
+                        {
+                            string cleanName = name.Contains(':') ? name.Substring(name.IndexOf(':') + 1).Trim() : name.Trim();
+                            var userObj = allUsers.FirstOrDefault(u => u.FullName.Equals(cleanName, StringComparison.OrdinalIgnoreCase));
+                            string teamName = userObj?.Team ?? "Genel / Ortak";
+
+                            todayShifts.Add(new TodayShiftItem
+                            {
+                                PersonnelName = cleanName,
+                                ShiftTitle = string.IsNullOrWhiteSpace(m.MonthName) ? "Yaygınlaştırma Nöbeti" : m.MonthName,
+                                Team = teamName,
+                                JiraTicketNo = m.JiraTicketNo ?? ""
+                            });
+                        }
+                    }
                 }
 
-                var customShifts = _services.GetAllCustomShifts();
-                foreach (var c in customShifts.Where(x => x.ShiftDate.Date == today))
+                var customShifts = _services.GetAllCustomShifts().Where(x => !x.IsFinished).ToList();
+                foreach (var c in customShifts)
                 {
-                    todayShifts.Add(new TodayShiftItem
+                    bool isWeekly = (!string.IsNullOrWhiteSpace(c.Topic) && c.Topic.Contains("Haftalık", StringComparison.OrdinalIgnoreCase)) ||
+                                    (!string.IsNullOrWhiteSpace(c.Description) && c.Description.Contains("Haftalık", StringComparison.OrdinalIgnoreCase));
+
+                    bool isActiveToday = isWeekly
+                        ? (c.ShiftDate.Date >= currentWeekStart && c.ShiftDate.Date <= currentWeekEnd)
+                        : (c.ShiftDate.Date == today);
+
+                    if (isActiveToday && !string.IsNullOrWhiteSpace(c.AssignedUsers))
                     {
-                        PersonnelName = c.AssignedUsers,
-                        ShiftTitle = string.IsNullOrWhiteSpace(c.Topic) ? "Özel Nöbet" : c.Topic,
-                        Team = "Özel / Geçiş",
-                        JiraTicketNo = c.Description ?? ""
-                    });
+                        var names = c.AssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(n => n.Trim());
+                        foreach (var name in names)
+                        {
+                            string cleanName = name.Contains(':') ? name.Substring(name.IndexOf(':') + 1).Trim() : name.Trim();
+                            var userObj = allUsers.FirstOrDefault(u => u.FullName.Equals(cleanName, StringComparison.OrdinalIgnoreCase));
+                            string teamName = userObj?.Team ?? "Özel / Geçiş";
+
+                            todayShifts.Add(new TodayShiftItem
+                            {
+                                PersonnelName = cleanName,
+                                ShiftTitle = string.IsNullOrWhiteSpace(c.Topic) ? "Özel Nöbet" : c.Topic,
+                                Team = teamName,
+                                JiraTicketNo = c.Description ?? ""
+                            });
+                        }
+                    }
                 }
 
-                foreach (var s in shifts.Where(x => x.ShiftDate.Date == today && x.User != null))
+                foreach (var s in shifts.Where(x => x.User != null))
                 {
-                    todayShifts.Add(new TodayShiftItem
+                    bool isWeekly = (s.ShiftType != null && s.ShiftType.ShiftName.Contains("Haftalık", StringComparison.OrdinalIgnoreCase));
+                    bool isActiveToday = isWeekly
+                        ? (s.ShiftDate.Date >= currentWeekStart && s.ShiftDate.Date <= currentWeekEnd)
+                        : (s.ShiftDate.Date == today);
+
+                    if (isActiveToday)
                     {
-                        PersonnelName = s.User?.FullName ?? "",
-                        ShiftTitle = s.ShiftType?.ShiftName ?? "Nöbet",
-                        Team = s.User?.Team ?? "",
-                        JiraTicketNo = s.JiraTicketNo ?? ""
-                    });
+                        todayShifts.Add(new TodayShiftItem
+                        {
+                            PersonnelName = s.User?.FullName ?? "",
+                            ShiftTitle = s.ShiftType?.ShiftName ?? "Nöbet",
+                            Team = s.User?.Team ?? "",
+                            JiraTicketNo = s.JiraTicketNo ?? ""
+                        });
+                    }
                 }
 
                 TodayShiftList = new ObservableCollection<TodayShiftItem>(todayShifts);
+                int activeDutyCount = todayShifts.Select(s => s.PersonnelName.Trim()).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+                if (activeDutyCount > 0)
+                {
+                    WeeklyShiftCount = activeDutyCount;
+                }
+
+                // Detect all shift-leave conflicts for active releases and custom shifts
+                var conflictList = new List<ShiftConflictNotificationModel>();
+                var activeLeavesForScan = leaves.Where(l => (string.IsNullOrEmpty(l.Status) || string.Equals(l.Status, "Approved", StringComparison.OrdinalIgnoreCase) || string.Equals(l.Status, "Onaylandı", StringComparison.OrdinalIgnoreCase)) && !string.Equals(l.Status, "Rejected", StringComparison.OrdinalIgnoreCase) && !string.Equals(l.Status, "Reddedildi", StringComparison.OrdinalIgnoreCase)).ToList();
+
+                foreach (var m in monthlyReleasesAll)
+                {
+                    if (string.IsNullOrWhiteSpace(m.AssignedUsers)) continue;
+
+                    bool isWeekly = (!string.IsNullOrWhiteSpace(m.MonthName) && m.MonthName.Contains("Haftalık", StringComparison.OrdinalIgnoreCase));
+                    DateTime mStart = m.ReleaseDate.Date;
+                    DateTime mEnd = mStart;
+                    if (isWeekly)
+                    {
+                        int mDiff = (7 + ((int)m.ReleaseDate.DayOfWeek - (int)DayOfWeek.Monday)) % 7;
+                        mStart = m.ReleaseDate.Date.AddDays(-mDiff);
+                        mEnd = mStart.AddDays(6).Date;
+                    }
+
+                    var assignedNames = m.AssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                                       .Select(n => n.Contains(':') ? n.Substring(n.IndexOf(':') + 1).Trim() : n.Trim());
+
+                    foreach (var name in assignedNames)
+                    {
+                        var userObj = allUsers.FirstOrDefault(u => u.FullName.Equals(name, StringComparison.OrdinalIgnoreCase));
+                        if (userObj != null)
+                        {
+                            var userLeaves = activeLeavesForScan.Where(l => (l.UserId == userObj.Id || (l.User != null && l.User.FullName.Equals(userObj.FullName, StringComparison.OrdinalIgnoreCase))) && l.StartDate.Date <= mEnd && l.EndDate.Date >= mStart).ToList();
+                            foreach (var leave in userLeaves)
+                            {
+                                conflictList.Add(new ShiftConflictNotificationModel
+                                {
+                                    ShiftId = m.Id,
+                                    ShiftCategory = "MonthlyRelease",
+                                    PersonnelName = userObj.FullName,
+                                    LeaveDatesText = $"{leave.StartDate:dd.MM.yyyy} - {leave.EndDate:dd.MM.yyyy}",
+                                    ShiftTitleText = string.IsNullOrWhiteSpace(m.MonthName) ? "Yaygınlaştırma Nöbeti" : m.MonthName
+                                });
+                            }
+                        }
+                    }
+                }
+
+                foreach (var c in customShifts)
+                {
+                    if (string.IsNullOrWhiteSpace(c.AssignedUsers)) continue;
+
+                    bool isWeekly = (!string.IsNullOrWhiteSpace(c.Topic) && c.Topic.Contains("Haftalık", StringComparison.OrdinalIgnoreCase)) ||
+                                    (!string.IsNullOrWhiteSpace(c.Description) && c.Description.Contains("Haftalık", StringComparison.OrdinalIgnoreCase));
+                    DateTime cStart = c.ShiftDate.Date;
+                    DateTime cEnd = cStart;
+                    if (isWeekly)
+                    {
+                        int cDiff = (7 + ((int)c.ShiftDate.DayOfWeek - (int)DayOfWeek.Monday)) % 7;
+                        cStart = c.ShiftDate.Date.AddDays(-cDiff);
+                        cEnd = cStart.AddDays(6).Date;
+                    }
+
+                    var assignedNames = c.AssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                                       .Select(n => n.Contains(':') ? n.Substring(n.IndexOf(':') + 1).Trim() : n.Trim());
+
+                    foreach (var name in assignedNames)
+                    {
+                        var userObj = allUsers.FirstOrDefault(u => u.FullName.Equals(name, StringComparison.OrdinalIgnoreCase));
+                        if (userObj != null)
+                        {
+                            var userLeaves = activeLeavesForScan.Where(l => (l.UserId == userObj.Id || (l.User != null && l.User.FullName.Equals(userObj.FullName, StringComparison.OrdinalIgnoreCase))) && l.StartDate.Date <= cEnd && l.EndDate.Date >= cStart).ToList();
+                            foreach (var leave in userLeaves)
+                            {
+                                conflictList.Add(new ShiftConflictNotificationModel
+                                {
+                                    ShiftId = c.Id,
+                                    ShiftCategory = "Custom",
+                                    PersonnelName = userObj.FullName,
+                                    LeaveDatesText = $"{leave.StartDate:dd.MM.yyyy} - {leave.EndDate:dd.MM.yyyy}",
+                                    ShiftTitleText = string.IsNullOrWhiteSpace(c.Topic) ? "Özel Nöbet" : c.Topic
+                                });
+                            }
+                        }
+                    }
+                }
+
+                ShiftConflictList = new ObservableCollection<ShiftConflictNotificationModel>(conflictList);
 
                 // B. Today Active Approved Leaves
                 var activeTodayLeaves = leaves.Where(l => l.Status == "Approved" && l.User != null && today >= l.StartDate.Date && today <= l.EndDate.Date)
@@ -623,7 +809,6 @@ namespace ZiraatProje.UI.ViewModels
                 UpcomingReleaseList = new ObservableCollection<UpcomingReleaseItem>(upcomingReleases);
 
                 // D. Team Department Summary
-                var allUsers = _services.GetAllUsers();
                 var teamSummaries = new List<TeamSummaryItem>
                 {
                     new TeamSummaryItem
@@ -668,18 +853,22 @@ namespace ZiraatProje.UI.ViewModels
                         UserTeam = currentUser.Team;
 
                         // My Next Shift
-                        var myShifts = shifts.Where(s => s.UserId == currentUser.Id && s.ShiftDate.Date >= today).OrderBy(s => s.ShiftDate).ToList();
-                        if (myShifts.Any(s => s.ShiftDate.Date == today))
+                        bool isOnDutyToday = todayShifts.Any(s => string.Equals(s.PersonnelName, currentUser.FullName, StringComparison.OrdinalIgnoreCase));
+                        if (isOnDutyToday)
                         {
                             MyNextShiftText = "🚨 BUGÜN NÖBETÇİSİNİZ!";
                         }
-                        else if (myShifts.Any())
-                        {
-                            MyNextShiftText = $"📅 Gelecek Nöbetiniz: {myShifts.First().ShiftDate:dd.MM.yyyy}";
-                        }
                         else
                         {
-                            MyNextShiftText = "📌 Kayıtlı nöbetiniz yok";
+                            var myShifts = shifts.Where(s => s.UserId == currentUser.Id && s.ShiftDate.Date >= today).OrderBy(s => s.ShiftDate).ToList();
+                            if (myShifts.Any())
+                            {
+                                MyNextShiftText = $"📅 Gelecek Nöbetiniz: {myShifts.First().ShiftDate:dd.MM.yyyy}";
+                            }
+                            else
+                            {
+                                MyNextShiftText = "📌 Kayıtlı nöbetiniz yok";
+                            }
                         }
 
                         // My Next Leave
@@ -743,6 +932,10 @@ namespace ZiraatProje.UI.ViewModels
             var customShifts = _services.GetAllCustomShifts();
             var standardShifts = _services.GetAllShifts();
 
+            int weekDiff = (7 + ((int)today.DayOfWeek - (int)DayOfWeek.Monday)) % 7;
+            DateTime currentWeekStart = today.AddDays(-weekDiff).Date;
+            DateTime currentWeekEnd = currentWeekStart.AddDays(6).Date;
+
             var userShiftsToday = new List<string>();
             var userShiftsTomorrow = new List<string>();
             var upcomingUserShifts = new List<(DateTime Date, string Title, string Jira)>();
@@ -756,7 +949,14 @@ namespace ZiraatProje.UI.ViewModels
                     var jira = string.IsNullOrWhiteSpace(m.JiraTicketNo) ? "" : $"Jira: {m.JiraTicketNo}";
                     var detail = string.IsNullOrWhiteSpace(jira) ? title : $"{title} | {jira}";
 
-                    if (m.ReleaseDate.Date == today)
+                    bool isWeekly = (!string.IsNullOrWhiteSpace(m.MonthName) && m.MonthName.Contains("Haftalık", StringComparison.OrdinalIgnoreCase)) ||
+                                    (m.ReleaseDate.Date >= currentWeekStart && m.ReleaseDate.Date <= currentWeekEnd);
+
+                    bool isActiveToday = isWeekly
+                        ? ((m.ReleaseDate.Date >= currentWeekStart && m.ReleaseDate.Date <= currentWeekEnd) || (m.ReleaseDate.Date <= today && today <= m.ReleaseDate.Date.AddDays(6)))
+                        : (m.ReleaseDate.Date == today);
+
+                    if (isActiveToday)
                         userShiftsToday.Add(detail);
                     else if (m.ReleaseDate.Date == tomorrow)
                         userShiftsTomorrow.Add(detail);
@@ -774,7 +974,14 @@ namespace ZiraatProje.UI.ViewModels
                     var jira = string.IsNullOrWhiteSpace(c.Description) ? "" : $"Açıklama: {c.Description}";
                     var detail = string.IsNullOrWhiteSpace(jira) ? title : $"{title} | {jira}";
 
-                    if (c.ShiftDate.Date == today)
+                    bool isWeekly = (!string.IsNullOrWhiteSpace(c.Topic) && c.Topic.Contains("Haftalık", StringComparison.OrdinalIgnoreCase)) ||
+                                    (!string.IsNullOrWhiteSpace(c.Description) && c.Description.Contains("Haftalık", StringComparison.OrdinalIgnoreCase));
+
+                    bool isActiveToday = isWeekly
+                        ? (c.ShiftDate.Date >= currentWeekStart && c.ShiftDate.Date <= currentWeekEnd)
+                        : (c.ShiftDate.Date == today);
+
+                    if (isActiveToday)
                         userShiftsToday.Add(detail);
                     else if (c.ShiftDate.Date == tomorrow)
                         userShiftsTomorrow.Add(detail);
@@ -792,7 +999,12 @@ namespace ZiraatProje.UI.ViewModels
                     var jira = string.IsNullOrWhiteSpace(s.JiraTicketNo) ? "" : $"Jira: {s.JiraTicketNo}";
                     var detail = string.IsNullOrWhiteSpace(jira) ? title : $"{title} | {jira}";
 
-                    if (s.ShiftDate.Date == today)
+                    bool isWeekly = (s.ShiftType != null && s.ShiftType.ShiftName.Contains("Haftalık", StringComparison.OrdinalIgnoreCase));
+                    bool isActiveToday = isWeekly
+                        ? (s.ShiftDate.Date >= currentWeekStart && s.ShiftDate.Date <= currentWeekEnd)
+                        : (s.ShiftDate.Date == today);
+
+                    if (isActiveToday)
                         userShiftsToday.Add(detail);
                     else if (s.ShiftDate.Date == tomorrow)
                         userShiftsTomorrow.Add(detail);

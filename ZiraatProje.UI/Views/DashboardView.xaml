@@ -78,6 +78,46 @@
                 </StackPanel>
             </Border>
 
+            <!-- 🚨 CRITICAL SHIFT-LEAVE CONFLICT RED EXCLAMATION BANNER -->
+            <ItemsControl ItemsSource="{Binding ShiftConflictList}" Visibility="{Binding HasShiftConflicts, Converter={StaticResource BoolToVisConverter}}" Margin="0,12,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="#fef2f2" BorderBrush="#dc2626" BorderThickness="1.5" CornerRadius="8" Padding="15,12" Margin="0,0,0,8" Cursor="Hand">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateToConflictingShiftCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" CommandParameter="{Binding}"/>
+                            </Border.InputBindings>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Background="#dc2626" Width="38" Height="38" CornerRadius="19" Margin="0,0,12,0">
+                                    <TextBlock Text="🚨" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="ExtraBold" Foreground="#991b1b"/>
+                                    <TextBlock Text="{Binding Message}" FontSize="12.5" FontWeight="Bold" Foreground="#7f1d1d" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Button Grid.Column="2" Content="Düzeltmek İçin Nöbet Paneline Git ➔" 
+                                        Command="{Binding DataContext.NavigateToConflictingShiftCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" 
+                                        CommandParameter="{Binding}"
+                                        Background="#dc2626" Foreground="White" BorderThickness="0" 
+                                        Padding="12,7" FontSize="11.5" FontWeight="Bold" Cursor="Hand" VerticalAlignment="Center" Margin="10,0,0,0">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border CornerRadius="6" Background="{TemplateBinding Background}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
             <!-- ADMIN PENDING APPROVAL NOTIFICATION BANNER -->
             <Border Visibility="{Binding PendingApprovalNotificationVisibility}" Background="#fff7ed" BorderBrush="#ea580c" BorderThickness="1.5" CornerRadius="8" Padding="15,12" Margin="0,12,0,0" Cursor="Hand">
                 <Border.InputBindings>

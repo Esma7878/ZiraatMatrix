@@ -404,12 +404,19 @@ namespace ZiraatProje.UI.ViewModels
                 CreateLeaveRequest,
                 CreateShift,
                 CreateProject,
-                CreateUser);
+                CreateUser,
+                NavigateToShiftConflict);
             dashVm.RefreshDashboard(userName);
             return dashVm;
         }
 
         private void NavigateToShifts() => CurrentViewModel = new ShiftsViewModel(IsCurrentUserAdmin, CurrentUserName);
+        private void NavigateToShiftConflict(int shiftId, string shiftCategory)
+        {
+            var vm = new ShiftsViewModel(IsCurrentUserAdmin, CurrentUserName);
+            vm.SelectConflictingShift(shiftId, shiftCategory);
+            CurrentViewModel = vm;
+        }
         private void NavigateToLeaves() => CurrentViewModel = new LeavesViewModel(IsCurrentUserAdmin, CurrentUserName);
         private void NavigateToProjects() => CurrentViewModel = new ProjectsViewModel(IsCurrentUserAdmin, CurrentUserName, SelectedLoginTeam);
         private void NavigateToUsers() => CurrentViewModel = new UsersViewModel(IsCurrentUserAdmin);

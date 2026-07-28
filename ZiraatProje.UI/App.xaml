@@ -167,6 +167,23 @@
             </Style.Resources>
         </Style>
 
+        <!-- DatePicker Style -->
+        <Style TargetType="DatePicker">
+            <Setter Property="FontFamily" Value="{StaticResource PrimaryFont}"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="6,2,6,2"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{StaticResource DarkSlate}"/>
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="5"/>
+                </Style>
+            </Style.Resources>
+        </Style>
+
         <!-- Rounded Buttons -->
         <Style TargetType="Button">
             <Setter Property="FontFamily" Value="{StaticResource PrimaryFont}"/>

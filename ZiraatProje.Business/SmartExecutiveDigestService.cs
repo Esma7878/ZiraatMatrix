@@ -39,24 +39,44 @@ namespace ZiraatProje.Business
             var todayLeaves = leaves.Where(l => l.StartDate.Date <= today && l.EndDate.Date >= today).ToList();
             report.ActiveLeavesCount = todayLeaves.Count;
 
+            // Calculate current week interval (Monday to Sunday)
+            int diff = (7 + ((int)today.DayOfWeek - (int)DayOfWeek.Monday)) % 7;
+            DateTime currentWeekStart = today.AddDays(-diff).Date;
+            DateTime currentWeekEnd = currentWeekStart.AddDays(6).Date;
+
             // Gather all personnel names on duty today across all shift tables
             var todayOnDutyNames = new List<string>();
 
             // 1. Shift table
-            foreach (var s in shifts.Where(s => s.ShiftDate.Date == today))
+            foreach (var s in shifts)
             {
-                if (s.User != null && !string.IsNullOrWhiteSpace(s.User.FullName))
-                    todayOnDutyNames.Add(s.User.FullName);
+                bool isWeekly = (s.ShiftType != null && s.ShiftType.ShiftName.Contains("Haftalık", StringComparison.OrdinalIgnoreCase));
+                bool matchesToday = isWeekly
+                    ? (s.ShiftDate.Date >= currentWeekStart && s.ShiftDate.Date <= currentWeekEnd)
+                    : (s.ShiftDate.Date == today);
+
+                if (matchesToday && s.User != null && !string.IsNullOrWhiteSpace(s.User.FullName))
+                {
+                    todayOnDutyNames.Add(s.User.FullName.Trim());
+                }
             }
 
             // 2. Monthly / Weekly release shift table
             if (monthlyReleases != null)
             {
-                foreach (var m in monthlyReleases.Where(m => !m.IsFinished && m.ReleaseDate.Date == today))
+                foreach (var m in monthlyReleases.Where(m => !m.IsFinished))
                 {
-                    if (!string.IsNullOrWhiteSpace(m.AssignedUsers))
+                    bool isWeekly = (!string.IsNullOrWhiteSpace(m.MonthName) && m.MonthName.Contains("Haftalık", StringComparison.OrdinalIgnoreCase)) ||
+                                    (m.ReleaseDate.Date >= currentWeekStart && m.ReleaseDate.Date <= currentWeekEnd);
+
+                    bool matchesToday = isWeekly
+                        ? ((m.ReleaseDate.Date >= currentWeekStart && m.ReleaseDate.Date <= currentWeekEnd) || (m.ReleaseDate.Date <= today && today <= m.ReleaseDate.Date.AddDays(6)))
+                        : (m.ReleaseDate.Date == today);
+
+                    if (matchesToday && !string.IsNullOrWhiteSpace(m.AssignedUsers))
                     {
-                        var names = m.AssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(n => n.Trim());
+                        var names = m.AssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                                   .Select(n => n.Contains(':') ? n.Substring(n.IndexOf(':') + 1).Trim() : n.Trim());
                         todayOnDutyNames.AddRange(names);
                     }
                 }
@@ -65,17 +85,25 @@ namespace ZiraatProje.Business
             // 3. Custom shift table
             if (customShifts != null)
             {
-                foreach (var c in customShifts.Where(c => !c.IsFinished && c.ShiftDate.Date == today))
+                foreach (var c in customShifts.Where(c => !c.IsFinished))
                 {
-                    if (!string.IsNullOrWhiteSpace(c.AssignedUsers))
+                    bool isWeekly = (!string.IsNullOrWhiteSpace(c.Topic) && c.Topic.Contains("Haftalık", StringComparison.OrdinalIgnoreCase)) ||
+                                    (!string.IsNullOrWhiteSpace(c.Description) && c.Description.Contains("Haftalık", StringComparison.OrdinalIgnoreCase));
+
+                    bool matchesToday = isWeekly
+                        ? (c.ShiftDate.Date >= currentWeekStart && c.ShiftDate.Date <= currentWeekEnd)
+                        : (c.ShiftDate.Date == today);
+
+                    if (matchesToday && !string.IsNullOrWhiteSpace(c.AssignedUsers))
                     {
-                        var names = c.AssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(n => n.Trim());
+                        var names = c.AssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                                   .Select(n => n.Contains(':') ? n.Substring(n.IndexOf(':') + 1).Trim() : n.Trim());
                         todayOnDutyNames.AddRange(names);
                     }
                 }
             }
 
-            todayOnDutyNames = todayOnDutyNames.Distinct().ToList();
+            todayOnDutyNames = todayOnDutyNames.Where(n => !string.IsNullOrWhiteSpace(n)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             report.TodayShiftsCount = todayOnDutyNames.Count;
             report.ActiveProjectsCount = projects.Count;
 

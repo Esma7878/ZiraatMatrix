@@ -182,7 +182,7 @@
                                                 </Border>
                                                 <StackPanel>
                                                     <TextBlock Text="Yaygınlaştırma Nöbet Planı" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Burgundy}"/>
-                                                    <TextBlock Text="Aylık ana yayınlar ve haftalık yaygınlaştırma nöbet tarihleri" FontSize="11" Foreground="{StaticResource TextGray}"/>
+                                                    <TextBlock Text="Aylık ana geçişler ve haftalık yaygınlaştırma nöbet tarihleri" FontSize="11" Foreground="{StaticResource TextGray}"/>
                                                 </StackPanel>
                                             </StackPanel>
                                         </Grid>
@@ -208,8 +208,8 @@
                                                     <!-- Dönem / Ay Adı -->
                                                     <DataGridTextColumn Header="Dönem / Açıklama" Binding="{Binding DisplayWeekLabel}" Width="320" FontWeight="Bold"/>
 
-                                                    <!-- Yayın Tarihi -->
-                                                    <DataGridTextColumn Header="Yayın Tarihi" Binding="{Binding ReleaseDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
+                                                    <!-- Geçiş Tarihi -->
+                                                    <DataGridTextColumn Header="Geçiş Tarihi" Binding="{Binding ReleaseDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
 
                                                     <DataGridTemplateColumn Header="Sorumlu Ekip Nöbetçileri" Width="*">
                                                         <DataGridTemplateColumn.HeaderStyle>
@@ -253,6 +253,8 @@
                                                                 <Button Content="🔗 Aç" 
                                                                         Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
                                                                         CommandParameter="{Binding ExternalLink}"
+                                                                        ToolTip="{Binding LinkTooltip}"
+                                                                        PreviewMouseDown="FinishButton_PreviewMouseDown"
                                                                         Style="{StaticResource SmallLinkButton}"/>
                                                             </DataTemplate>
                                                         </DataGridTemplateColumn.CellTemplate>
@@ -301,11 +303,11 @@
                                                 </DataGrid.RowStyle>
 
                                                 <DataGrid.Columns>
-                                                    <!-- Dönem / Yayın Adı -->
-                                                    <DataGridTextColumn Header="Yayın Adı / Hafta" Binding="{Binding DisplayWeekLabel}" Width="320" FontWeight="Bold"/>
+                                                    <!-- Dönem / Geçiş Adı -->
+                                                    <DataGridTextColumn Header="Geçiş Adı / Hafta" Binding="{Binding DisplayWeekLabel}" Width="320" FontWeight="Bold"/>
 
-                                                    <!-- Yayın Tarihi -->
-                                                    <DataGridTextColumn Header="Yayın Tarihi" Binding="{Binding ReleaseDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
+                                                    <!-- Geçiş Tarihi -->
+                                                    <DataGridTextColumn Header="Geçiş Tarihi" Binding="{Binding ReleaseDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
 
                                                     <DataGridTemplateColumn Header="Sorumlu Ekip Nöbetçileri" Width="*">
                                                         <DataGridTemplateColumn.HeaderStyle>
@@ -349,6 +351,8 @@
                                                                 <Button Content="🔗 Aç" 
                                                                         Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
                                                                         CommandParameter="{Binding ExternalLink}"
+                                                                        ToolTip="{Binding LinkTooltip}"
+                                                                        PreviewMouseDown="FinishButton_PreviewMouseDown"
                                                                         Style="{StaticResource SmallLinkButton}"/>
                                                             </DataTemplate>
                                                         </DataGridTemplateColumn.CellTemplate>
@@ -507,7 +511,7 @@
 
                                                         <DataGrid.Columns>
                                                             <DataGridTextColumn Header="Nöbet Haftası" Binding="{Binding DisplayWeekLabel}" Width="240" FontWeight="Bold"/>
-                                                            <DataGridTextColumn Header="Yayın Tarihi" Binding="{Binding ReleaseDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
+                                                            <DataGridTextColumn Header="Geçiş Tarihi" Binding="{Binding ReleaseDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
 
                                                             <DataGridTemplateColumn Header="Sorumlu Ekip Nöbetçileri" Width="*">
                                                                 <DataGridTemplateColumn.HeaderStyle>
@@ -549,6 +553,8 @@
                                                                         <Button Content="🔗 Aç" 
                                                                                 Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
                                                                                 CommandParameter="{Binding ExternalLink}"
+                                                                                ToolTip="{Binding LinkTooltip}"
+                                                                                PreviewMouseDown="FinishButton_PreviewMouseDown"
                                                                                 Style="{StaticResource SmallLinkButton}"/>
                                                                     </DataTemplate>
                                                                 </DataGridTemplateColumn.CellTemplate>
@@ -651,6 +657,8 @@
                                                             <Button Content="🔗 Aç" 
                                                                     Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
                                                                     CommandParameter="{Binding ExternalLink}"
+                                                                    ToolTip="{Binding LinkTooltip}"
+                                                                    PreviewMouseDown="FinishButton_PreviewMouseDown"
                                                                     Style="{StaticResource SmallLinkButton}"/>
                                                         </DataTemplate>
                                                     </DataGridTemplateColumn.CellTemplate>
@@ -720,12 +728,12 @@
                                             <ComboBox ItemsSource="{Binding MonthWeeksList}" SelectedItem="{Binding SelectedMonthWeekOption}" DisplayMemberPath="DisplayText" Height="32" Margin="0,0,0,10"/>
                                         </StackPanel>
 
-                                        <!-- Yayın Adı -->
-                                        <TextBlock Text="Yayın Adı / Açıklama" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <!-- Geçiş Adı -->
+                                        <TextBlock Text="Geçiş Adı / Açıklama" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
                                         <TextBox Text="{Binding ReleaseMonthName, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,0,0,10"/>
 
-                                        <!-- Yayın Tarihi -->
-                                        <TextBlock Text="Yayın Tarihi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
+                                        <!-- Geçiş Tarihi -->
+                                        <TextBlock Text="Geçiş Tarihi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4"/>
                                         <DatePicker SelectedDate="{Binding ReleaseDate}" Height="32" Margin="0,0,0,10"/>
 
                                         <!-- JIRA No -->
@@ -1571,8 +1579,8 @@
                                     <!-- Dönem / Ay Adı -->
                                      <DataGridTextColumn Header="Dönem / Açıklama" Binding="{Binding DisplayWeekLabel}" Width="240" FontWeight="Bold"/>
 
-                                    <!-- Yayın Tarihi -->
-                                    <DataGridTextColumn Header="Yayın Tarihi" Binding="{Binding ReleaseDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
+                                    <!-- Geçiş Tarihi -->
+                                    <DataGridTextColumn Header="Geçiş Tarihi" Binding="{Binding ReleaseDate, StringFormat=\{0:dd.MM.yyyy\}}" Width="100"/>
 
                                     <!-- Sorumlu Ekip Nöbetçileri -->
                                     <DataGridTemplateColumn Header="Nöbetçi Personeller" Width="*">
@@ -1617,6 +1625,8 @@
                                                 <Button Content="🔗 Aç" 
                                                         Command="{Binding DataContext.OpenLinkCommand, RelativeSource={RelativeSource AncestorType={x:Type local:ShiftsView}}}" 
                                                         CommandParameter="{Binding ExternalLink}"
+                                                        ToolTip="{Binding LinkTooltip}"
+                                                        PreviewMouseDown="FinishButton_PreviewMouseDown"
                                                         Style="{StaticResource SmallLinkButton}"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>

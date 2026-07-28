@@ -925,6 +925,16 @@ namespace ZiraatProje.Business
                             CreatedAt DATETIME2 NOT NULL
                         );
                     END
+                    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ChatMessageReadStates')
+                    BEGIN
+                        CREATE TABLE ChatMessageReadStates (
+                            Id INT IDENTITY(1,1) PRIMARY KEY,
+                            UserId INT NOT NULL,
+                            ChannelKey NVARCHAR(100) NOT NULL,
+                            LastReadMessageId INT NOT NULL,
+                            LastReadAt DATETIME2 NOT NULL
+                        );
+                    END
                 ");
 
                 var today = DateTime.Today;
@@ -936,6 +946,17 @@ namespace ZiraatProje.Business
                 {
                     context.ChatMessages.RemoveRange(oldMessages);
                     context.SaveChanges();
+                }
+
+                // If all messages were deleted or no messages remain for today, reset read states
+                if (!context.ChatMessages.Any())
+                {
+                    var allStates = context.ChatMessageReadStates.ToList();
+                    if (allStates.Any())
+                    {
+                        context.ChatMessageReadStates.RemoveRange(allStates);
+                        context.SaveChanges();
+                    }
                 }
             }
             catch (Exception)
@@ -994,10 +1015,12 @@ namespace ZiraatProje.Business
         public List<ChatMessage> GetChatMessagesForChannel(int currentUserId, string targetType, int? targetUserId = null, string targetTeam = "")
         {
             using var context = CreateContext();
+            var today = DateTime.Today;
             var query = context.ChatMessages
                 .Include(m => m.SenderUser)
                 .Include(m => m.ReceiverUser)
-                .AsNoTracking();
+                .AsNoTracking()
+                .Where(m => m.SentAt >= today);
 
             if (targetType == "General")
             {
@@ -1089,6 +1112,7 @@ namespace ZiraatProje.Business
         {
             using var context = CreateContext();
             string channelKey = GetChannelKey(currentUserId, targetType, targetUserId, targetTeam);
+            var today = DateTime.Today;
 
             var readState = context.ChatMessageReadStates.AsNoTracking().FirstOrDefault(s => s.UserId == currentUserId && s.ChannelKey == channelKey);
             int lastReadId = readState?.LastReadMessageId ?? 0;
@@ -1096,23 +1120,23 @@ namespace ZiraatProje.Business
             if (targetType == "General")
             {
                 return context.ChatMessages.AsNoTracking()
-                    .Count(m => m.TargetType == "General" && m.SenderUserId != currentUserId && m.Id > lastReadId);
+                    .Count(m => m.SentAt >= today && m.TargetType == "General" && m.SenderUserId != currentUserId && m.Id > lastReadId);
             }
             else if (targetType == "Team")
             {
                 return context.ChatMessages.AsNoTracking()
-                    .Count(m => m.TargetType == "Team" && m.TargetTeam.ToLower() == targetTeam.ToLower() && m.SenderUserId != currentUserId && m.Id > lastReadId);
+                    .Count(m => m.SentAt >= today && m.TargetType == "Team" && m.TargetTeam.ToLower() == targetTeam.ToLower() && m.SenderUserId != currentUserId && m.Id > lastReadId);
             }
             else if (targetType == "Group" && !string.IsNullOrWhiteSpace(targetTeam))
             {
                 return context.ChatMessages.AsNoTracking()
-                    .Count(m => m.TargetType == "Group" && m.TargetTeam == targetTeam && m.SenderUserId != currentUserId && m.Id > lastReadId);
+                    .Count(m => m.SentAt >= today && m.TargetType == "Group" && m.TargetTeam == targetTeam && m.SenderUserId != currentUserId && m.Id > lastReadId);
             }
             else if (targetType == "Direct" && targetUserId.HasValue)
             {
                 int otherId = targetUserId.Value;
                 return context.ChatMessages.AsNoTracking()
-                    .Count(m => m.TargetType == "Direct" && m.SenderUserId == otherId && m.ReceiverUserId == currentUserId && m.Id > lastReadId && !m.IsRead);
+                    .Count(m => m.SentAt >= today && m.TargetType == "Direct" && m.SenderUserId == otherId && m.ReceiverUserId == currentUserId && m.Id > lastReadId && !m.IsRead);
             }
 
             return 0;
@@ -1202,8 +1226,13 @@ namespace ZiraatProje.Business
             if (all.Any())
             {
                 context.ChatMessages.RemoveRange(all);
-                context.SaveChanges();
             }
+            var allStates = context.ChatMessageReadStates.ToList();
+            if (allStates.Any())
+            {
+                context.ChatMessageReadStates.RemoveRange(allStates);
+            }
+            context.SaveChanges();
         }
         #endregion
 

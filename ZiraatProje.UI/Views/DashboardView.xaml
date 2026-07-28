@@ -14,11 +14,10 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- ROW 0: Welcome Title & Notifications Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+        <StackPanel Grid.Row="0" Margin="0,0,0,18">
             <TextBlock Text="Katılım Finansman Tahsis ve Takip Departmanı" FontSize="24" FontWeight="Bold" Foreground="#1a202c"/>
             <TextBlock Text="Genel Operasyon ve BT Planlama Portalı" FontSize="14" Foreground="#718096" Margin="0,4,0,0"/>
 
@@ -174,21 +173,23 @@
             </ItemsControl>
         </StackPanel>
 
-        <!-- ROW 1: MAIN CONTENT AREA (Left: Extended Welcome Card | Right: Profile Card + Vertical Shortcuts Panel) -->
-        <Grid Grid.Row="1" Margin="0,0,0,20">
+        <!-- ROW 1: MAIN CONTENT AREA (Left: Welcome Card with Integrated KPI Cards | Right: Profile Card + Vertical Shortcuts Panel) -->
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2.2*"/>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- LEFT COLUMN: EXTENDED ZIRAAT PORTAL WELCOME CARD -->
-            <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="25" Margin="0,0,15,0" VerticalAlignment="Stretch">
+            <!-- LEFT COLUMN: EXTENDED ZIRAAT PORTAL WELCOME CARD WITH KPI SUMMARY CARDS -->
+            <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="20,16" Margin="0,0,15,0" VerticalAlignment="Stretch">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
+                    <!-- Top Header Section -->
                     <Grid Grid.Row="0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="2*"/>
@@ -196,56 +197,117 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="Ziraat Matrix'e Hoş Geldiniz!" FontSize="20" FontWeight="Bold" Foreground="{StaticResource ZiraatRed}"/>
+                            <TextBlock Text="Ziraat Matrix'e Hoş Geldiniz!" FontSize="19" FontWeight="Bold" Foreground="{StaticResource ZiraatRed}"/>
                             <TextBlock Text="Ziraat Matrix Ekip İçi Yönetim Sistemi aracılığıyla ekiplerin tüm nöbet takvimlerini, yıllık ve mazeret izin planlamalarını, proje kaynak tahsislerini ve yetkilerini tek bir merkezden yönetebilirsiniz."
-                                       FontSize="13" Foreground="#4a5568" TextWrapping="Wrap" Margin="0,10,0,15" LineHeight="19"/>
+                                       FontSize="12" Foreground="#4a5568" TextWrapping="Wrap" Margin="0,6,0,10" LineHeight="17"/>
                         </StackPanel>
 
                         <!-- Red-Themed Accent Graphic Badge -->
-                        <Border Grid.Column="1" Background="{StaticResource ZiraatRedGlow}" CornerRadius="10" Margin="15,0,0,0" Padding="15" BorderBrush="{StaticResource ZiraatRed}" BorderThickness="0.5" VerticalAlignment="Center">
+                        <Border Grid.Column="1" Background="{StaticResource ZiraatRedGlow}" CornerRadius="10" Margin="10,0,0,0" Padding="12,10" BorderBrush="{StaticResource ZiraatRed}" BorderThickness="0.5" VerticalAlignment="Center">
                             <StackPanel HorizontalAlignment="Center">
-                                <TextBlock Text="ZİRAAT MATRIX" FontSize="16" FontWeight="Bold" Foreground="{StaticResource ZiraatRed}" HorizontalAlignment="Center"/>
-                                <TextBlock Text="Ekip İçi Yönetim Sistemi" FontSize="11" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,4" HorizontalAlignment="Center" TextAlignment="Center"/>
-                                <Border Width="45" Height="2" Background="{StaticResource ZiraatRed}" HorizontalAlignment="Center" Margin="0,6"/>
-                                <TextBlock Text="Ortak Operasyon Platformu" FontSize="10" Foreground="#718096" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="140"/>
+                                <TextBlock Text="ZİRAAT MATRIX" FontSize="14" FontWeight="Bold" Foreground="{StaticResource ZiraatRed}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Ekip İçi Yönetim Sistemi" FontSize="10.5" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,2" HorizontalAlignment="Center" TextAlignment="Center"/>
+                                <Border Width="40" Height="2" Background="{StaticResource ZiraatRed}" HorizontalAlignment="Center" Margin="0,4"/>
+                                <TextBlock Text="Ortak Operasyon Platformu" FontSize="9.5" Foreground="#718096" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="130"/>
                             </StackPanel>
                         </Border>
                     </Grid>
 
                     <!-- Extended Rules, Guidelines & Information Section -->
-                    <StackPanel Grid.Row="1" Margin="0,20,0,0" VerticalAlignment="Top">
-                        <Border Height="1" Background="#e2e8f0" Margin="0,0,0,15"/>
-                        <TextBlock Text="📌 Operasyonel Kurallar ve Sistem Rehberi:" FontSize="13" FontWeight="Bold" Foreground="#1a202c" Margin="0,0,0,10"/>
+                    <StackPanel Grid.Row="1" Margin="0,10,0,0" VerticalAlignment="Top">
+                        <Border Height="1" Background="#e2e8f0" Margin="0,0,0,10"/>
+                        <TextBlock Text="📌 Operasyonel Kurallar ve Sistem Rehberi:" FontSize="12.5" FontWeight="Bold" Foreground="#1a202c" Margin="0,0,0,8"/>
 
-                        <StackPanel Margin="5,0,0,0">
-                            <BulletDecorator Margin="0,0,0,8">
+                        <StackPanel Margin="4,0,0,0">
+                            <BulletDecorator Margin="0,0,0,6">
                                 <BulletDecorator.Bullet>
-                                    <Ellipse Width="6" Height="6" Fill="{StaticResource ZiraatRed}" VerticalAlignment="Center"/>
+                                    <Ellipse Width="5" Height="5" Fill="{StaticResource ZiraatRed}" VerticalAlignment="Center"/>
                                 </BulletDecorator.Bullet>
-                                <TextBlock Text=" Nöbet Planlama: Nöbet girerken Jira bilet numarası ve açıklama ekleyebilir, listeden doğrudan tıklayarak Jira tarayıcısında açabilirsiniz." FontSize="12" Foreground="#4a5568" Margin="8,0,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text=" Nöbet Planlama: Nöbet girerken Jira bilet numarası ve açıklama ekleyebilir, listeden doğrudan tıklayarak Jira tarayıcısında açabilirsiniz." FontSize="11.5" Foreground="#4a5568" Margin="6,0,0,0" TextWrapping="Wrap"/>
                             </BulletDecorator>
 
-                            <BulletDecorator Margin="0,0,0,8">
+                            <BulletDecorator Margin="0,0,0,6">
                                 <BulletDecorator.Bullet>
-                                    <Ellipse Width="6" Height="6" Fill="{StaticResource ZiraatRed}" VerticalAlignment="Center"/>
+                                    <Ellipse Width="5" Height="5" Fill="{StaticResource ZiraatRed}" VerticalAlignment="Center"/>
                                 </BulletDecorator.Bullet>
-                                <TextBlock Text=" İzin &amp; Çakışma Yönetimi: Yıllık ve mazeret izin planlamalarını görsel takvim matrisinden takip edebilir, onaylı izin kaydınızı görüntüleyebilirsiniz." FontSize="12" Foreground="#4a5568" Margin="8,0,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text=" İzin &amp; Çakışma Yönetimi: Yıllık ve mazeret izin planlamalarını görsel takvim matrisinden takip edebilir, onaylı izin kaydınızı görüntüleyebilirsiniz." FontSize="11.5" Foreground="#4a5568" Margin="6,0,0,0" TextWrapping="Wrap"/>
                             </BulletDecorator>
 
-                            <BulletDecorator Margin="0,0,0,8">
+                            <BulletDecorator Margin="0,0,0,6">
                                 <BulletDecorator.Bullet>
-                                    <Ellipse Width="6" Height="6" Fill="{StaticResource ZiraatRed}" VerticalAlignment="Center"/>
+                                    <Ellipse Width="5" Height="5" Fill="{StaticResource ZiraatRed}" VerticalAlignment="Center"/>
                                 </BulletDecorator.Bullet>
-                                <TextBlock Text=" Proje &amp; Efor Tahsisi: Pergel No, çeyrek dönem (Q1-Q4) ve personel bazlı adam/gün efor kırılımlarını detaylı olarak yönetebilirsiniz." FontSize="12" Foreground="#4a5568" Margin="8,0,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text=" Proje &amp; Efor Tahsisi: Pergel No, çeyrek dönem (Q1-Q4) ve personel bazlı adam/gün efor kırılımlarını detaylı olarak yönetebilirsiniz." FontSize="11.5" Foreground="#4a5568" Margin="6,0,0,0" TextWrapping="Wrap"/>
                             </BulletDecorator>
 
-                            <BulletDecorator Margin="0,0,0,8">
+                            <BulletDecorator Margin="0,0,0,6">
                                 <BulletDecorator.Bullet>
-                                    <Ellipse Width="6" Height="6" Fill="{StaticResource ZiraatRed}" VerticalAlignment="Center"/>
+                                    <Ellipse Width="5" Height="5" Fill="{StaticResource ZiraatRed}" VerticalAlignment="Center"/>
                                 </BulletDecorator.Bullet>
-                                <TextBlock Text=" Ekip Yönetimi &amp; Yetkiler: Kullanıcı Yönetimi modülünden personellerin ekiplerini, unvanlarını ve yetkilerini düzenleyebilir; departman yöneticisi olarak üst menüden tüm ekipleri görüntüleyebilirsiniz." FontSize="12" Foreground="#4a5568" Margin="8,0,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text=" Ekip Yönetimi &amp; Yetkiler: Kullanıcı Yönetimi modülünden personellerin ekiplerini, unvanlarını ve yetkilerini düzenleyebilir; departman yöneticisi olarak üst menüden tüm ekipleri görüntüleyebilirsiniz." FontSize="11.5" Foreground="#4a5568" Margin="6,0,0,0" TextWrapping="Wrap"/>
                             </BulletDecorator>
                         </StackPanel>
+                    </StackPanel>
+
+                    <!-- INTEGRATED COMPACT KPI CARDS (NÖBETÇİLER, İZİNLİ PERSONEL, PROJE TALEPLERİ, DEVAM EDEN PROJELER) -->
+                    <StackPanel Grid.Row="2" Margin="0,18,0,0">
+                        <Border Height="1" Background="#e2e8f0" Margin="0,0,0,14"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Card 1: NÖBETÇİLER -->
+                            <Border Grid.Column="0" Style="{StaticResource KpiCard}" Padding="12,12" Margin="0,0,6,0" ToolTip="Nöbet Takvimine Git">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToShiftsCommand}"/>
+                                </Border.InputBindings>
+                                <StackPanel>
+                                    <TextBlock Text="NÖBETÇİLER" FontSize="10.5" FontWeight="Bold" Foreground="{StaticResource ZiraatRed}"/>
+                                    <TextBlock Text="{Binding WeeklyShiftCount}" FontSize="26" FontWeight="Bold" Foreground="#1a202c" Margin="0,3,0,2"/>
+                                    <TextBlock Text="Bu haftaki nöbetler ➔" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource ZiraatRed}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card 2: İZİNLİ PERSONEL -->
+                            <Border Grid.Column="1" Style="{StaticResource KpiCard}" Padding="12,12" Margin="0,0,6,0" ToolTip="İzin Planlamaya Git">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToLeavesCommand}"/>
+                                </Border.InputBindings>
+                                <StackPanel>
+                                    <TextBlock Text="İZİNLİ PERSONEL" FontSize="10.5" FontWeight="Bold" Foreground="#059669"/>
+                                    <TextBlock Text="{Binding ActiveLeaveCount}" FontSize="26" FontWeight="Bold" Foreground="#1a202c" Margin="0,3,0,2"/>
+                                    <TextBlock Text="Şu an izinli çalışanlar ➔" FontSize="9.5" FontWeight="SemiBold" Foreground="#059669"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card 3: PROJE TALEPLERİ -->
+                            <Border Grid.Column="2" Style="{StaticResource KpiCard}" Padding="12,12" Margin="0,0,6,0" ToolTip="Proje Yönetimine Git">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToProjectsCommand}"/>
+                                </Border.InputBindings>
+                                <StackPanel>
+                                    <TextBlock Text="PROJE TALEPLERİ" FontSize="10.5" FontWeight="Bold" Foreground="#2563eb"/>
+                                    <TextBlock Text="{Binding OngoingProjectsCount}" FontSize="26" FontWeight="Bold" Foreground="#1a202c" Margin="0,3,0,2"/>
+                                    <TextBlock Text="Aktif iş süreçleri ➔" FontSize="9.5" FontWeight="SemiBold" Foreground="#2563eb"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card 4: DEVAM EDEN PROJELER -->
+                            <Border Grid.Column="3" Style="{StaticResource KpiCard}" Padding="12,12" Margin="0,0,0,0" ToolTip="Proje Sayfasına Git">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToProjectsCommand}"/>
+                                </Border.InputBindings>
+                                <StackPanel>
+                                    <TextBlock Text="DEVAM EDEN PROJELER" FontSize="10.5" FontWeight="Bold" Foreground="#7c3aed"/>
+                                    <TextBlock Text="{Binding TotalProjectsCount}" FontSize="26" FontWeight="Bold" Foreground="#1a202c" Margin="0,3,0,2"/>
+                                    <TextBlock Text="{Binding CurrentQuarterText, StringFormat='{}{0} aktif projeleri ➔'}" FontSize="9.5" FontWeight="SemiBold" Foreground="#7c3aed"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -254,7 +316,7 @@
             <StackPanel Grid.Column="1">
 
                 <!-- 1. PERSONAL PROFILE CARD -->
-                <Border Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="18,15" Margin="0,0,0,15">
+                <Border Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="16,12" Margin="0,0,0,12">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -263,31 +325,31 @@
                         </Grid.RowDefinitions>
 
                         <!-- User Profile Header -->
-                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-                            <Border Background="{StaticResource ZiraatRed}" Width="40" Height="40" CornerRadius="20" Margin="0,0,10,0" VerticalAlignment="Center">
-                                <TextBlock Text="👤" Foreground="White" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                            <Border Background="{StaticResource ZiraatRed}" Width="36" Height="36" CornerRadius="18" Margin="0,0,10,0" VerticalAlignment="Center">
+                                <TextBlock Text="👤" Foreground="White" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding UserFullName}" FontSize="14" FontWeight="ExtraBold" Foreground="#1e293b"/>
+                                    <TextBlock Text="{Binding UserFullName}" FontSize="13.5" FontWeight="ExtraBold" Foreground="#1e293b"/>
                                     <Border Background="{Binding UserTeamBadgeBg}" CornerRadius="4" Padding="5,1" Margin="6,0,0,0" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding UserTeam, StringFormat='{}📌 {0}'}" FontSize="9" FontWeight="Bold" Foreground="{Binding UserTeamBadgeColor}"/>
                                     </Border>
                                 </StackPanel>
-                                <TextBlock Text="{Binding UserTitle}" FontSize="11" Foreground="#64748b" Margin="0,2,0,0"/>
+                                <TextBlock Text="{Binding UserTitle}" FontSize="10.5" Foreground="#64748b" Margin="0,1,0,0"/>
                             </StackPanel>
                         </StackPanel>
 
                         <!-- Teammates List -->
-                        <StackPanel Grid.Row="1" Margin="0,0,0,10">
-                            <TextBlock Text="👥 Ekip Arkadaşlarım:" FontSize="11" FontWeight="Bold" Foreground="#475569" Margin="0,0,0,2"/>
+                        <StackPanel Grid.Row="1" Margin="0,0,0,8">
+                            <TextBlock Text="👥 Ekip Arkadaşlarım:" FontSize="10.5" FontWeight="Bold" Foreground="#475569" Margin="0,0,0,2"/>
                             <TextBlock Text="{Binding MyTeammatesText, TargetNullValue='Yalnızca Siz'}" FontSize="10" Foreground="#334155" TextWrapping="Wrap"/>
                         </StackPanel>
 
                         <!-- Personal Status Highlights -->
                         <StackPanel Grid.Row="2">
                             <!-- Personal Shift Badge -->
-                            <Border Background="#eff6ff" BorderBrush="#bfdbfe" BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="0,0,0,5" Cursor="Hand" ToolTip="Nöbet Takvimine Git">
+                            <Border Background="#eff6ff" BorderBrush="#bfdbfe" BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="0,0,0,4" Cursor="Hand" ToolTip="Nöbet Takvimine Git">
                                 <Border.InputBindings>
                                     <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToShiftsCommand}"/>
                                 </Border.InputBindings>
@@ -306,27 +368,27 @@
                 </Border>
 
                 <!-- 2. FAST ACTION SHORTCUTS (VERTICAL FORM) BELOW PROFILE CARD -->
-                <Border Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="18,15">
+                <Border Background="White" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="10" Padding="16,12">
                     <StackPanel>
-                        <TextBlock Text="⚡ Hızlı İşlem Kısayolları" FontSize="13" FontWeight="Bold" Foreground="#1a202c" Margin="0,0,0,12"/>
+                        <TextBlock Text="⚡ Hızlı İşlem Kısayolları" FontSize="12.5" FontWeight="Bold" Foreground="#1a202c" Margin="0,0,0,10"/>
 
                         <!-- Shortcut 1: Create Leave Request -->
-                        <Button Command="{Binding CreateLeaveRequestCommand}" Height="Auto" Margin="0,0,0,10" Cursor="Hand">
+                        <Button Command="{Binding CreateLeaveRequestCommand}" Height="Auto" Margin="0,0,0,8" Cursor="Hand">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border Background="#ecfdf5" BorderBrush="#a7f3d0" BorderThickness="1" CornerRadius="8" Padding="14,12">
+                                    <Border Background="#ecfdf5" BorderBrush="#a7f3d0" BorderThickness="1" CornerRadius="8" Padding="12,9">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="➕🌴" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="0" Text="➕🌴" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <TextBlock Text="İzin Talep Kaydı Oluştur" FontSize="12" FontWeight="Bold" Foreground="#065f46"/>
-                                                <TextBlock Text="Yeni izin veya değişiklik isteği" FontSize="10" Foreground="#059669" Margin="0,3,0,0"/>
+                                                <TextBlock Text="İzin Talep Kaydı Oluştur" FontSize="11.5" FontWeight="Bold" Foreground="#065f46"/>
+                                                <TextBlock Text="Yeni izin veya değişiklik isteği" FontSize="9.5" Foreground="#059669" Margin="0,2,0,0"/>
                                             </StackPanel>
-                                            <TextBlock Grid.Column="2" Text="➔" FontSize="14" FontWeight="Bold" Foreground="#065f46" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="➔" FontSize="13" FontWeight="Bold" Foreground="#065f46" VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                 </ControlTemplate>
@@ -334,22 +396,22 @@
                         </Button>
 
                         <!-- Shortcut 2: Add New Shift -->
-                        <Button Command="{Binding CreateShiftCommand}" Height="Auto" Margin="0,0,0,10" Cursor="Hand">
+                        <Button Command="{Binding CreateShiftCommand}" Height="Auto" Margin="0,0,0,8" Cursor="Hand">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border Background="#eff6ff" BorderBrush="#bfdbfe" BorderThickness="1" CornerRadius="8" Padding="14,12">
+                                    <Border Background="#eff6ff" BorderBrush="#bfdbfe" BorderThickness="1" CornerRadius="8" Padding="12,9">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="➕🗓️" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="0" Text="➕🗓️" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <TextBlock Text="Nöbet Kaydı Ekle" FontSize="12" FontWeight="Bold" Foreground="#1e40af"/>
-                                                <TextBlock Text="Yaygınlaştırma veya özel nöbet" FontSize="10" Foreground="#3b82f6" Margin="0,3,0,0"/>
+                                                <TextBlock Text="Nöbet Kaydı Ekle" FontSize="11.5" FontWeight="Bold" Foreground="#1e40af"/>
+                                                <TextBlock Text="Yaygınlaştırma veya özel nöbet" FontSize="9.5" Foreground="#3b82f6" Margin="0,2,0,0"/>
                                             </StackPanel>
-                                            <TextBlock Grid.Column="2" Text="➔" FontSize="14" FontWeight="Bold" Foreground="#1e40af" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="➔" FontSize="13" FontWeight="Bold" Foreground="#1e40af" VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                 </ControlTemplate>
@@ -357,22 +419,22 @@
                         </Button>
 
                         <!-- Shortcut 3: Project Section -->
-                        <Button Command="{Binding CreateProjectCommand}" Height="Auto" Margin="0,0,0,10" Cursor="Hand">
+                        <Button Command="{Binding CreateProjectCommand}" Height="Auto" Margin="0,0,0,8" Cursor="Hand">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border Background="#f5f3ff" BorderBrush="#ddd6fe" BorderThickness="1" CornerRadius="8" Padding="14,12">
+                                    <Border Background="#f5f3ff" BorderBrush="#ddd6fe" BorderThickness="1" CornerRadius="8" Padding="12,9">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding ProjectShortcutIcon}" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="0" Text="{Binding ProjectShortcutIcon}" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding ProjectShortcutTitle}" FontSize="12" FontWeight="Bold" Foreground="#5b21b6"/>
-                                                <TextBlock Text="{Binding ProjectShortcutSubtitle}" FontSize="10" Foreground="#7c3aed" Margin="0,3,0,0"/>
+                                                <TextBlock Text="{Binding ProjectShortcutTitle}" FontSize="11.5" FontWeight="Bold" Foreground="#5b21b6"/>
+                                                <TextBlock Text="{Binding ProjectShortcutSubtitle}" FontSize="9.5" Foreground="#7c3aed" Margin="0,2,0,0"/>
                                             </StackPanel>
-                                            <TextBlock Grid.Column="2" Text="➔" FontSize="14" FontWeight="Bold" Foreground="#5b21b6" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="➔" FontSize="13" FontWeight="Bold" Foreground="#5b21b6" VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                 </ControlTemplate>
@@ -383,19 +445,19 @@
                         <Button Command="{Binding CreateUserCommand}" Height="Auto" Cursor="Hand">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border Background="#fff7ed" BorderBrush="#fed7aa" BorderThickness="1" CornerRadius="8" Padding="14,12">
+                                    <Border Background="#fff7ed" BorderBrush="#fed7aa" BorderThickness="1" CornerRadius="8" Padding="12,9">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding UserShortcutIcon}" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <TextBlock Grid.Column="0" Text="{Binding UserShortcutIcon}" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding UserShortcutTitle}" FontSize="12" FontWeight="Bold" Foreground="#c2410c"/>
-                                                <TextBlock Text="{Binding UserShortcutSubtitle}" FontSize="10" Foreground="#ea580c" Margin="0,3,0,0"/>
+                                                <TextBlock Text="{Binding UserShortcutTitle}" FontSize="11.5" FontWeight="Bold" Foreground="#c2410c"/>
+                                                <TextBlock Text="{Binding UserShortcutSubtitle}" FontSize="9.5" Foreground="#ea580c" Margin="0,2,0,0"/>
                                             </StackPanel>
-                                            <TextBlock Grid.Column="2" Text="➔" FontSize="14" FontWeight="Bold" Foreground="#c2410c" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="➔" FontSize="13" FontWeight="Bold" Foreground="#c2410c" VerticalAlignment="Center"/>
                                         </Grid>
                                     </Border>
                                 </ControlTemplate>
@@ -405,76 +467,5 @@
                 </Border>
             </StackPanel>
         </Grid>
-
-        <!-- ROW 2 (EN ALTTA): 4 KPI Cards (NÖBETÇİLER, İZİNLİ PERSONEL, DEVAM EDEN PROJELER, BÜTÇESİ KRİTİK PROJELER) -->
-        <UniformGrid Grid.Row="2" Columns="4" Margin="0,0,0,0">
-            <!-- Card 1: NÖBETÇİLER -->
-            <Border Style="{StaticResource KpiCard}" ToolTip="Nöbet Takvimine Git">
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToShiftsCommand}"/>
-                </Border.InputBindings>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="NÖBETÇİLER" FontSize="11" FontWeight="Bold" Foreground="{StaticResource ZiraatRed}"/>
-                    <TextBlock Grid.Row="1" Text="{Binding WeeklyShiftCount}" FontSize="32" FontWeight="Bold" Foreground="#1a202c" Margin="0,4"/>
-                    <TextBlock Grid.Row="2" Text="Bu haftaki aktif nöbetler ➔" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource ZiraatRed}"/>
-                </Grid>
-            </Border>
-
-            <!-- Card 2: İZİNLİ PERSONEL -->
-            <Border Style="{StaticResource KpiCard}" ToolTip="İzin Planlamaya Git">
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToLeavesCommand}"/>
-                </Border.InputBindings>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="İZİNLİ PERSONEL" FontSize="11" FontWeight="Bold" Foreground="#059669"/>
-                    <TextBlock Grid.Row="1" Text="{Binding ActiveLeaveCount}" FontSize="32" FontWeight="Bold" Foreground="#1a202c" Margin="0,4"/>
-                    <TextBlock Grid.Row="2" Text="Şu an izinli çalışanlar ➔" FontSize="11" FontWeight="SemiBold" Foreground="#059669"/>
-                </Grid>
-            </Border>
-
-            <!-- Card 3: PROJE TALEPLERİ -->
-            <Border Style="{StaticResource KpiCard}" ToolTip="Proje Yönetimine Git">
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToProjectsCommand}"/>
-                </Border.InputBindings>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="PROJE TALEPLERİ" FontSize="11" FontWeight="Bold" Foreground="#2563eb"/>
-                    <TextBlock Grid.Row="1" Text="{Binding OngoingProjectsCount}" FontSize="32" FontWeight="Bold" Foreground="#1a202c" Margin="0,4"/>
-                    <TextBlock Grid.Row="2" Text="Aktif iş süreçleri ➔" FontSize="11" FontWeight="SemiBold" Foreground="#2563eb"/>
-                </Grid>
-            </Border>
-
-            <!-- Card 4: DEVAM EDEN PROJELER -->
-            <Border Style="{StaticResource KpiCard}" ToolTip="Proje Sayfasına Git">
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToProjectsCommand}"/>
-                </Border.InputBindings>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="DEVAM EDEN PROJELER" FontSize="11" FontWeight="Bold" Foreground="#7c3aed"/>
-                    <TextBlock Grid.Row="1" Text="{Binding TotalProjectsCount}" FontSize="32" FontWeight="Bold" Foreground="#1a202c" Margin="0,4"/>
-                    <TextBlock Grid.Row="2" Text="{Binding CurrentQuarterText, StringFormat='{}{0} aktif projeleri ➔'}" FontSize="11" FontWeight="SemiBold" Foreground="#7c3aed"/>
-                </Grid>
-            </Border>
-        </UniformGrid>
     </Grid>
 </UserControl>

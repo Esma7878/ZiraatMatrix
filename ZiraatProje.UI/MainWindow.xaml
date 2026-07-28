@@ -12,6 +12,7 @@
         Icon="/Assets/ziraat_logo.png"
         Height="820" Width="1280"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         Background="#fcfbfa">
 
     <Window.Resources>

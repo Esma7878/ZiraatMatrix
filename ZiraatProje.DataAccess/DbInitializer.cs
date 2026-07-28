@@ -319,54 +319,136 @@ namespace ZiraatProje.DataAccess
             {
                 new Team { TeamName = "Takip", Color = "#7c3aed" },
                 new Team { TeamName = "Tahsis", Color = "#059669" },
-                new Team { TeamName = "Teminat", Color = "#2563eb" }
+                new Team { TeamName = "Teminat", Color = "#2563eb" },
             };
-            context.Teams.AddRange(teams);
-            context.SaveChanges();
+            if (!context.Teams.Any()) { context.Teams.AddRange(teams); context.SaveChanges(); }
 
-            // 2. Seed Users & Managers
+            // 2. Seed Users
             var users = new User[]
             {
                 new User { Name = "Ahmet", Surname = "Yılmaz", Title = "Analist", Team = "Takip", Email = "ahmet.yilmaz@ziraatteknoloji.com", Phone = "+90 (212) 555 0101", Password = "1234", IsAdmin = true },
-                new User { Name = "Ali", Surname = "Çelik", Title = "Developer", Team = "Tahsis", Email = "ali.celik@ziraatteknoloji.com", Phone = "+90 (212) 555 0102", Password = "1234", IsAdmin = true },
-                new User { Name = "Esma", Surname = "Yılmaz", Title = "Developer", Team = "Takip", Email = "esma.yilmaz@ziraatteknoloji.com", Phone = "+90 (212) 555 0103", Password = "1234", IsAdmin = false },
-                new User { Name = "Mehmet", Surname = "Kaya", Title = "Developer", Team = "Tahsis", Email = "mehmet.kaya@ziraatteknoloji.com", Phone = "+90 (212) 555 0104", Password = "1234", IsAdmin = false },
+                new User { Name = "Ali", Surname = "Çelik", Title = "Developer", Team = "Tahsis", Email = "ali.celik@ziraatteknoloji.com", Phone = "+90 (212) 555 01 02", Password = "1234", IsAdmin = true },
+                new User { Name = "Esma", Surname = "Yılmaz", Title = "Developer", Team = "Tahsis", Email = "esma.yilmaz@ziraatteknoloji.com", Phone = "+90 (212) 555 01 03", Password = "1234", IsAdmin = false },
+                new User { Name = "Mehmet", Surname = "Kaya", Title = "Analist", Team = "Tahsis", Email = "mehmet.kaya@ziraatteknoloji.com", Phone = "+90 (212) 555 0104", Password = "1234", IsAdmin = false },
                 new User { Name = "Ayşe", Surname = "Demir", Title = "Analist", Team = "Teminat", Email = "ayse.demir@ziraatteknoloji.com", Phone = "+90 (212) 555 0105", Password = "1234", IsAdmin = false },
                 new User { Name = "Fatma", Surname = "Şahin", Title = "Developer", Team = "Takip", Email = "fatma.sahin@ziraatteknoloji.com", Phone = "+90 (212) 555 0106", Password = "1234", IsAdmin = false },
-                new User { Name = "Zeynep", Surname = "Yıldız", Title = "Analist", Team = "Teminat", Email = "zeynep.yildiz@ziraatteknoloji.com", Phone = "+90 (212) 555 0107", Password = "1234", IsAdmin = false },
+                new User { Name = "Zeynep", Surname = "Yıldız", Title = "Developer", Team = "Teminat", Email = "zeynep.yildiz@ziraatteknoloji.com", Phone = "+90 (212) 555 0107", Password = "1234", IsAdmin = false },
                 new User { Name = "Mustafa", Surname = "Öztürk", Title = "Developer", Team = "Takip", Email = "mustafa.ozturk@ziraatteknoloji.com", Phone = "+90 (212) 555 0108", Password = "1234", IsAdmin = false },
-                new User { Name = "Elif", Surname = "Aydın", Title = "Developer", Team = "Tahsis", Email = "elif.aydin@ziraatteknoloji.com", Phone = "+90 (212) 555 0109", Password = "1234", IsAdmin = false },
+                new User { Name = "Elif", Surname = "Aydın", Title = "Analist", Team = "Tahsis", Email = "elif.aydin@ziraatteknoloji.com", Phone = "+90 (212) 555 0109", Password = "1234", IsAdmin = true },
                 new User { Name = "Ömer", Surname = "Arslan", Title = "Analist", Team = "Teminat", Email = "omer.arslan@ziraatteknoloji.com", Phone = "+90 (212) 555 0110", Password = "1234", IsAdmin = false },
                 new User { Name = "Selin", Surname = "Bulut", Title = "Developer", Team = "Takip", Email = "selin.bulut@ziraatteknoloji.com", Phone = "+90 (212) 555 0111", Password = "1234", IsAdmin = false },
-                new User { Name = "Can", Surname = "Koç", Title = "Developer", Team = "Tahsis", Email = "can.koc@ziraatteknoloji.com", Phone = "+90 (212) 555 0112", Password = "1234", IsAdmin = false }
+                new User { Name = "Can", Surname = "Koç", Title = "Developer", Team = "Tahsis", Email = "can.koc@ziraatteknoloji.com", Phone = "+90 (212) 555 0112", Password = "1234", IsAdmin = false },
+                new User { Name = "Esma İrem ", Surname = "Öztürk", Title = "Developer", Team = "Takip", Email = "eozturk@ziraatteknoloji.com", Phone = "+90 (535) 262 66 22", Password = "esmaa", IsAdmin = false },
+                new User { Name = "Gülşah", Surname = "yavuz", Title = "Developer", Team = "Teminat", Email = "gulsah@ziraatteknoloji.com", Phone = "+90 (565) 666 22 55", Password = "1234", IsAdmin = false },
+                new User { Name = "Neslihan", Surname = "Keske", Title = "Departman Yöneticisi", Team = "Departman Yönetimi", Email = "nesli@ziraatteknoloji.com", Phone = "+90 (566) 956 66", Password = "1234", IsAdmin = true },
+                new User { Name = " Barbaros", Surname = "Hayrettin", Title = "Analist", Team = "Tahsis", Email = "barbo@ziraatteknoloji.com", Phone = "+90 (544) 547 88 99", Password = "1234", IsAdmin = false },
+                new User { Name = "Ali", Surname = "Koç", Title = "Developer", Team = "Takip", Email = "ali@ziraatteknoloji.com", Phone = "+90 (233) 336 66 45", Password = "1234", IsAdmin = false },
             };
-            context.Users.AddRange(users);
+            if (!context.Users.Any()) { context.Users.AddRange(users); context.SaveChanges(); }
+
+            // 3. Seed ShiftTypes
+            var shiftTypes = new ShiftType[]
+            {
+                new ShiftType { ShiftName = "Firewall Geçiş" },
+                new ShiftType { ShiftName = "Server Geçiş" },
+                new ShiftType { ShiftName = "Acil Güvenlik Yaması" },
+                new ShiftType { ShiftName = "Server & Altyapı Geçiş Nöbeti" },
+                new ShiftType { ShiftName = "Server Geçiş Nöbeti" },
+                new ShiftType { ShiftName = "Firewall Geçiş Nöbeti" },
+                new ShiftType { ShiftName = "Acil Güvenlik Yaması Nöbeti" },
+                new ShiftType { ShiftName = "Haftalık Yaygınlaştırma Nöbeti" },
+                new ShiftType { ShiftName = "Aylık Yaygınlaştırma Nöbeti" },
+                new ShiftType { ShiftName = "özel" },
+            };
+            foreach (var st in shiftTypes) { if (!context.ShiftTypes.Any(x => x.ShiftName == st.ShiftName)) context.ShiftTypes.Add(st); }
             context.SaveChanges();
 
-            // 3. Seed Shift Types
-            if (!context.ShiftTypes.Any())
+            // 4. Seed MonthlyReleaseShifts
+            if (!context.MonthlyReleaseShifts.Any())
             {
-                var shiftTypes = new ShiftType[]
+                var monthlyShifts = new MonthlyReleaseShift[]
                 {
-                    new ShiftType { ShiftName = "Firewall Geçiş" },
-                    new ShiftType { ShiftName = "Server Geçiş" },
-                    new ShiftType { ShiftName = "Haftalık Yaygınlaştırma" },
-                    new ShiftType { ShiftName = "Aylık Yaygınlaştırma" },
-                    new ShiftType { ShiftName = "Acil Güvenlik Yaması" }
+                    new MonthlyReleaseShift { MonthName = "Mart 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 3, 11, 0, 0, 0), AssignedUsers = "Ahmet Yılmaz, Fatma Şahin, Ali Çelik, Elif Aydın, Zeynep Yıldız", JiraTicketNo = "REL-2026-01", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-01", Note = null, IsFinished = true, CreatedByUserName = "Ahmet Yılmaz", UpdatedByUserName = "Ahmet Yılmaz", CreatedAt = null, UpdatedAt = new DateTime(2026, 7, 21, 11, 38, 22) },
+                    new MonthlyReleaseShift { MonthName = "Şubat 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 2, 12, 0, 0, 0), AssignedUsers = "Mehmet Kaya, Ayşe Demir, Mustafa Öztürk, Ömer Arslan", JiraTicketNo = "REL-2026-02", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-02", Note = null, IsFinished = true, CreatedByUserName = "Ahmet Yılmaz", UpdatedByUserName = null, CreatedAt = null, UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Mart 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 3, 19, 0, 0, 0), AssignedUsers = "Zeynep Yıldız, Selin Bulut, Can Koç, Esma Yılmaz", JiraTicketNo = "REL-2026-03", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-03", Note = null, IsFinished = true, CreatedByUserName = "Esma Yılmaz", UpdatedByUserName = null, CreatedAt = null, UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Nisan 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 4, 16, 0, 0, 0), AssignedUsers = "Fatma Şahin, Esma İrem  Öztürk, Ali Çelik, Mehmet Kaya, Elif Aydın", JiraTicketNo = "REL-2026-04", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-04", Note = null, IsFinished = true, CreatedByUserName = "Ali Çelik", UpdatedByUserName = "Ahmet Yılmaz", CreatedAt = null, UpdatedAt = new DateTime(2026, 7, 20, 15, 56, 14) },
+                    new MonthlyReleaseShift { MonthName = "Mayıs 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 5, 14, 0, 0, 0), AssignedUsers = "Ayşe Demir, Mustafa Öztürk, Ömer Arslan, Zeynep Yıldız", JiraTicketNo = "REL-2026-05", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-05", Note = null, IsFinished = true, CreatedByUserName = "Ahmet Yılmaz", UpdatedByUserName = null, CreatedAt = null, UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haziran 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 6, 11, 0, 0, 0), AssignedUsers = "Selin Bulut, Can Koç, Ahmet Yılmaz, Fatma Şahin", JiraTicketNo = "REL-2026-06", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-06", Note = null, IsFinished = true, CreatedByUserName = "Esma Yılmaz", UpdatedByUserName = null, CreatedAt = null, UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Temmuz 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 7, 16, 0, 0, 0), AssignedUsers = "Ali Çelik, Elif Aydın, Mehmet Kaya, Ayşe Demir", JiraTicketNo = "REL-2026-07", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-07", Note = null, IsFinished = true, CreatedByUserName = "Ali Çelik", UpdatedByUserName = null, CreatedAt = null, UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Ağustos 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 8, 13, 0, 0, 0), AssignedUsers = "Mustafa Öztürk, Ömer Arslan, Zeynep Yıldız, Selin Bulut", JiraTicketNo = "REL-2026-08", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-08", Note = null, IsFinished = false, CreatedByUserName = "Ahmet Yılmaz", UpdatedByUserName = null, CreatedAt = null, UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Eylül 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 9, 17, 0, 0, 0), AssignedUsers = "Fatma Şahin, Can Koç", JiraTicketNo = "REL-2026-09", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-09", Note = null, IsFinished = false, CreatedByUserName = "Ali Çelik", UpdatedByUserName = "Ahmet Yılmaz", CreatedAt = null, UpdatedAt = new DateTime(2026, 7, 20, 15, 41, 22) },
+                    new MonthlyReleaseShift { MonthName = "Ekim 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 10, 15, 0, 0, 0), AssignedUsers = "Elif Aydın, Mehmet Kaya, Ayşe Demir, Mustafa Öztürk", JiraTicketNo = "REL-2026-10", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-10", Note = null, IsFinished = false, CreatedByUserName = "Ahmet Yılmaz", UpdatedByUserName = null, CreatedAt = null, UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Kasım 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 11, 12, 0, 0, 0), AssignedUsers = "Ömer Arslan, Zeynep Yıldız, Selin Bulut, Can Koç", JiraTicketNo = "REL-2026-11", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-11", Note = null, IsFinished = false, CreatedByUserName = "Esma Yılmaz", UpdatedByUserName = null, CreatedAt = null, UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Aralık 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 12, 17, 0, 0, 0), AssignedUsers = "Ahmet Yılmaz, Fatma Şahin, Ali Çelik, Mehmet Kaya", JiraTicketNo = "REL-2026-12", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-12", Note = null, IsFinished = false, CreatedByUserName = "Ahmet Yılmaz", UpdatedByUserName = null, CreatedAt = null, UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 30 (20.07 - 26.07.2026)", ReleaseDate = new DateTime(2026, 7, 20, 0, 0, 0), AssignedUsers = "Ahmet Yılmaz, Selin Bulut", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = true, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 22, 15, 42, 25), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 31 (27.07 - 02.08.2026)", ReleaseDate = new DateTime(2026, 7, 27, 0, 0, 0), AssignedUsers = "Esma Yılmaz, Mustafa Öztürk", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 22, 15, 42, 25), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 32 (03.08 - 09.08.2026)", ReleaseDate = new DateTime(2026, 8, 3, 0, 0, 0), AssignedUsers = "Esma Yılmaz, Selin Bulut", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 22, 15, 42, 25), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 33 (10.08 - 16.08.2026)", ReleaseDate = new DateTime(2026, 8, 10, 0, 0, 0), AssignedUsers = "Ahmet Yılmaz, Esma İrem  Öztürk", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 22, 15, 42, 25), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 34 (17.08 - 23.08.2026)", ReleaseDate = new DateTime(2026, 8, 17, 0, 0, 0), AssignedUsers = "Ahmet Yılmaz, Esma İrem  Öztürk", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 22, 15, 42, 25), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 35 (24.08 - 30.08.2026)", ReleaseDate = new DateTime(2026, 8, 24, 0, 0, 0), AssignedUsers = "Ahmet Yılmaz, Fatma Şahin", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 22, 15, 42, 25), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 36 (31.08 - 06.09.2026)", ReleaseDate = new DateTime(2026, 8, 31, 0, 0, 0), AssignedUsers = "Ahmet Yılmaz, Selin Bulut", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 22, 15, 42, 25), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 37 (07.09 - 13.09.2026)", ReleaseDate = new DateTime(2026, 9, 7, 0, 0, 0), AssignedUsers = "Esma Yılmaz, Selin Bulut", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 22, 15, 42, 25), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 30 (20.07 - 26.07.2026)", ReleaseDate = new DateTime(2026, 7, 20, 0, 0, 0), AssignedUsers = " Barbaros Hayrettin, Ali Koç", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = true, CreatedByUserName = "Neslihan Yilmaz", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 36, 22), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 31 (27.07 - 02.08.2026)", ReleaseDate = new DateTime(2026, 7, 27, 0, 0, 0), AssignedUsers = "Elif Aydın, Can Koç", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Neslihan Yilmaz", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 36, 22), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 32 (03.08 - 09.08.2026)", ReleaseDate = new DateTime(2026, 8, 3, 0, 0, 0), AssignedUsers = "Mehmet Kaya, Ali Çelik", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Neslihan Yilmaz", UpdatedByUserName = "Neslihan Yilmaz", CreatedAt = new DateTime(2026, 7, 23, 13, 36, 22), UpdatedAt = new DateTime(2026, 7, 23, 13, 37, 4) },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 33 (10.08 - 16.08.2026)", ReleaseDate = new DateTime(2026, 8, 10, 0, 0, 0), AssignedUsers = "Elif Aydın, Can Koç", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Neslihan Yilmaz", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 36, 22), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 34 (17.08 - 23.08.2026)", ReleaseDate = new DateTime(2026, 8, 17, 0, 0, 0), AssignedUsers = "Mehmet Kaya, Ali Koç", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Neslihan Yilmaz", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 36, 22), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 36 (31.08 - 06.09.2026)", ReleaseDate = new DateTime(2026, 8, 31, 0, 0, 0), AssignedUsers = "Mehmet Kaya, Ali Koç", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Neslihan Yilmaz", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 36, 22), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 30 (20.07 - 26.07.2026)", ReleaseDate = new DateTime(2026, 7, 20, 0, 0, 0), AssignedUsers = "Ayşe Demir, Gülşah yavuz", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = true, CreatedByUserName = "Neslihan Yilmaz", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 37, 26), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık Yaygınlaştırma: Temmuz 2026 - Hafta 4 (20.07.2026 - 26.07.2026)", ReleaseDate = new DateTime(2026, 7, 25, 0, 0, 0), AssignedUsers = "Ahmet Yılmaz, Selin Bulut, Can Koç,  Barbaros Hayrettin, Ayşe Demir, Gülşah yavuz", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 56, 57), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 31 (27.07 - 02.08.2026)", ReleaseDate = new DateTime(2026, 7, 27, 0, 0, 0), AssignedUsers = "Ömer Arslan, Gülşah yavuz", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 27, 11, 58, 1), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 32 (03.08 - 09.08.2026)", ReleaseDate = new DateTime(2026, 8, 3, 0, 0, 0), AssignedUsers = "Ayşe Demir, Zeynep Yıldız", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 27, 11, 58, 14), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 33 (10.08 - 16.08.2026)", ReleaseDate = new DateTime(2026, 8, 10, 0, 0, 0), AssignedUsers = "Ömer Arslan, Zeynep Yıldız", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 27, 11, 58, 14), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 34 (17.08 - 23.08.2026)", ReleaseDate = new DateTime(2026, 8, 17, 0, 0, 0), AssignedUsers = "Ayşe Demir, Gülşah yavuz", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 27, 11, 58, 14), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 35 (24.08 - 30.08.2026)", ReleaseDate = new DateTime(2026, 8, 24, 0, 0, 0), AssignedUsers = "Ayşe Demir, Zeynep Yıldız", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 27, 11, 58, 14), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 36 (31.08 - 06.09.2026)", ReleaseDate = new DateTime(2026, 8, 31, 0, 0, 0), AssignedUsers = "Ayşe Demir, Gülşah yavuz", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 27, 11, 58, 14), UpdatedAt = null },
                 };
-                context.ShiftTypes.AddRange(shiftTypes);
+                context.MonthlyReleaseShifts.AddRange(monthlyShifts);
                 context.SaveChanges();
             }
 
-            // 4. Seed Monthly Release Shifts
-            var monthlyShifts = new MonthlyReleaseShift[]
+            // 5. Seed CustomShifts
+            if (!context.CustomShifts.Any())
             {
-                new MonthlyReleaseShift { MonthName = "Ocak 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 1, 15), AssignedUsers = "Ahmet Yılmaz, Fatma Şahin, Ali Çelik, Elif Aydın", JiraTicketNo = "REL-2026-01", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-01", CreatedByUserName = "Ahmet Yılmaz" },
-                new MonthlyReleaseShift { MonthName = "Şubat 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 2, 12), AssignedUsers = "Mehmet Kaya, Ayşe Demir, Mustafa Öztürk, Ömer Arslan", JiraTicketNo = "REL-2026-02", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-02", CreatedByUserName = "Ahmet Yılmaz" },
-                new MonthlyReleaseShift { MonthName = "Mart 2026 Yaygınlaştırması", ReleaseDate = new DateTime(2026, 3, 19), AssignedUsers = "Zeynep Yıldız, Selin Bulut, Can Koç, Esma Yılmaz", JiraTicketNo = "REL-2026-03", ExternalLink = "https://jira.ziraat.com/browse/REL-2026-03", CreatedByUserName = "Esma Yılmaz" }
-            };
-            context.MonthlyReleaseShifts.AddRange(monthlyShifts);
-            context.SaveChanges();
+                var customShifts = new CustomShift[]
+                {
+                    new CustomShift { Topic = "Server & Altyapı Geçiş Nöbeti", Description = "CR-1019 Altyapı Sunucu Geçiş Nöbeti", AssignedUsers = "Ahmet Yılmaz, Esma Yılmaz", ShiftDate = new DateTime(2026, 7, 20, 0, 0, 0), ExternalLink = "https://jira.ziraat.com/browse/CR-1019 ALTYAPI SUNUCU GEÇİŞ NÖBETİ", IsFinished = true, CreatedByUserName = "Esma Yılmaz", UpdatedByUserName = "Ahmet Yılmaz", CreatedAt = null, UpdatedAt = new DateTime(2026, 7, 20, 15, 54, 52) },
+                    new CustomShift { Topic = "Firewall Kural Güncellemesi", Description = "CR-1024 Firewall Güncelleme Nöbeti", AssignedUsers = "Ahmet Yılmaz, Ali Çelik, Elif Aydın, Ayşe Demir, Zeynep Yıldız", ShiftDate = new DateTime(2026, 7, 21, 0, 0, 0), ExternalLink = "https://jira.ziraat.com/browse/CR-1024 FİREWALL GÜNCELLEME NÖBETİ", IsFinished = true, CreatedByUserName = "Ahmet Yılmaz", UpdatedByUserName = "Ahmet Yılmaz", CreatedAt = null, UpdatedAt = new DateTime(2026, 7, 20, 14, 46, 47) },
+                    new CustomShift { Topic = "Acil Güvenlik Yaması", Description = "CR-1027 Güvenlik Yama Yüklemesi", AssignedUsers = "Mehmet Kaya, Ayşe Demir, Zeynep Yıldız", ShiftDate = new DateTime(2026, 7, 22, 0, 0, 0), ExternalLink = "https://jira.ziraat.com/browse/CR-1027", IsFinished = true, CreatedByUserName = "Ali Çelik", UpdatedByUserName = null, CreatedAt = null, UpdatedAt = null },
+                    new CustomShift { Topic = "Server Geçiş Nöbeti", Description = "CR-1019", AssignedUsers = "Esma İrem  Öztürk, Ali Çelik", ShiftDate = new DateTime(2026, 7, 21, 0, 0, 0), ExternalLink = "https://jira.ziraat.com/browse/CR-1019", IsFinished = true, CreatedByUserName = "Ahmet Yılmaz", UpdatedByUserName = null, CreatedAt = null, UpdatedAt = null },
+                    new CustomShift { Topic = "Acil Güvenlik Yaması Nöbeti", Description = null, AssignedUsers = "Esma İrem  Öztürk", ShiftDate = new DateTime(2026, 7, 25, 0, 0, 0), ExternalLink = null, IsFinished = true, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 22, 14, 42, 8), UpdatedAt = null },
+                    new CustomShift { Topic = "Server Geçiş Nöbeti", Description = "zxcvf", AssignedUsers = "Mehmet Kaya", ShiftDate = new DateTime(2026, 7, 23, 0, 0, 0), ExternalLink = null, IsFinished = true, CreatedByUserName = "Neslihan Yilmaz", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 38, 30), UpdatedAt = null },
+                    new CustomShift { Topic = "Server Geçiş Nöbeti", Description = null, AssignedUsers = "Elif Aydın, Ayşe Demir", ShiftDate = new DateTime(2026, 7, 24, 0, 0, 0), ExternalLink = null, IsFinished = true, CreatedByUserName = "Neslihan Yilmaz", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 39, 11), UpdatedAt = null },
+                    new CustomShift { Topic = "Server Geçiş Nöbeti", Description = null, AssignedUsers = "Can Koç", ShiftDate = new DateTime(2026, 7, 27, 0, 0, 0), ExternalLink = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 27, 11, 0, 13), UpdatedAt = null },
+                };
+                context.CustomShifts.AddRange(customShifts);
+                context.SaveChanges();
+            }
+
+            // 6. Seed Leaves
+            if (!context.Leaves.Any())
+            {
+                var leaves = new Leave[]
+                {
+                    new Leave { UserId = 69, StartDate = new DateTime(2026, 7, 25, 0, 0, 0), EndDate = new DateTime(2026, 7, 29, 0, 0, 0), Status = "Approved", IsSpecialRequest = false, RequestNote = null, RequestedAt = null, ApprovedAt = null, ApprovedByUserName = null },
+                    new Leave { UserId = 70, StartDate = new DateTime(2026, 7, 21, 0, 0, 0), EndDate = new DateTime(2026, 7, 22, 0, 0, 0), Status = "Approved", IsSpecialRequest = false, RequestNote = null, RequestedAt = null, ApprovedAt = null, ApprovedByUserName = null },
+                    new Leave { UserId = 71, StartDate = new DateTime(2026, 7, 30, 0, 0, 0), EndDate = new DateTime(2026, 8, 1, 0, 0, 0), Status = "Approved", IsSpecialRequest = false, RequestNote = null, RequestedAt = null, ApprovedAt = null, ApprovedByUserName = null },
+                    new Leave { UserId = 79, StartDate = new DateTime(2026, 7, 22, 0, 0, 0), EndDate = new DateTime(2026, 7, 24, 0, 0, 0), Status = "Rejected", IsSpecialRequest = false, RequestNote = null, RequestedAt = new DateTime(2026, 7, 21, 13, 25, 3), ApprovedAt = null, ApprovedByUserName = null },
+                    new Leave { UserId = 79, StartDate = new DateTime(2026, 7, 21, 0, 0, 0), EndDate = new DateTime(2026, 7, 21, 0, 0, 0), Status = "Rejected", IsSpecialRequest = false, RequestNote = null, RequestedAt = new DateTime(2026, 7, 21, 13, 25, 7), ApprovedAt = null, ApprovedByUserName = null },
+                    new Leave { UserId = 67, StartDate = new DateTime(2026, 7, 31, 0, 0, 0), EndDate = new DateTime(2026, 8, 1, 0, 0, 0), Status = "Approved", IsSpecialRequest = true, RequestNote = "'Takip' ekibindeki 'Analist' rolündeki 2 personelden 1 kadarı (31.07.2026, 01.08.2026) tarihlerinde izinli görünmektedir (%50 veya üzeri rol çakışması). Özel izin gereklidir.", RequestedAt = new DateTime(2026, 7, 21, 14, 16, 1), ApprovedAt = new DateTime(2026, 7, 21, 14, 16, 1), ApprovedByUserName = "Ahmet Yılmaz" },
+                    new Leave { UserId = 79, StartDate = new DateTime(2026, 7, 23, 0, 0, 0), EndDate = new DateTime(2026, 7, 28, 0, 0, 0), Status = "Rejected", IsSpecialRequest = false, RequestNote = null, RequestedAt = new DateTime(2026, 7, 21, 14, 31, 5), ApprovedAt = null, ApprovedByUserName = null },
+                    new Leave { UserId = 79, StartDate = new DateTime(2026, 7, 22, 0, 0, 0), EndDate = new DateTime(2026, 7, 28, 0, 0, 0), Status = "Cancelled", IsSpecialRequest = false, RequestNote = "🔄 Onaylı izin değişikliği talep edildi (22.07.2026 - 28.07.2026)", RequestedAt = new DateTime(2026, 7, 21, 15, 24, 56), ApprovedAt = new DateTime(2026, 7, 21, 15, 25, 4), ApprovedByUserName = "Elif Aydın" },
+                    new Leave { UserId = 75, StartDate = new DateTime(2026, 7, 23, 0, 0, 0), EndDate = new DateTime(2026, 7, 24, 0, 0, 0), Status = "Cancelled", IsSpecialRequest = false, RequestNote = null, RequestedAt = new DateTime(2026, 7, 21, 16, 19, 37), ApprovedAt = new DateTime(2026, 7, 21, 16, 19, 37), ApprovedByUserName = "Elif Aydın" },
+                    new Leave { UserId = 79, StartDate = new DateTime(2026, 7, 22, 0, 0, 0), EndDate = new DateTime(2026, 7, 23, 0, 0, 0), Status = "Cancelled", IsSpecialRequest = false, RequestNote = null, RequestedAt = new DateTime(2026, 7, 21, 16, 21, 45), ApprovedAt = new DateTime(2026, 7, 21, 16, 23, 7), ApprovedByUserName = "Esma İrem  Öztürk" },
+                    new Leave { UserId = 79, StartDate = new DateTime(2026, 7, 24, 10, 30, 0), EndDate = new DateTime(2026, 7, 24, 16, 0, 0), Status = "Cancelled", IsSpecialRequest = false, RequestNote = null, RequestedAt = new DateTime(2026, 7, 22, 11, 40, 48), ApprovedAt = new DateTime(2026, 7, 22, 11, 41, 17), ApprovedByUserName = "Esma İrem  Öztürk" },
+                    new Leave { UserId = 79, StartDate = new DateTime(2026, 7, 22, 13, 0, 0), EndDate = new DateTime(2026, 7, 22, 13, 30, 0), Status = "Rejected", IsSpecialRequest = false, RequestNote = null, RequestedAt = new DateTime(2026, 7, 22, 11, 49, 11), ApprovedAt = null, ApprovedByUserName = "Elif Aydın" },
+                    new Leave { UserId = 83, StartDate = new DateTime(2026, 7, 22, 0, 0, 0), EndDate = new DateTime(2026, 7, 22, 0, 0, 0), Status = "Approved", IsSpecialRequest = false, RequestNote = null, RequestedAt = new DateTime(2026, 7, 22, 17, 14, 56), ApprovedAt = new DateTime(2026, 7, 22, 17, 14, 56), ApprovedByUserName = "Neslihan Yilmaz" },
+                    new Leave { UserId = 79, StartDate = new DateTime(2026, 7, 23, 16, 0, 0), EndDate = new DateTime(2026, 7, 23, 16, 30, 0), Status = "Approved", IsSpecialRequest = false, RequestNote = null, RequestedAt = new DateTime(2026, 7, 23, 15, 57, 50), ApprovedAt = new DateTime(2026, 7, 23, 15, 58, 18), ApprovedByUserName = "Neslihan Yilmaz" },
+                    new Leave { UserId = 79, StartDate = new DateTime(2026, 7, 28, 0, 0, 0), EndDate = new DateTime(2026, 7, 28, 0, 0, 0), Status = "Approved", IsSpecialRequest = false, RequestNote = null, RequestedAt = new DateTime(2026, 7, 26, 1, 55, 43), ApprovedAt = new DateTime(2026, 7, 26, 2, 3, 1), ApprovedByUserName = "Neslihan Keske" },
+                };
+                context.Leaves.AddRange(leaves);
+                context.SaveChanges();
+            }
         }
 
         public static void EnsureMockProjectsSeeded(AppDbContext context)

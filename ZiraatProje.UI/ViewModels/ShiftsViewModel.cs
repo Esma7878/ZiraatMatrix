@@ -91,6 +91,8 @@ namespace ZiraatProje.UI.ViewModels
             : $"📌 {CreatedByUserName} tarafından eklendi ({(CreatedAt ?? ReleaseDate):dd.MM.yyyy HH:mm})";
         public ObservableCollection<TeamAssignmentCompartment> TeamCompartments { get; set; } = new ObservableCollection<TeamAssignmentCompartment>();
         public bool IsFinished { get; set; }
+        public bool HasLink => !string.IsNullOrWhiteSpace(ExternalLink);
+        public string LinkTooltip => HasLink ? $"🔗 Web Bağlantısını Aç: {ExternalLink}" : "⚠️ Bu nöbet kaydı için eklenmiş bir web bağlantısı (link) bulunmuyor.";
         public bool IsReleaseDatePassed => ReleaseDate.Date <= DateTime.Today;
 
         public bool IsWeekly => !string.IsNullOrWhiteSpace(MonthName) && MonthName.StartsWith("Haftalık", StringComparison.OrdinalIgnoreCase);
@@ -145,6 +147,8 @@ namespace ZiraatProje.UI.ViewModels
             : $"📌 {CreatedByUserName} tarafından eklendi ({(CreatedAt ?? ShiftDate):dd.MM.yyyy HH:mm})";
         public ObservableCollection<TeamAssignmentCompartment> TeamCompartments { get; set; } = new ObservableCollection<TeamAssignmentCompartment>();
         public bool IsFinished { get; set; }
+        public bool HasLink => !string.IsNullOrWhiteSpace(ExternalLink);
+        public string LinkTooltip => HasLink ? $"🔗 Web Bağlantısını Aç: {ExternalLink}" : "⚠️ Bu nöbet kaydı için eklenmiş bir web bağlantısı (link) bulunmuyor.";
         public bool IsShiftDatePassed => ShiftDate.Date <= DateTime.Today;
         public Visibility FinishShiftVisibility => (ShiftDate.Date <= DateTime.Today && !IsFinished) ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -1110,10 +1114,30 @@ namespace ZiraatProje.UI.ViewModels
                     OnPropertyChanged(nameof(IsMonthlySelected));
                     OnPropertyChanged(nameof(MonthlySaveButtonText));
 
-                    CustomTopic = _selectedCustomShift.Topic;
-                    CustomDescription = _selectedCustomShift.Description;
-                    CustomShiftDate = _selectedCustomShift.ShiftDate;
-                    CustomJiraNo = _selectedCustomShift.Description;
+                    _customTopic = _selectedCustomShift.Topic;
+                    OnPropertyChanged(nameof(CustomTopic));
+
+                    _customDescription = _selectedCustomShift.Description;
+                    OnPropertyChanged(nameof(CustomDescription));
+
+                    _customShiftDate = _selectedCustomShift.ShiftDate;
+                    OnPropertyChanged(nameof(CustomShiftDate));
+
+                    _customLink = _selectedCustomShift.ExternalLink;
+                    OnPropertyChanged(nameof(CustomLink));
+
+                    string jiraNo = "";
+                    if (!string.IsNullOrWhiteSpace(_selectedCustomShift.ExternalLink) && _selectedCustomShift.ExternalLink.Contains("/browse/"))
+                    {
+                        jiraNo = _selectedCustomShift.ExternalLink.Substring(_selectedCustomShift.ExternalLink.LastIndexOf('/') + 1);
+                    }
+                    else if (!string.IsNullOrWhiteSpace(_selectedCustomShift.Description) && _selectedCustomShift.Description.StartsWith("CR-", StringComparison.OrdinalIgnoreCase))
+                    {
+                        jiraNo = _selectedCustomShift.Description;
+                    }
+                    _customJiraNo = jiraNo;
+                    OnPropertyChanged(nameof(CustomJiraNo));
+
                     SyncCheckboxesFromUserString(_selectedCustomShift.RawAssignedUsers, CustomTeamUserGroups);
                     SelectedTabIndex = 1; // Automatically switch to Diğer / Özel Nöbet tab!
                     IsFormOpen = true;
@@ -2348,17 +2372,41 @@ namespace ZiraatProje.UI.ViewModels
 
         private void SyncCheckboxesFromUserString(string userString, ObservableCollection<TeamUserGroup> groupList)
         {
-            var names = string.IsNullOrWhiteSpace(userString)
-                ? new HashSet<string>()
-                : userString.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                            .Select(n => n.Trim())
-                            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(userString))
+            {
+                foreach (var group in groupList)
+                {
+                    foreach (var item in group.Users) item.IsSelected = false;
+                }
+                return;
+            }
+
+            var rawTokens = userString.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                      .Select(n => n.Trim())
+                                      .ToList();
+
+            var cleanNames = new List<string>();
+            foreach (var token in rawTokens)
+            {
+                string nameOnly = token;
+                if (token.Contains(':'))
+                {
+                    nameOnly = token.Substring(token.IndexOf(':') + 1).Trim();
+                }
+                cleanNames.Add(nameOnly.Trim());
+            }
 
             foreach (var group in groupList)
             {
                 foreach (var item in group.Users)
                 {
-                    item.IsSelected = names.Contains(item.User.FullName);
+                    string uFullName = item.User.FullName.Trim();
+                    string uCombined = $"{item.User.Name} {item.User.Surname}".Trim();
+
+                    item.IsSelected = cleanNames.Any(cn =>
+                        string.Equals(cn, uFullName, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(cn, uCombined, StringComparison.OrdinalIgnoreCase) ||
+                        uFullName.Equals(cn, StringComparison.OrdinalIgnoreCase));
                 }
             }
         }
@@ -2569,10 +2617,12 @@ namespace ZiraatProje.UI.ViewModels
                         var item = new CustomShift
                         {
                             Topic = CustomTopic,
-                            Description = string.IsNullOrWhiteSpace(CustomDescription) ? CustomJiraNo : CustomDescription,
+                            Description = CustomDescription,
                             AssignedUsers = assignedUsers,
                             ShiftDate = CustomShiftDate,
-                            ExternalLink = CustomLink,
+                            ExternalLink = string.IsNullOrWhiteSpace(CustomLink) && !string.IsNullOrWhiteSpace(CustomJiraNo)
+                                ? $"https://jira.ziraat.com/browse/{CustomJiraNo.Trim().ToUpper()}"
+                                : CustomLink,
                             CreatedByUserName = creator
                         };
                         _services.AddCustomShift(item);
@@ -2585,16 +2635,19 @@ namespace ZiraatProje.UI.ViewModels
                         {
                             Id = SelectedCustomShift.Id,
                             Topic = CustomTopic,
-                            Description = string.IsNullOrWhiteSpace(CustomDescription) ? CustomJiraNo : CustomDescription,
+                            Description = CustomDescription,
                             AssignedUsers = assignedUsers,
                             ShiftDate = CustomShiftDate,
-                            ExternalLink = CustomLink,
+                            ExternalLink = string.IsNullOrWhiteSpace(CustomLink) && !string.IsNullOrWhiteSpace(CustomJiraNo)
+                                ? $"https://jira.ziraat.com/browse/{CustomJiraNo.Trim().ToUpper()}"
+                                : CustomLink,
                             CreatedByUserName = string.IsNullOrWhiteSpace(SelectedCustomShift.CreatedByUserName) ? creator : SelectedCustomShift.CreatedByUserName,
                             UpdatedByUserName = creator,
                             UpdatedAt = DateTime.Now
                         };
                         _services.UpdateCustomShift(item);
                         StatusMessage = $"✅ Güncellendi — {creator} tarafından güncellendi.";
+                        MessageBox.Show("✅ Nöbet kaydı başarıyla güncellendi!", "Nöbet Güncellendi", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                 }
 
@@ -2810,7 +2863,11 @@ namespace ZiraatProje.UI.ViewModels
         private void ExecuteOpenLink(object? param)
         {
             string link = param as string ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(link)) return;
+            if (string.IsNullOrWhiteSpace(link))
+            {
+                MessageBox.Show("⚠️ Bu nöbet kaydına henüz eklenmiş bir web bağlantısı (link) bulunmamaktadır.", "Kayıtlı Link Bulunamadı", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
 
             try
             {

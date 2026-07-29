@@ -89,7 +89,6 @@ namespace ZiraatProje.UI.Helpers
 
                 if (targetScrollViewer != null)
                 {
-                    // Check if Shift key is held down (standard shortcut for horizontal scroll)
                     bool isShiftPressed = (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift;
 
                     if (isShiftPressed)
@@ -102,32 +101,22 @@ namespace ZiraatProje.UI.Helpers
                     }
                     else
                     {
-                        // Vertical scroll logic: Scroll inner target if possible, otherwise pass to parent ScrollViewer
                         double currentOffset = targetScrollViewer.VerticalOffset;
                         double maxOffset = targetScrollViewer.ScrollableHeight;
 
-                        bool canScrollTarget = maxOffset > 0 &&
+                        bool canScrollVertical = maxOffset > 0 &&
                             ((e.Delta < 0 && currentOffset < maxOffset) || (e.Delta > 0 && currentOffset > 0));
 
-                        if (canScrollTarget)
+                        if (canScrollVertical)
                         {
                             targetScrollViewer.ScrollToVerticalOffset(currentOffset - (e.Delta * 0.8));
                             e.Handled = true;
                         }
-                        else
+                        else if (targetScrollViewer.ScrollableWidth > 0)
                         {
-                            // Outer parent ScrollViewer (e.g. Tab's main ScrollViewer)
-                            ScrollViewer? parentSv = FindParentScrollViewer(targetScrollViewer);
-                            if (parentSv != null && parentSv.ScrollableHeight > 0)
-                            {
-                                parentSv.ScrollToVerticalOffset(parentSv.VerticalOffset - (e.Delta * 0.8));
-                                e.Handled = true;
-                            }
-                            else if (targetScrollViewer.ScrollableWidth > 0)
-                            {
-                                targetScrollViewer.ScrollToHorizontalOffset(targetScrollViewer.HorizontalOffset - (e.Delta * 0.8));
-                                e.Handled = true;
-                            }
+                            // If vertical scrolling reached boundary or not possible, scroll horizontally!
+                            targetScrollViewer.ScrollToHorizontalOffset(targetScrollViewer.HorizontalOffset - (e.Delta * 0.8));
+                            e.Handled = true;
                         }
                     }
                 }

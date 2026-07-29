@@ -120,8 +120,16 @@ namespace ZiraatProje.DataAccess
         public string? AssignedUserIds { get; set; } = string.Empty;
 
         public decimal TotalManDayBudget { get; set; }
+        public decimal ActualManDays { get; set; } = 0m; // Gerçekleşen efor (adam/gün)
         public DateTime StartDate { get; set; } = DateTime.Today;
         public DateTime EndDate { get; set; } = DateTime.Today.AddMonths(3);
+
+        public string? CreatedByUserName { get; set; }
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
+        public string? UpdatedByUserName { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public string? CompletedByUserName { get; set; }
+        public DateTime? CompletedAt { get; set; }
 
         // Navigation properties
         public virtual ICollection<ProjectAllocation> ProjectAllocations { get; set; } = new List<ProjectAllocation>();
@@ -147,6 +155,7 @@ namespace ZiraatProje.DataAccess
         public int ProjectId { get; set; }
         public int UserId { get; set; }
         public decimal AllocatedManDay { get; set; }
+        public decimal ActualManDay { get; set; } = 0m; // Kişinin gerçekleşen harcanan eforu (gün)
 
         // Navigation properties
         public virtual Project? Project { get; set; }

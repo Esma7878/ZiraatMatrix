@@ -751,14 +751,26 @@ namespace ZiraatProje.Business
                 .ToList();
         }
 
-        public void SaveProjectWithMonthlyCosts(Project project, List<ProjectMonthlyCost> monthlyCosts)
+        public void SaveProjectWithMonthlyCosts(Project project, List<ProjectMonthlyCost> monthlyCosts, List<ProjectAllocation>? allocations = null, string currentUserName = "")
         {
             using var context = CreateContext();
             if (string.IsNullOrWhiteSpace(project.ProjectName))
                 throw new ValidationException("Proje Adı / Talep Özeti boş bırakılamaz.");
 
+            bool isCompletedNow = string.Equals(project.ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase);
+
             if (project.Id == 0)
             {
+                if (!string.IsNullOrWhiteSpace(currentUserName))
+                {
+                    project.CreatedByUserName = currentUserName;
+                    project.UpdatedByUserName = currentUserName;
+                    if (isCompletedNow) project.CompletedByUserName = currentUserName;
+                }
+                project.CreatedAt ??= DateTime.Now;
+                project.UpdatedAt = DateTime.Now;
+                if (isCompletedNow) project.CompletedAt ??= DateTime.Now;
+
                 context.Projects.Add(project);
                 context.SaveChanges();
 
@@ -771,11 +783,22 @@ namespace ZiraatProje.Business
                     }
                     context.SaveChanges();
                 }
+
+                if (allocations != null && allocations.Any())
+                {
+                    foreach (var alloc in allocations)
+                    {
+                        alloc.ProjectId = project.Id;
+                        context.ProjectAllocations.Add(alloc);
+                    }
+                    context.SaveChanges();
+                }
             }
             else
             {
                 var existing = context.Projects
                     .Include(p => p.ProjectMonthlyCosts)
+                    .Include(p => p.ProjectAllocations)
                     .FirstOrDefault(p => p.Id == project.Id);
 
                 if (existing == null) throw new ValidationException("Güncellenecek proje bulunamadı.");
@@ -799,6 +822,25 @@ namespace ZiraatProje.Business
                 existing.AssignedDeveloperNames = project.AssignedDeveloperNames;
                 existing.AssignedUserIds = project.AssignedUserIds;
                 existing.TotalManDayBudget = project.TotalManDayBudget;
+                existing.ActualManDays = project.ActualManDays;
+
+                if (!string.IsNullOrWhiteSpace(currentUserName))
+                {
+                    if (string.IsNullOrWhiteSpace(existing.CreatedByUserName)) existing.CreatedByUserName = currentUserName;
+                    existing.UpdatedByUserName = currentUserName;
+                    if (isCompletedNow && string.IsNullOrWhiteSpace(existing.CompletedByUserName)) existing.CompletedByUserName = currentUserName;
+                }
+                else
+                {
+                    if (!string.IsNullOrWhiteSpace(project.UpdatedByUserName)) existing.UpdatedByUserName = project.UpdatedByUserName;
+                    if (isCompletedNow && !string.IsNullOrWhiteSpace(project.CompletedByUserName)) existing.CompletedByUserName = project.CompletedByUserName;
+                }
+
+                existing.UpdatedAt = DateTime.Now;
+                if (isCompletedNow && existing.CompletedAt == null)
+                {
+                    existing.CompletedAt = DateTime.Now;
+                }
 
                 // Refresh monthly costs
                 var oldCosts = context.ProjectMonthlyCosts.Where(c => c.ProjectId == project.Id).ToList();
@@ -811,6 +853,20 @@ namespace ZiraatProje.Business
                         mc.Id = 0;
                         mc.ProjectId = project.Id;
                         context.ProjectMonthlyCosts.Add(mc);
+                    }
+                }
+
+                // Refresh allocations (person actual efforts)
+                var oldAllocations = context.ProjectAllocations.Where(a => a.ProjectId == project.Id).ToList();
+                context.ProjectAllocations.RemoveRange(oldAllocations);
+
+                if (allocations != null && allocations.Any())
+                {
+                    foreach (var alloc in allocations)
+                    {
+                        alloc.Id = 0;
+                        alloc.ProjectId = project.Id;
+                        context.ProjectAllocations.Add(alloc);
                     }
                 }
 

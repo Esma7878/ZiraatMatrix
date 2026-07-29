@@ -1,7 +1,10 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
+using ZiraatProje.UI.Helpers;
 
 namespace ZiraatProje.UI.Views
 {
@@ -10,13 +13,13 @@ namespace ZiraatProje.UI.Views
         public ProjectsView()
         {
             InitializeComponent();
-            ModalGrid.IsVisibleChanged += (s, e) =>
-            {
-                if (ModalGrid.Visibility == Visibility.Visible)
-                {
-                    RootScrollViewer.ScrollToTop();
-                }
-            };
+            Loaded += ProjectsView_Loaded;
+        }
+
+        private void ProjectsView_Loaded(object sender, RoutedEventArgs e)
+        {
+            var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+            hwndSource?.AddHook(MouseWheelScrollHelper.HwndHook);
         }
 
         private void DataGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

@@ -264,56 +264,57 @@ namespace ZiraatProje.UI.ViewModels
         }
     }
 
+    // Not: Bu class DashboardViewModel tarafından da kullanılmaktadır.
     public class NotificationItemModel
     {
         public int LeaveId { get; set; }
-        public string Type { get; set; } = "Approved"; // "Approved", "Updated", "Rejected", "Cancelled"
+        public string Type { get; set; } = "Approved";
         public string Icon { get; set; } = "✅";
-        public string Title { get; set; } = "İZİN TALEBİ BİLDİRİMİ";
+        public string Title { get; set; } = "BİLDİRİM";
         public string Message { get; set; } = string.Empty;
 
         public string BackgroundColor => Type switch
         {
-            "Approved" => "#dcfce7",  // Açık yeşil (Onaylandı)
-            "Updated" => "#fef3c7",   // Canlı Açık Sarı (Yönetici Güncelledi)
-            "Rejected" => "#fee2e2",  // Açık kırmızı (Reddedildi)
-            "Cancelled" => "#ffedd5", // Açık turuncu (İptal edildi)
+            "Approved" => "#dcfce7",
+            "Updated"  => "#fef3c7",
+            "Rejected" => "#fee2e2",
+            "Cancelled"=> "#ffedd5",
             _ => "#dcfce7"
         };
 
         public string BorderColor => Type switch
         {
             "Approved" => "#16a34a",
-            "Updated" => "#f59e0b",  // Canlı Kehribar Sarı Border
+            "Updated"  => "#f59e0b",
             "Rejected" => "#dc2626",
-            "Cancelled" => "#ea580c",
+            "Cancelled"=> "#ea580c",
             _ => "#16a34a"
         };
 
         public string HeaderTextColor => Type switch
         {
             "Approved" => "#14532d",
-            "Updated" => "#92400e",  // Koyu Kehribar Sarı Başlık
+            "Updated"  => "#92400e",
             "Rejected" => "#991b1b",
-            "Cancelled" => "#9a3412",
+            "Cancelled"=> "#9a3412",
             _ => "#14532d"
         };
 
         public string BodyTextColor => Type switch
         {
             "Approved" => "#166534",
-            "Updated" => "#78350f",  // Koyu Kahve/Sarı Gövde Metni
+            "Updated"  => "#78350f",
             "Rejected" => "#7f1d1d",
-            "Cancelled" => "#c2410c",
+            "Cancelled"=> "#c2410c",
             _ => "#166534"
         };
 
         public string ButtonBackground => Type switch
         {
             "Approved" => "#bbf7d0",
-            "Updated" => "#fde047",  // Canlı Sarı Buton
+            "Updated"  => "#fde047",
             "Rejected" => "#fecaca",
-            "Cancelled" => "#fed7aa",
+            "Cancelled"=> "#fed7aa",
             _ => "#bbf7d0"
         };
 
@@ -396,37 +397,6 @@ namespace ZiraatProje.UI.ViewModels
             set { _leavesList = value; OnPropertyChanged(); }
         }
 
-        private ObservableCollection<Leave> _pendingLeaves = new ObservableCollection<Leave>();
-        public ObservableCollection<Leave> PendingLeaves
-        {
-            get => _pendingLeaves;
-            set 
-            { 
-                _pendingLeaves = value; 
-                OnPropertyChanged(); 
-                OnPropertyChanged(nameof(HasPendingLeaves)); 
-                OnPropertyChanged(nameof(IsSaveButtonEnabled));
-            }
-        }
-
-        public bool HasPendingLeaves => PendingLeaves != null && PendingLeaves.Count > 0;
-
-        private ObservableCollection<Leave> _myPendingLeaves = new ObservableCollection<Leave>();
-        public ObservableCollection<Leave> MyPendingLeaves
-        {
-            get => _myPendingLeaves;
-            set
-            {
-                _myPendingLeaves = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(MyPendingLeavesVisibility));
-                OnPropertyChanged(nameof(IsSaveButtonEnabled));
-            }
-        }
-
-        public Visibility MyPendingLeavesVisibility =>
-            (!IsCurrentUserAdmin && MyPendingLeaves != null && MyPendingLeaves.Count > 0)
-                ? Visibility.Visible : Visibility.Collapsed;
 
 
         private ObservableCollection<Leave> _takipLeaves = new ObservableCollection<Leave>();
@@ -709,23 +679,6 @@ namespace ZiraatProje.UI.ViewModels
 
         public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
 
-        // ── Notification Banner Properties ──────────────────────────────────────
-        private ObservableCollection<NotificationItemModel> _notificationList = new ObservableCollection<NotificationItemModel>();
-        public ObservableCollection<NotificationItemModel> NotificationList
-        {
-            get => _notificationList;
-            set
-            {
-                _notificationList = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(NotificationVisible));
-            }
-        }
-
-        public Visibility NotificationVisible =>
-            (NotificationList != null && NotificationList.Count > 0) ? Visibility.Visible : Visibility.Collapsed;
-
-        public ICommand DismissNotificationCommand { get; private set; } = new RelayCommand(_ => { });
 
         private bool _isCurrentUserAdmin;
         public bool IsCurrentUserAdmin
@@ -736,9 +689,6 @@ namespace ZiraatProje.UI.ViewModels
                 _isCurrentUserAdmin = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(AdminTabVisibility));
-                OnPropertyChanged(nameof(SaveButtonText));
-                OnPropertyChanged(nameof(FormTitleText));
-                OnPropertyChanged(nameof(IsSaveButtonEnabled));
                 OnPropertyChanged(nameof(IsUserSelectorEnabled));
             }
         }
@@ -769,56 +719,13 @@ namespace ZiraatProje.UI.ViewModels
             }
         }
 
-        public bool IsSaveButtonEnabled
-        {
-            get
-            {
-                if (IsCurrentUserAdmin) return true;
-                if (SelectedLeave != null) return true;
-
-                // Non-admin with no leave selected: check if user already has a pending leave request!
-                int myId = CurrentUserId;
-                bool hasPending = PendingLeaves.Any(l => l.UserId == myId || (l.User != null && string.Equals(l.User.FullName, CurrentUserName, StringComparison.OrdinalIgnoreCase)));
-                return !hasPending;
-            }
-        }
+        public bool IsSaveButtonEnabled => true;
 
         public Visibility AdminTabVisibility => IsCurrentUserAdmin ? Visibility.Visible : Visibility.Collapsed;
-        public string SaveButtonText
-        {
-            get
-            {
-                if (IsCurrentUserAdmin)
-                {
-                    return SelectedLeave == null ? "İzin Kaydet & Onayla" : "İznini Güncelle & Onayla";
-                }
-                else
-                {
-                    if (SelectedLeave == null) return "İzin Talebi Gönder";
-                    if (string.Equals(SelectedLeave.Status, "Pending", StringComparison.OrdinalIgnoreCase))
-                        return "Değişiklikleri Kaydet (Talep Güncelle)";
-                    return "İzin Değişiklik Talebi Gönder (Re-Onay)";
-                }
-            }
-        }
 
-        public string FormTitleText
-        {
-            get
-            {
-                if (IsCurrentUserAdmin)
-                {
-                    return SelectedLeave == null ? "İzin Kayıt & Onay Paneli" : "İzin Kaydı Düzenleme Paneli";
-                }
-                else
-                {
-                    if (SelectedLeave == null) return "Yeni İzin Talep Paneli";
-                    if (string.Equals(SelectedLeave.Status, "Pending", StringComparison.OrdinalIgnoreCase))
-                        return "Bekleyen İzin Talebini Düzenle";
-                    return "Onaylı İzni Değiştirme Talebi";
-                }
-            }
-        }
+        public string SaveButtonText => SelectedLeave == null ? "✅ İzin Gir" : "✅ İzni Güncelle";
+
+        public string FormTitleText => SelectedLeave == null ? "İzin Giriş Paneli" : "İzin Düzenleme Paneli";
 
         // ── Akıllı İzin Öneri Asistanı Properties ─────────────────────────
         private readonly SmartLeaveRecommendationService _aiRecommendationService = new SmartLeaveRecommendationService();
@@ -868,8 +775,6 @@ namespace ZiraatProje.UI.ViewModels
         public ICommand SaveCommand { get; }
         public ICommand DeleteCommand { get; }
         public ICommand ClearFormCommand { get; }
-        public ICommand ApproveCommand { get; }
-        public ICommand RejectCommand { get; }
         public ICommand EditLeaveCommand { get; }
 
         public ICommand SelectTabCommand { get; }
@@ -893,8 +798,6 @@ namespace ZiraatProje.UI.ViewModels
         public Visibility IsMatrixTabVisible => SelectedTabIndex == 0 ? Visibility.Visible : Visibility.Collapsed;
         public Visibility IsFormListTabVisible => SelectedTabIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
 
-        private readonly System.Windows.Threading.DispatcherTimer _expiryTimer;
-
         public LeavesViewModel() : this(false, string.Empty, 0) { }
 
         public LeavesViewModel(bool isCurrentUserAdmin, string currentUserName = "", int initialTabIndex = 0)
@@ -902,10 +805,6 @@ namespace ZiraatProje.UI.ViewModels
             IsCurrentUserAdmin = isCurrentUserAdmin;
             CurrentUserName = currentUserName;
             SelectedTabIndex = initialTabIndex;
-
-            _expiryTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
-            _expiryTimer.Tick += (s, e) => LoadData();
-            _expiryTimer.Start();
 
             SelectTabCommand = new RelayCommand(param =>
             {
@@ -918,23 +817,7 @@ namespace ZiraatProje.UI.ViewModels
             SaveCommand = new RelayCommand(ExecuteSave);
             DeleteCommand = new RelayCommand(ExecuteDelete, CanDelete);
             ClearFormCommand = new RelayCommand(ExecuteClearForm);
-            ApproveCommand = new RelayCommand(ExecuteApprove);
-            RejectCommand = new RelayCommand(ExecuteReject);
             EditLeaveCommand = new RelayCommand(ExecuteEditLeave);
-            DismissNotificationCommand = new RelayCommand(param =>
-            {
-                if (param is NotificationItemModel item)
-                {
-                    NotificationList.Remove(item);
-                    OnPropertyChanged(nameof(NotificationVisible));
-                }
-                else
-                {
-                    NotificationList.Clear();
-                    OnPropertyChanged(nameof(NotificationVisible));
-                }
-                _services.MarkNotificationsSeenForUser(CurrentUserName);
-            });
 
             GetAIRecommendationsCommand = new RelayCommand(ExecuteGetAIRecommendations);
             ApplyRecommendationCommand = new RelayCommand(ExecuteApplyRecommendation);
@@ -1008,116 +891,28 @@ namespace ZiraatProje.UI.ViewModels
                 Func<Leave, bool> isNotExpired = l =>
                 {
                     bool isHourly = l.StartDate.TimeOfDay != TimeSpan.Zero || l.EndDate.TimeOfDay != TimeSpan.Zero;
-                    if (isHourly)
-                    {
-                        return l.EndDate >= DateTime.Now;
-                    }
-                    else
-                    {
-                        return l.EndDate.Date >= DateTime.Today;
-                    }
+                    return isHourly ? l.EndDate >= DateTime.Now : l.EndDate.Date >= DateTime.Today;
                 };
 
-                // Filter Pending Leaves for Admin approval (only non-expired)
-                PendingLeaves = new ObservableCollection<Leave>(allLeaves.Where(l => string.Equals(l.Status, "Pending", StringComparison.OrdinalIgnoreCase) && isNotExpired(l)));
+                // Active approved leaves for team sections
+                var approvedLeaves = allLeaves.Where(l =>
+                    l.Status != "Rejected" && l.Status != "Reddedildi" && l.Status != "Cancelled"
+                ).ToList();
+                var activeLeaves = approvedLeaves.Where(isNotExpired).ToList();
 
-                // Filter MY pending leaves (non-admin user sees their own active pending requests)
-                MyPendingLeaves = new ObservableCollection<Leave>(
-                    allLeaves.Where(l =>
-                        string.Equals(l.Status, "Pending", StringComparison.OrdinalIgnoreCase) &&
-                        isNotExpired(l) &&
-                        l.User != null &&
-                        l.User.FullName.Equals(CurrentUserName, StringComparison.OrdinalIgnoreCase)
-                    ));
-
-                // Approved leaves for active team sections (ONLY leaves where EndDate is active and not expired)
-                var approvedLeaves = allLeaves.Where(l => string.IsNullOrEmpty(l.Status) || string.Equals(l.Status, "Approved", StringComparison.OrdinalIgnoreCase)).ToList();
-                var activeApprovedLeaves = approvedLeaves.Where(isNotExpired).ToList();
-
-                DepartmanLeaves = new ObservableCollection<Leave>(activeApprovedLeaves.Where(l => l.User != null && (string.Equals(l.User.Team, "Departman Yönetimi", StringComparison.OrdinalIgnoreCase) || string.Equals(l.User.Team, "Yönetim", StringComparison.OrdinalIgnoreCase))));
-                TakipLeaves = new ObservableCollection<Leave>(activeApprovedLeaves.Where(l => l.User != null && string.Equals(l.User.Team, "Takip", StringComparison.OrdinalIgnoreCase)));
-                TahsisLeaves = new ObservableCollection<Leave>(activeApprovedLeaves.Where(l => l.User != null && string.Equals(l.User.Team, "Tahsis", StringComparison.OrdinalIgnoreCase)));
-                TeminatLeaves = new ObservableCollection<Leave>(activeApprovedLeaves.Where(l => l.User != null && string.Equals(l.User.Team, "Teminat", StringComparison.OrdinalIgnoreCase)));
+                DepartmanLeaves = new ObservableCollection<Leave>(activeLeaves.Where(l => l.User != null && (string.Equals(l.User.Team, "Departman Yönetimi", StringComparison.OrdinalIgnoreCase) || string.Equals(l.User.Team, "Yönetim", StringComparison.OrdinalIgnoreCase))));
+                TakipLeaves = new ObservableCollection<Leave>(activeLeaves.Where(l => l.User != null && string.Equals(l.User.Team, "Takip", StringComparison.OrdinalIgnoreCase)));
+                TahsisLeaves = new ObservableCollection<Leave>(activeLeaves.Where(l => l.User != null && string.Equals(l.User.Team, "Tahsis", StringComparison.OrdinalIgnoreCase)));
+                TeminatLeaves = new ObservableCollection<Leave>(activeLeaves.Where(l => l.User != null && string.Equals(l.User.Team, "Teminat", StringComparison.OrdinalIgnoreCase)));
 
                 // Populate Leave History Archive (Past completed leaves)
                 UpdateHistoryLeaves();
 
-                // Pre-select current user in form (both admin and non-admin start with themselves)
+                // Pre-select current user in form
                 if (SelectedUserId == 0 && !string.IsNullOrWhiteSpace(CurrentUserName))
                 {
                     var self = allUsers.FirstOrDefault(u => u.FullName.Equals(CurrentUserName, StringComparison.OrdinalIgnoreCase));
                     if (self != null) SelectedUserId = self.Id;
-                }
-
-                // Show notification banner list for users with unseen approve/reject/cancel/update results
-                if (!string.IsNullOrWhiteSpace(CurrentUserName))
-                {
-                    var unseenNotifications = _services.GetUnseenNotificationsForUser(CurrentUserName);
-                    var list = new ObservableCollection<NotificationItemModel>();
-
-                    foreach (var n in unseenNotifications)
-                    {
-                        string dateRange = $"{n.StartDate:dd.MM.yyyy} - {n.EndDate:dd.MM.yyyy}";
-                        string adminWho = !string.IsNullOrWhiteSpace(n.ApprovedByUserName) ? n.ApprovedByUserName : "Yönetici";
-
-                        if (string.Equals(n.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
-                        {
-                            list.Add(new NotificationItemModel
-                            {
-                                LeaveId = n.Id,
-                                Type = "Cancelled",
-                                Icon = "⚠️",
-                                Title = "İZİN İPTAL BİLDİRİMİ",
-                                Message = $"{dateRange} tarihli onaylı izniniz yöneticiniz ({adminWho}) tarafından İPTAL EDİLDİ!"
-                            });
-                        }
-                        else if (string.Equals(n.Status, "Rejected", StringComparison.OrdinalIgnoreCase))
-                        {
-                            list.Add(new NotificationItemModel
-                            {
-                                LeaveId = n.Id,
-                                Type = "Rejected",
-                                Icon = "❌",
-                                Title = "İZİN RED BİLDİRİMİ",
-                                Message = $"{dateRange} tarihli izin talebiniz yöneticiniz ({adminWho}) tarafından REDDEDİLDİ!"
-                            });
-                        }
-                        else if (string.Equals(n.Status, "Approved", StringComparison.OrdinalIgnoreCase) && n.RequestNote != null && n.RequestNote.Contains("❌ Değişiklik talebi reddedildi"))
-                        {
-                            list.Add(new NotificationItemModel
-                            {
-                                LeaveId = n.Id,
-                                Type = "Rejected",
-                                Icon = "❌",
-                                Title = "İZİN DEĞİŞİKLİK TALEBİ REDDEDİLDİ",
-                                Message = $"Değişiklik talebiniz yöneticiniz ({adminWho}) tarafından REDDEDİLDİ! Önceki onaylı izniniz ({dateRange}) geçerli kalmaya devam etmektedir."
-                            });
-                        }
-                        else if (n.RequestNote != null && n.RequestNote.Contains("izninizi güncelledi"))
-                        {
-                            list.Add(new NotificationItemModel
-                            {
-                                LeaveId = n.Id,
-                                Type = "Updated",
-                                Icon = "🔄",
-                                Title = "İZİN DEĞİŞİKLİK BİLDİRİMİ",
-                                Message = $"İzninizin tarihi yöneticiniz ({adminWho}) tarafından {dateRange} olarak GÜNCELLENDİ."
-                            });
-                        }
-                        else if (string.Equals(n.Status, "Approved", StringComparison.OrdinalIgnoreCase))
-                        {
-                            list.Add(new NotificationItemModel
-                            {
-                                LeaveId = n.Id,
-                                Type = "Approved",
-                                Icon = "✅",
-                                Title = "İZİN TALEBİ BİLDİRİMİ",
-                                Message = $"{dateRange} tarihli izin talebiniz yöneticiniz ({adminWho}) tarafından ONAYLANDI!"
-                            });
-                        }
-                    }
-
-                    NotificationList = list;
                 }
 
                 RefreshMatrix();
@@ -1221,31 +1016,15 @@ namespace ZiraatProje.UI.ViewModels
                     ? $"{HourlyDate:dd.MM.yyyy} Saatlik İzin ({SelectedStartHour} - {SelectedEndHour})"
                     : $"{StartDate:dd.MM.yyyy} - {EndDate:dd.MM.yyyy}";
 
-                string confirmMsg;
-                if (IsCurrentUserAdmin)
-                {
-                    if (SelectedLeave == null)
-                        confirmMsg = $"📋 YENİ İZİN KAYDI\n\n" +
-                                     $"Personel  : {targetName}\n" +
-                                     $"Tarih/Saat Aralığı : {dateRange}\n\n" +
-                                     $"Bu izin direkt ONAYLI olarak sisteme kaydedilecektir.\nOnaylıyor musunuz?";
-                    else
-                        confirmMsg = $"✏️ İZİN DEĞİŞİKLİĞİ\n\n" +
-                                     $"Personel  : {targetName}\n" +
-                                     $"Yeni Tarih/Saat : {dateRange}\n\n" +
-                                     $"Bu değişiklik direkt ONAYLI olarak kaydedilecektir.\nOnaylıyor musunuz?";
-                }
-                else
-                {
-                    if (SelectedLeave == null)
-                        confirmMsg = $"📤 İZİN TALEBİ GÖNDERİLECEK\n\n" +
-                                     $"Tarih/Saat Aralığı : {dateRange}\n\n" +
-                                     $"İzin talebiniz yöneticinizin onayına gönderilecektir.\nOnaylıyor musunuz?";
-                    else
-                        confirmMsg = $"🔄 İZİN DEĞİŞİKLİĞİ TALEBİ\n\n" +
-                                     $"Yeni Tarih/Saat : {dateRange}\n\n" +
-                                     $"Değişiklik talebi yöneticinizin yeniden onayına sunulacaktır.\nOnaylıyor musunuz?";
-                }
+                string confirmMsg = SelectedLeave == null
+                    ? $"📋 YENİ İZİN KAYDI\n\n" +
+                      $"Personel       : {targetName}\n" +
+                      $"Tarih/Saat     : {dateRange}\n\n" +
+                      $"İzin sisteme kaydedilecektir. Onaylıyor musunuz?"
+                    : $"✏️ İZİN GÜNCELLEMESİ\n\n" +
+                      $"Personel       : {targetName}\n" +
+                      $"Yeni Tarih/Saat: {dateRange}\n\n" +
+                      $"İzin güncellencektir. Onaylıyor musunuz?";
 
                 // CHECK FOR ACTIVE SHIFT CONFLICT
                 var nonFinishedMonthly = _services.GetAllMonthlyReleaseShifts().Where(s => !s.IsFinished).ToList();
@@ -1300,7 +1079,7 @@ namespace ZiraatProje.UI.ViewModels
                     return;
                 }
 
-                // Check 50% Role Capacity Overlap Rule
+                // Check 50% Role Capacity Overlap Rule (uyarı ver ama izni yine de kaydet)
                 var checkResult = _services.CheckLeaveRoleCapacityOverlap(targetUserId, finalStartDate, finalEndDate, SelectedLeave?.Id);
 
                 bool isSpecialRequest = false;
@@ -1308,35 +1087,17 @@ namespace ZiraatProje.UI.ViewModels
 
                 if (checkResult.Has50PercentOverlap)
                 {
-                    if (IsCurrentUserAdmin)
-                    {
-                        var dlg = MessageBox.Show(
-                            $"⚠️ DİKKAT: ROL İZİN ÇAKIŞMASI UYARISI (%50+)\n\n" +
-                            $"{checkResult.DetailedMessage}\n\n" +
-                            $"Yönetici yetkinizle bu izni yine de doğrudan ONAYLAYIP kaydetmek istiyor musunuz?",
-                            "Özel İzin Çakışma Uyarısı",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Warning);
+                    var dlg = MessageBox.Show(
+                        $"⚠️ DİKKAT: ROL İZİN ÇAKIŞMASI (%50+)\n\n" +
+                        $"{checkResult.DetailedMessage}\n\n" +
+                        $"İzni yine de kaydetmek istiyor musunuz?",
+                        "Kapasite Çakışması Uyarısı",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
 
-                        if (dlg != MessageBoxResult.Yes) return;
-                        isSpecialRequest = true;
-                        requestNote = checkResult.DetailedMessage;
-                    }
-                    else
-                    {
-                        var dlg = MessageBox.Show(
-                            $"⚠️ DİKKAT: ROL İZİN ÇAKIŞMASI (%50+)\n\n" +
-                            $"{checkResult.DetailedMessage}\n\n" +
-                            $"İş kuralları gereği ekibinizdeki aynı rolün %50'sinden fazlası bu tarihlerde izinli olacağı için doğrudan izin oluşturamazsınız.\n\n" +
-                            $"Talebinizi 'ÖZEL İZİN TALEBİ' olarak Yöneticinizin onayına göndermek istiyor musunuz?",
-                            "Özel İzin Talebi Oluşturma",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Question);
-
-                        if (dlg != MessageBoxResult.Yes) return;
-                        isSpecialRequest = true;
-                        requestNote = checkResult.DetailedMessage;
-                    }
+                    if (dlg != MessageBoxResult.Yes) return;
+                    isSpecialRequest = true;
+                    requestNote = checkResult.DetailedMessage;
                 }
 
                 string resultMessage = string.Empty;
@@ -1348,74 +1109,35 @@ namespace ZiraatProje.UI.ViewModels
                         UserId = targetUserId,
                         StartDate = finalStartDate,
                         EndDate = finalEndDate,
-                        Status = IsCurrentUserAdmin ? "Approved" : "Pending",
+                        Status = "Approved",
                         IsSpecialRequest = isSpecialRequest,
                         RequestNote = requestNote,
                         RequestedAt = DateTime.Now,
-                        ApprovedAt = IsCurrentUserAdmin ? DateTime.Now : null,
-                        ApprovedByUserName = IsCurrentUserAdmin ? CurrentUserName : null,
-                        IsNotificationSeen = IsCurrentUserAdmin ? (targetUserId == CurrentUserId) : true
+                        ApprovedAt = DateTime.Now,
+                        ApprovedByUserName = CurrentUserName,
+                        IsNotificationSeen = true
                     };
 
                     _services.AddLeave(newLeave);
-
-                    if (IsCurrentUserAdmin)
-                        resultMessage = isSpecialRequest ? "Özel izin kaydı yönetici tarafından onaylanarak eklendi." : "İzin kaydı başarıyla eklendi.";
-                    else
-                        resultMessage = isSpecialRequest ? "⚠️ Özel izin talebiniz çakışma notuyla yönetici onayına gönderildi." : "⏳ İzin talebiniz başarıyla oluşturuldu! Yönetici onayı bekleniyor.";
+                    resultMessage = isSpecialRequest
+                        ? "✅ İzin kaydedildi. (Not: %50 kapasite çakışması mevcut)"
+                        : "✅ İzin başarıyla kaydedildi.";
                 }
                 else
                 {
-                    bool wasApproved = string.Equals(SelectedLeave.Status, "Approved", StringComparison.OrdinalIgnoreCase);
-
                     SelectedLeave.UserId = targetUserId;
                     SelectedLeave.StartDate = finalStartDate;
                     SelectedLeave.EndDate = finalEndDate;
+                    SelectedLeave.Status = "Approved";
                     SelectedLeave.IsSpecialRequest = isSpecialRequest;
-
-                    if (IsCurrentUserAdmin)
-                    {
-                        SelectedLeave.Status = "Approved";
-                        SelectedLeave.ApprovedByUserName = CurrentUserName;
-                        SelectedLeave.ApprovedAt = DateTime.Now;
-                        SelectedLeave.IsNotificationSeen = (targetUserId == CurrentUserId); // false for target user if changed by admin
-                        if (wasApproved || targetUserId != CurrentUserId)
-                        {
-                            SelectedLeave.RequestNote = $"🔄 Yöneticiniz ({CurrentUserName}) izninizi güncelledi ({finalStartDate:dd.MM.yyyy HH:mm} - {finalEndDate:dd.MM.yyyy HH:mm})";
-                        }
-                        else if (!string.IsNullOrWhiteSpace(requestNote))
-                        {
-                            SelectedLeave.RequestNote = requestNote;
-                        }
-                        resultMessage = "✅ İzin kaydı yönetici yetkisi ile güncellendi ve onaylandı.";
-                    }
-                    else
-                    {
-                        SelectedLeave.Status = "Pending"; // Reset status to Pending for Admin re-approval!
-                        SelectedLeave.RequestedAt = DateTime.Now;
-
-                        if (wasApproved)
-                        {
-                            SelectedLeave.PreviousStartDate = SelectedLeave.StartDate;
-                            SelectedLeave.PreviousEndDate = SelectedLeave.EndDate;
-                            SelectedLeave.RequestNote = string.IsNullOrWhiteSpace(requestNote)
-                                ? $"🔄 Onaylı izin değişikliği talep edildi ({finalStartDate:dd.MM.yyyy HH:mm} - {finalEndDate:dd.MM.yyyy HH:mm})"
-                                : $"🔄 Onaylı izin değişikliği (%50 çakışma): {requestNote}";
-
-                            resultMessage = "⏳ Onaylanmış izniniz için değişiklik talebi gönderildi! Yönetici yeniden onayına sunuldu.";
-                        }
-                        else
-                        {
-                            if (!string.IsNullOrWhiteSpace(requestNote)) SelectedLeave.RequestNote = requestNote;
-                            resultMessage = "⏳ Bekleyen izin talebiniz güncellendi ve yönetici onayına sunuldu.";
-                        }
-
-                        SelectedLeave.IsNotificationSeen = true; // Clear previous notification card while waiting for re-approval!
-                        SelectedLeave.StartDate = finalStartDate;
-                        SelectedLeave.EndDate = finalEndDate;
-                    }
+                    SelectedLeave.ApprovedByUserName = CurrentUserName;
+                    SelectedLeave.ApprovedAt = DateTime.Now;
+                    SelectedLeave.IsNotificationSeen = true;
+                    if (!string.IsNullOrWhiteSpace(requestNote))
+                        SelectedLeave.RequestNote = requestNote;
 
                     _services.UpdateLeave(SelectedLeave);
+                    resultMessage = "✅ İzin kaydı güncellendi.";
                 }
 
                 LoadData();
@@ -1432,43 +1154,6 @@ namespace ZiraatProje.UI.ViewModels
             }
         }
 
-        private void ExecuteApprove(object? param)
-        {
-            if (param is Leave leave)
-            {
-                try
-                {
-                    _services.ApproveLeave(leave.Id, CurrentUserName);
-                    StatusMessage = $"✅ '{leave.User?.FullName}' için izin talebi başarıyla onaylandı.";
-                    LoadData();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Onaylama hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-        }
-
-        private void ExecuteReject(object? param)
-        {
-            if (param is Leave leave)
-            {
-                var result = MessageBox.Show($"'{leave.User?.FullName}' isimli personelin izin talebini reddetmek istediğinize emin misiniz?", "Talebi Reddet", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (result == MessageBoxResult.Yes)
-                {
-                    try
-                    {
-                        _services.RejectLeave(leave.Id, CurrentUserName);
-                        StatusMessage = "İzin talebi reddedildi.";
-                        LoadData();
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Reddetme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-            }
-        }
 
         private void ExecuteDelete(object? param)
         {

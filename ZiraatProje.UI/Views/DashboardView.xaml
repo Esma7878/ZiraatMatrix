@@ -4,13 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ZiraatProje.UI.Views"
+             xmlns:helpers="clr-namespace:ZiraatProje.UI.Helpers"
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="800">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
     </UserControl.Resources>
 
-    <Grid Background="Transparent" Margin="25">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True" Padding="25">
+        <Grid Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -425,7 +427,7 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="➕🌴" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <TextBlock Text="İzin Talep Kaydı Oluştur" FontSize="11.5" FontWeight="Bold" Foreground="#065f46"/>
+                                                <TextBlock Text="İzin Kaydı Oluştur" FontSize="11.5" FontWeight="Bold" Foreground="#065f46"/>
                                                 <TextBlock Text="Yeni izin veya değişiklik isteği" FontSize="9.5" Foreground="#059669" Margin="0,2,0,0"/>
                                             </StackPanel>
                                             <TextBlock Grid.Column="2" Text="➔" FontSize="13" FontWeight="Bold" Foreground="#065f46" VerticalAlignment="Center"/>
@@ -508,4 +510,5 @@
             </StackPanel>
         </Grid>
     </Grid>
+</ScrollViewer>
 </UserControl>

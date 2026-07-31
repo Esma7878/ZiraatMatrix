@@ -46,16 +46,13 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Background="Transparent">
-        <!-- Main Page Root ScrollViewer -->
-        <ScrollViewer x:Name="RootScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                      helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True" Padding="15">
-            <Grid Background="Transparent">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+        <Grid Background="Transparent" Margin="15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
                 <!-- View Header & Top Action Bar -->
                 <StackPanel Grid.Row="0" Margin="0,0,0,10">
@@ -278,6 +275,9 @@
                         <DataGrid ItemsSource="{Binding ProjectsList}" SelectedItem="{Binding SelectedProjectDisplay}" 
                                   AutoGenerateColumns="False" HeadersVisibility="Column" 
                                   HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                  VirtualizingStackPanel.IsVirtualizing="True"
+                                  VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                  ScrollViewer.CanContentScroll="True"
                                   helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True" CanUserSortColumns="True"
                                   CanUserResizeColumns="False" RowHeight="32" FontSize="10.5" GridLinesVisibility="Horizontal"
                                   PreviewMouseLeftButtonDown="DataGrid_PreviewMouseLeftButtonDown">
@@ -316,9 +316,27 @@
                                     </Style.Triggers>
                                 </Style>
                             </DataGrid.CellStyle>
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#f8fafc"/>
+                                    <Setter Property="Foreground" Value="#334155"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="FontSize" Value="10"/>
+                                    <Setter Property="Padding" Value="2,2"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" LineHeight="12" LineStackingStrategy="BlockLineHeight"/>
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
                             <DataGrid.Columns>
                                 <!-- Sol İşlem & Detay Butonları (EN BAŞTA) -->
-                                <DataGridTemplateColumn Header="İşlem / Detay" Width="85">
+                                <DataGridTemplateColumn Header="İşlem / Detay" Width="110">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -330,7 +348,20 @@
                                                 <!-- Detay Formunu Aç (En Başta) -->
                                                 <Button Content="ℹ️" Command="{Binding Data.OpenDetailPanelCommand, Source={StaticResource DataContextProxy}}" CommandParameter="{Binding}"
                                                         Visibility="{Binding ReadVisibility}" Style="{StaticResource SecondaryButton}" 
-                                                        Padding="4,2" FontSize="10" ToolTip="Tüm detayların bulunduğu kayıt formunu sağda aç"/>
+                                                        Padding="4,2" FontSize="10" Margin="0,0,3,0" ToolTip="Tüm detayların bulunduğu kayıt formunu sağda aç"/>
+
+                                                <!-- Projeyi Sil -->
+                                                <Button Content="🗑️" Command="{Binding Data.DeleteProjectCommand, Source={StaticResource DataContextProxy}}" CommandParameter="{Binding}"
+                                                        Visibility="{Binding ReadVisibility}" Background="#fee2e2" Foreground="#dc2626" BorderBrush="#fca5a5" BorderThickness="1"
+                                                        Padding="4,2" FontSize="10" Cursor="Hand" ToolTip="Bu projeyi sil">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border CornerRadius="4" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
                                                 
                                                 <!-- Kaydet / İptal (Kilit Açık hal) -->
                                                 <Button Content="💾" Command="{Binding Data.SaveRowEditCommand, Source={StaticResource DataContextProxy}}" CommandParameter="{Binding}"
@@ -358,7 +389,7 @@
                                 </DataGridTemplateColumn>
 
                                 <!-- Talep Özeti / Adı (Kısa Kutucuk: 110px) -->
-                                <DataGridTemplateColumn Header="Talep Özeti / Proje Adı" Width="110">
+                                <DataGridTemplateColumn Header="Talep Özeti / Proje Adı" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid VerticalAlignment="Center">
@@ -370,7 +401,7 @@
                                 </DataGridTemplateColumn>
 
                                 <!-- Proje Türü -->
-                                <DataGridTemplateColumn Header="Proje Türü" Width="95">
+                                <DataGridTemplateColumn Header="Proje Türü" Width="75">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid VerticalAlignment="Center">
@@ -387,7 +418,7 @@
                                 </DataGridTemplateColumn>
 
                                 <!-- Durum -->
-                                <DataGridTemplateColumn Header="Durum" Width="95">
+                                <DataGridTemplateColumn Header="Durum" Width="75">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid VerticalAlignment="Center">
@@ -433,126 +464,211 @@
                                                         </TextBlock.Style>
                                                     </TextBlock>
                                                 </Border>
-                                                <ComboBox ItemsSource="{Binding Data.StatusOptions, Source={StaticResource DataContextProxy}}" SelectedItem="{Binding Project.ProjectStatus}" Background="White" Foreground="#0f172a" FontSize="9.5" Padding="2,1" Visibility="{Binding EditVisibility}"/>
+                                                <ComboBox ItemsSource="{Binding Data.StatusOptions, Source={StaticResource DataContextProxy}}" SelectedItem="{Binding ProjectStatus, UpdateSourceTrigger=PropertyChanged}" Background="White" Foreground="#0f172a" FontSize="9.5" Padding="2,1" Visibility="{Binding EditVisibility}"/>
                                             </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <!-- Analistler (Soyisim İlk Harf Kısaltmalı) -->
-                                <DataGridTemplateColumn Header="Analistler" Width="100">
+                                <!-- Planlanan Sürüm -->
+                                <DataGridTemplateColumn Header="Planlanan&#10;Sürüm" Width="92">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding FormattedAnalystNames}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#1e40af" TextTrimming="CharacterEllipsis"/>
+                                            <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding PlannedReleaseDate, StringFormat=\{0:dd.MM.yyyy\}, TargetNullValue='-'}" HorizontalAlignment="Center" FontWeight="SemiBold" Visibility="{Binding ReadVisibility}"/>
+                                                <DatePicker SelectedDate="{Binding PlannedReleaseDate, UpdateSourceTrigger=PropertyChanged}" Background="White" Foreground="#0f172a" FontSize="9.5" Padding="1" Visibility="{Binding EditVisibility}" HorizontalAlignment="Center"/>
+                                            </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <!-- Yazılımcılar (Soyisim İlk Harf Kısaltmalı) -->
-                                <DataGridTemplateColumn Header="Yazılımcılar" Width="100">
+                                <!-- Geçiş Yapılan Sürüm -->
+                                <DataGridTemplateColumn Header="Geçiş Yapılan&#10;Sürüm" Width="92">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding FormattedDeveloperNames}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#065f46" TextTrimming="CharacterEllipsis"/>
+                                            <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Visibility="{Binding ReadVisibility}">
+                                                    <TextBlock Text="{Binding ActualReleaseDate, StringFormat=\{0:dd.MM.yyyy\}, TargetNullValue='-'}" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text=" ⚠️" Foreground="#dc2626" FontSize="9.5" ToolTip="{Binding ReleaseDelayMessage}" Visibility="{Binding HasReleaseDelay, Converter={StaticResource BoolToVisConverter}}"/>
+                                                </StackPanel>
+                                                <DatePicker SelectedDate="{Binding ActualReleaseDate, UpdateSourceTrigger=PropertyChanged}" Background="White" Foreground="#0f172a" FontSize="9.5" Padding="1" Visibility="{Binding EditVisibility}" HorizontalAlignment="Center"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Analistler (Çoklu Seçilebilir CheckBox Dropdown) -->
+                                <DataGridTemplateColumn Header="Analistler" Width="130">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding FormattedAnalystNames}" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" FontWeight="SemiBold" Foreground="#1e40af" TextTrimming="CharacterEllipsis" Visibility="{Binding ReadVisibility}"/>
+                                                <ComboBox ItemsSource="{Binding AnalystUserItems}" 
+                                                          Text="{Binding FormattedAnalystNames, Mode=OneWay}"
+                                                          IsEditable="True" IsReadOnly="True"
+                                                          Visibility="{Binding EditVisibility}"
+                                                          Background="White" Foreground="#1e40af" FontSize="9.5" Padding="2,1">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" 
+                                                                      Content="{Binding User.FullName}" 
+                                                                      FontSize="10" Padding="4,1" Margin="2,1"/>
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Yazılımcılar (Çoklu Seçilebilir CheckBox Dropdown) -->
+                                <DataGridTemplateColumn Header="Yazılımcılar" Width="130">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding FormattedDeveloperNames}" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" FontWeight="SemiBold" Foreground="#065f46" TextTrimming="CharacterEllipsis" Visibility="{Binding ReadVisibility}"/>
+                                                <ComboBox ItemsSource="{Binding DeveloperUserItems}" 
+                                                          Text="{Binding FormattedDeveloperNames, Mode=OneWay}"
+                                                          IsEditable="True" IsReadOnly="True"
+                                                          Visibility="{Binding EditVisibility}"
+                                                          Background="White" Foreground="#065f46" FontSize="9.5" Padding="2,1">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" 
+                                                                      Content="{Binding User.FullName}" 
+                                                                      FontSize="10" Padding="4,1" Margin="2,1"/>
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                            </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
                                 <!-- Çeyreğin 3 Ayı (Düzenlenebilir Kutucuklar) -->
-                                <DataGridTemplateColumn Header="{Binding Data.Month1Header, Source={StaticResource DataContextProxy}}" Width="55">
+                                <DataGridTemplateColumn Header="{Binding Data.Month1Header, Source={StaticResource DataContextProxy}}" Width="45">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Month1ManDaysTotal, StringFormat=\{0:N0\}}" HorizontalAlignment="Center" Visibility="{Binding ReadVisibility}"/>
-                                                <TextBox Text="{Binding Month1ManDaysTotal, UpdateSourceTrigger=PropertyChanged, StringFormat=\{0:N0\}}" Background="White" Foreground="#0f172a" HorizontalContentAlignment="Center" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"/>
+                                                <TextBox Text="{Binding Month1ManDaysTotal, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:N0\}}" HorizontalContentAlignment="Center" Background="White" Foreground="#0f172a" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"
+                                                         PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus"/>
                                             </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{Binding Data.Month2Header, Source={StaticResource DataContextProxy}}" Width="55">
+                                <DataGridTemplateColumn Header="{Binding Data.Month2Header, Source={StaticResource DataContextProxy}}" Width="45">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Month2ManDaysTotal, StringFormat=\{0:N0\}}" HorizontalAlignment="Center" Visibility="{Binding ReadVisibility}"/>
-                                                <TextBox Text="{Binding Month2ManDaysTotal, UpdateSourceTrigger=PropertyChanged, StringFormat=\{0:N0\}}" Background="White" Foreground="#0f172a" HorizontalContentAlignment="Center" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"/>
+                                                <TextBox Text="{Binding Month2ManDaysTotal, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:N0\}}" HorizontalContentAlignment="Center" Background="White" Foreground="#0f172a" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"
+                                                         PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus"/>
                                             </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="{Binding Data.Month3Header, Source={StaticResource DataContextProxy}}" Width="55">
+                                <DataGridTemplateColumn Header="{Binding Data.Month3Header, Source={StaticResource DataContextProxy}}" Width="45">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Month3ManDaysTotal, StringFormat=\{0:N0\}}" HorizontalAlignment="Center" Visibility="{Binding ReadVisibility}"/>
-                                                <TextBox Text="{Binding Month3ManDaysTotal, UpdateSourceTrigger=PropertyChanged, StringFormat=\{0:N0\}}" Background="White" Foreground="#0f172a" HorizontalContentAlignment="Center" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"/>
+                                                <TextBox Text="{Binding Month3ManDaysTotal, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:N0\}}" HorizontalContentAlignment="Center" Background="White" Foreground="#0f172a" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"
+                                                         PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus"/>
                                             </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
                                 <!-- Analist Maliyet (Düzenlenebilir) -->
-                                <DataGridTemplateColumn Header="Analist Maliyet" Width="85">
+                                <DataGridTemplateColumn Header="Analist Maliyet" Width="70">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding AnalystPlannedManDays, StringFormat=\{0:N0\}}" HorizontalAlignment="Center" Foreground="#1e40af" Visibility="{Binding ReadVisibility}"/>
-                                                <TextBox Text="{Binding AnalystPlannedManDays, UpdateSourceTrigger=PropertyChanged, StringFormat=\{0:N0\}}" Background="White" Foreground="#1e40af" HorizontalContentAlignment="Center" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"/>
+                                                <TextBox Text="{Binding AnalystPlannedManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:N0\}}" HorizontalContentAlignment="Center" Background="White" Foreground="#1e40af" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"
+                                                         PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus"/>
                                             </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
                                 <!-- Yazılım Maliyet (Düzenlenebilir) -->
-                                <DataGridTemplateColumn Header="Yazılım Maliyet" Width="85">
+                                <DataGridTemplateColumn Header="Yazılım Maliyet" Width="70">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding DeveloperPlannedManDays, StringFormat=\{0:N0\}}" HorizontalAlignment="Center" Foreground="#065f46" Visibility="{Binding ReadVisibility}"/>
-                                                <TextBox Text="{Binding DeveloperPlannedManDays, UpdateSourceTrigger=PropertyChanged, StringFormat=\{0:N0\}}" Background="White" Foreground="#065f46" HorizontalContentAlignment="Center" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"/>
+                                                <TextBox Text="{Binding DeveloperPlannedManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:N0\}}" HorizontalContentAlignment="Center" Background="White" Foreground="#065f46" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"
+                                                         PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus"/>
                                             </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <!-- Toplam Maliyet (Otomatik Canlı Hesaplanan) -->
-                                <DataGridTemplateColumn Header="Toplam Maliyet" Width="85">
+                                <!-- Toplam Maliyet (Temiz & Çelişkisiz Gösterim) -->
+                                <DataGridTemplateColumn Header="Toplam Maliyet" Width="75">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding TotalInternalManDays, StringFormat=\{0:N0\}}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="#0f172a"/>
+                                            <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <!-- READ MODE -->
+                                                <StackPanel Visibility="{Binding ReadVisibility}" HorizontalAlignment="Center">
+                                                    <TextBlock Text="{Binding TotalInternalManDays, StringFormat=\{0:N0\}}" HorizontalAlignment="Center" FontWeight="Bold" Foreground="#0f172a"/>
+                                                    <Border Visibility="{Binding IsCostMismatched, Converter={StaticResource BoolToVisConverter}}" Background="#fef3c7" BorderBrush="#d97706" BorderThickness="1" CornerRadius="3" Padding="3,1" Margin="0,1,0,0" ToolTip="{Binding CostMismatchWarningMessage}">
+                                                        <TextBlock Text="⚠️ Uyuşmazlık" FontSize="8" FontWeight="Bold" Foreground="#92400e" HorizontalAlignment="Center"/>
+                                                    </Border>
+                                                </StackPanel>
+
+                                                <!-- EDIT MODE -->
+                                                <StackPanel Orientation="Horizontal" Visibility="{Binding EditVisibility}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <TextBox Text="{Binding TotalInternalManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:N0\}}" 
+                                                             Background="White" Foreground="#0f172a" HorizontalContentAlignment="Center" FontSize="10.5" FontWeight="Bold" 
+                                                             Padding="2,1" MinWidth="42" Height="24" ToolTip="Proje Toplam Maliyetini El İle Değiştirebilirsiniz"
+                                                             PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus"/>
+                                                    <Border Visibility="{Binding IsCostMismatched, Converter={StaticResource BoolToVisConverter}}" 
+                                                            Background="#fef3c7" BorderBrush="#d97706" BorderThickness="1" CornerRadius="4" 
+                                                            Padding="3,2" Margin="3,0,0,0" ToolTip="{Binding CostMismatchWarningMessage}" VerticalAlignment="Center">
+                                                        <TextBlock Text="⚠️ Eksik!" FontSize="8.5" FontWeight="Bold" Foreground="#92400e"/>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
                                 <!-- Analist Efor (Düzenlenebilir) -->
-                                <DataGridTemplateColumn Header="Analist Efor" Width="80">
+                                <DataGridTemplateColumn Header="Analist Efor" Width="65">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding AnalystActualManDays, StringFormat=\{0:N0\}}" HorizontalAlignment="Center" Foreground="#2563eb" Visibility="{Binding ReadVisibility}"/>
-                                                <TextBox Text="{Binding AnalystActualManDays, UpdateSourceTrigger=PropertyChanged, StringFormat=\{0:N0\}}" Background="White" Foreground="#2563eb" HorizontalContentAlignment="Center" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"/>
+                                                <TextBlock Text="{Binding AnalystActualManDays, StringFormat=\{0:0.##\}}" HorizontalAlignment="Center" Foreground="#2563eb" Visibility="{Binding ReadVisibility}"/>
+                                                <TextBox Text="{Binding AnalystActualManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:0.##\}}" Background="White" Foreground="#2563eb" HorizontalContentAlignment="Center" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"
+                                                         PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus"/>
                                             </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
                                 <!-- Yazılım Efor (Düzenlenebilir) -->
-                                <DataGridTemplateColumn Header="Yazılım Efor" Width="80">
+                                <DataGridTemplateColumn Header="Yazılım Efor" Width="65">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding DeveloperActualManDays, StringFormat=\{0:N0\}}" HorizontalAlignment="Center" Foreground="#059669" Visibility="{Binding ReadVisibility}"/>
-                                                <TextBox Text="{Binding DeveloperActualManDays, UpdateSourceTrigger=PropertyChanged, StringFormat=\{0:N0\}}" Background="White" Foreground="#059669" HorizontalContentAlignment="Center" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"/>
+                                                <TextBlock Text="{Binding DeveloperActualManDays, StringFormat=\{0:0.##\}}" HorizontalAlignment="Center" Foreground="#059669" Visibility="{Binding ReadVisibility}"/>
+                                                <TextBox Text="{Binding DeveloperActualManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:0.##\}}" Background="White" Foreground="#059669" HorizontalContentAlignment="Center" FontSize="10" Padding="1,0" Visibility="{Binding EditVisibility}"
+                                                         PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus"/>
                                             </Grid>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
                                 <!-- Toplam Efor (Otomatik Canlı Hesaplanan) -->
-                                <DataGridTemplateColumn Header="Toplam Efor" Width="80">
+                                <DataGridTemplateColumn Header="Toplam Efor" Width="65">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding ActualManDays, StringFormat=\{0:N0\}}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="#0f172a"/>
+                                            <TextBlock Text="{Binding ActualManDays, StringFormat=\{0:0.##\}}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="#0f172a"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -622,15 +738,29 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <!-- Paydaşlar -->
-                                <DataGridTextColumn Header="Paydaşlar" Binding="{Binding Project.Stakeholders}" Width="100">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                                <!-- Paydaşlar (Çoklu Seçilebilir CheckBox Dropdown) -->
+                                <DataGridTemplateColumn Header="Paydaşlar" Width="115">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Project.Stakeholders}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Project.Stakeholders}" Visibility="{Binding ReadVisibility}"/>
+                                                <ComboBox ItemsSource="{Binding StakeholderItems}" 
+                                                          Text="{Binding Project.Stakeholders, Mode=OneWay}"
+                                                          IsEditable="True" IsReadOnly="True"
+                                                          Visibility="{Binding EditVisibility}"
+                                                          Background="White" Foreground="#0f172a" FontSize="9.5" Padding="2,1">
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" 
+                                                                      Content="{Binding Name}" 
+                                                                      FontSize="10" Padding="4,1" Margin="2,1"/>
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
+                                                </ComboBox>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </Border>
@@ -638,7 +768,7 @@
                     <!-- RIGHT COLUMN: SIDE DETAIL & INLINE EDITING PANEL -->
                     <Border Grid.Column="1" Visibility="{Binding DetailPanelVisibility}" 
                             Background="White" BorderBrush="{StaticResource ZiraatRed}" BorderThickness="1.5" 
-                            CornerRadius="8" Width="480" Padding="14" Margin="10,0,0,0" VerticalAlignment="Top">
+                            CornerRadius="8" Width="520" Padding="14" Margin="10,0,0,0" VerticalAlignment="Top">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -657,6 +787,19 @@
                                     <Button Content="✏️ Düzenle" Command="{Binding EditProjectCommand}" 
                                             Visibility="{Binding ReadModeVisibility}" 
                                             Style="{StaticResource SecondaryButton}" Padding="10,4" FontSize="11" Margin="0,0,6,0"/>
+
+                                    <Button Content="🗑️ Sil" Command="{Binding DeleteProjectCommand}" 
+                                            Visibility="{Binding ReadModeVisibility}" 
+                                            Background="#fee2e2" Foreground="#dc2626" BorderBrush="#fca5a5" BorderThickness="1"
+                                            Padding="8,4" FontSize="11" Margin="0,0,6,0" Cursor="Hand" ToolTip="Bu projeyi sil">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border CornerRadius="5" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
 
                                     <!-- EDIT MODE BUTTONS -->
                                     <Button Content="💾 Kaydet" Command="{Binding SaveInlineCommand}" 
@@ -727,6 +870,35 @@
                                             </StackPanel>
                                         </Grid>
 
+                                        <!-- Sürümler ve Tarihler -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                                                <TextBlock Text="📅 Planlanan Sürüm" FontSize="10" FontWeight="SemiBold" Foreground="#64748b"/>
+                                                <TextBlock Text="{Binding PlannedReleaseDate, StringFormat=\{0:dd.MM.yyyy\}, TargetNullValue='-'}" FontSize="11" FontWeight="Bold" Foreground="#0f172a"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                                                <TextBlock Text="🚀 Geçiş Yapılan Sürüm" FontSize="10" FontWeight="SemiBold" Foreground="#64748b"/>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding ActualReleaseDate, StringFormat=\{0:dd.MM.yyyy\}, TargetNullValue='-'}" FontSize="11" FontWeight="Bold" Foreground="#0f172a"/>
+                                                    <Border Visibility="{Binding HasReleaseDelay, Converter={StaticResource BoolToVisConverter}}" Background="#fee2e2" BorderBrush="#dc2626" BorderThickness="1" CornerRadius="3" Padding="4,1" Margin="5,0,0,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding ReleaseDelayMessage}" FontSize="9.5" FontWeight="Bold" Foreground="#dc2626"/>
+                                                    </Border>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Sürüm Geçiş Gecikmesi Uyarısı -->
+                                        <Border Visibility="{Binding HasReleaseDelay, Converter={StaticResource BoolToVisConverter}}" 
+                                                Background="#fee2e2" BorderBrush="#dc2626" BorderThickness="1" CornerRadius="4" Padding="6,4" Margin="0,0,0,10">
+                                            <TextBlock Text="{Binding ReleaseDelayBannerText}" FontSize="10" FontWeight="Bold" Foreground="#dc2626" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+                                        </Border>
+
                                         <Grid Margin="0,0,0,10">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
@@ -764,15 +936,25 @@
                                             <StackPanel>
                                                 <TextBlock Text="📋 Personel Bazlı Ay ve Efor Dağılımı" FontWeight="Bold" FontSize="10.5" Foreground="#1e40af" Margin="0,0,0,6"/>
                                                 
-                                                <DataGrid ItemsSource="{Binding PersonMonthlyCostRows}" AutoGenerateColumns="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" MinHeight="60" MaxHeight="180" CanUserAddRows="False"
+                                                <DataGrid ItemsSource="{Binding SelectedProjectDisplay.UserBreakdownList}" AutoGenerateColumns="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" MinHeight="60" MaxHeight="180" CanUserAddRows="False"
                                                           FontSize="10" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+                                                    <DataGrid.ColumnHeaderStyle>
+                                                        <Style TargetType="DataGridColumnHeader">
+                                                            <Setter Property="Padding" Value="2,4"/>
+                                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                            <Setter Property="FontWeight" Value="Bold"/>
+                                                            <Setter Property="FontSize" Value="10"/>
+                                                            <Setter Property="Background" Value="#dbeafe"/>
+                                                            <Setter Property="Foreground" Value="#1e40af"/>
+                                                        </Style>
+                                                    </DataGrid.ColumnHeaderStyle>
                                                     <DataGrid.Columns>
-                                                        <DataGridTextColumn Header="Personel" Binding="{Binding User.FullName}" Width="1.2*" IsReadOnly="True" FontWeight="Bold"/>
-                                                        <DataGridTextColumn Header="{Binding Data.Month1Header, Source={StaticResource DataContextProxy}}" Binding="{Binding Month1ManDays, StringFormat=\{0:N0\}}" Width="45" IsReadOnly="True"/>
-                                                        <DataGridTextColumn Header="{Binding Data.Month2Header, Source={StaticResource DataContextProxy}}" Binding="{Binding Month2ManDays, StringFormat=\{0:N0\}}" Width="45" IsReadOnly="True"/>
-                                                        <DataGridTextColumn Header="{Binding Data.Month3Header, Source={StaticResource DataContextProxy}}" Binding="{Binding Month3ManDays, StringFormat=\{0:N0\}}" Width="45" IsReadOnly="True"/>
-                                                        <DataGridTextColumn Header="Planlanan" Binding="{Binding TotalManDays, StringFormat=\{0:N0\}}" Width="55" IsReadOnly="True" FontWeight="Bold"/>
-                                                        <DataGridTextColumn Header="Gerçekleşen" Binding="{Binding ActualManDays, StringFormat=\{0:N0\}}" Width="60" IsReadOnly="True" FontWeight="Bold"/>
+                                                        <DataGridTextColumn Header="Personel" Binding="{Binding FullName}" Width="110" IsReadOnly="True" FontWeight="Bold"/>
+                                                        <DataGridTextColumn Header="{Binding Data.Month1Header, Source={StaticResource DataContextProxy}}" Binding="{Binding Month1ManDays, StringFormat=\{0:N0\}}" Width="65" IsReadOnly="True"/>
+                                                        <DataGridTextColumn Header="{Binding Data.Month2Header, Source={StaticResource DataContextProxy}}" Binding="{Binding Month2ManDays, StringFormat=\{0:N0\}}" Width="65" IsReadOnly="True"/>
+                                                        <DataGridTextColumn Header="{Binding Data.Month3Header, Source={StaticResource DataContextProxy}}" Binding="{Binding Month3ManDays, StringFormat=\{0:N0\}}" Width="60" IsReadOnly="True"/>
+                                                        <DataGridTextColumn Header="Planlanan" Binding="{Binding TotalManDays, StringFormat=\{0:N0\}}" Width="65" IsReadOnly="True" FontWeight="Bold"/>
+                                                        <DataGridTextColumn Header="Gerçekleşen" Binding="{Binding ActualManDaysShare, StringFormat=\{0:0.##\}}" Width="75" IsReadOnly="True" FontWeight="Bold"/>
                                                     </DataGrid.Columns>
                                                 </DataGrid>
                                             </StackPanel>
@@ -783,6 +965,18 @@
                                             <StackPanel>
                                                 <TextBlock Text="📊 BÜTÇE &amp; EFOR MALİYET ÖZETİ" FontSize="10.5" FontWeight="Bold" Foreground="#6b21a8" Margin="0,0,0,6"/>
                                                 
+                                                <!-- Bütçe Aşımı Uyarısı Canlı Rozet Banner -->
+                                                <Border Visibility="{Binding IsSideCardBudgetExceeded, Converter={StaticResource BoolToVisConverter}}" 
+                                                        Background="#fee2e2" BorderBrush="#dc2626" BorderThickness="1.5" CornerRadius="4" Padding="6,4" Margin="0,0,0,6">
+                                                    <TextBlock Text="{Binding SideCardBudgetFeedbackMessage}" FontSize="9.5" FontWeight="ExtraBold" Foreground="#dc2626" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+                                                </Border>
+
+                                                <!-- Rol Dağılım Denge Bilgilendirme Rozet Banner -->
+                                                <Border Visibility="{Binding HasRoleBalanceFeedback, Converter={StaticResource BoolToVisConverter}}" 
+                                                        Background="#f0fdf4" BorderBrush="#16a34a" BorderThickness="1.5" CornerRadius="4" Padding="6,4" Margin="0,0,0,6">
+                                                    <TextBlock Text="{Binding SideCardRoleBalanceFeedbackMessage}" FontSize="9.5" FontWeight="Bold" Foreground="#15803d" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+                                                </Border>
+
                                                 <!-- Planlanan Breakdown -->
                                                 <Grid Margin="0,0,0,3">
                                                     <TextBlock Text="🎯 Planlanan Analist Eforu:" FontSize="10" Foreground="#1e40af"/>
@@ -795,7 +989,7 @@
                                                 </Grid>
 
                                                 <Grid Margin="0,0,0,4">
-                                                    <TextBlock Text="🎯 Toplam Planlanan Bütçe:" FontSize="10" Foreground="#475569" FontWeight="Bold"/>
+                                                    <TextBlock Text="🎯 Toplam Planlanan Bütçe / Maliyet:" FontSize="10" Foreground="#475569" FontWeight="Bold"/>
                                                     <TextBlock Text="{Binding TotalManDayBudget, StringFormat='\{0:N0\} Adam/Gün'}" FontWeight="ExtraBold" FontSize="10.5" Foreground="#0f172a" HorizontalAlignment="Right"/>
                                                 </Grid>
 
@@ -814,7 +1008,12 @@
 
                                                 <Grid Margin="0,0,0,3">
                                                     <TextBlock Text="⏱️ Toplam Gerçekleşen Efor:" FontSize="10" Foreground="#1d4ed8" FontWeight="Bold"/>
-                                                    <TextBlock Text="{Binding ActualManDays, StringFormat='\{0:N0\} Adam/Gün'}" FontWeight="ExtraBold" FontSize="10.5" Foreground="#1d4ed8" HorizontalAlignment="Right"/>
+                                                    <TextBlock Text="{Binding TotalActualManDays, StringFormat='\{0:N0\} Adam/Gün'}" FontWeight="ExtraBold" FontSize="10.5" Foreground="#1d4ed8" HorizontalAlignment="Right"/>
+                                                </Grid>
+
+                                                <Grid Margin="0,0,0,3">
+                                                    <TextBlock Text="📊 Efor / Bütçe Durumu:" FontSize="10" Foreground="#475569" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding SideCardVarianceText}" FontWeight="ExtraBold" FontSize="10" Foreground="{Binding SideCardVarianceColor}" HorizontalAlignment="Right"/>
                                                 </Grid>
 
                                                 <Grid Margin="0,2,0,0">
@@ -878,12 +1077,50 @@
 
                                             <StackPanel Grid.Column="0" Margin="0,0,5,0">
                                                 <TextBlock Text="Proje Türü" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,2" FontSize="10.5"/>
-                                                <ComboBox ItemsSource="{Binding TypeList}" SelectedItem="{Binding ProjectType}" Height="28" FontSize="11"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="28"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <ComboBox Grid.Column="0" ItemsSource="{Binding TypeList}" SelectedItem="{Binding ProjectType}" Height="26" FontSize="10.5"/>
+                                                    <Button Grid.Column="1" Command="{Binding AddProjectTypeCommand}" Width="24" Height="26" Margin="4,0,0,0" ToolTip="Yeni Proje Türü Ekle" Cursor="Hand">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="bg" Background="#eff6ff" BorderBrush="#3b82f6" BorderThickness="1.5" CornerRadius="4">
+                                                                    <TextBlock Text="+" Foreground="#1d4ed8" FontSize="16" FontWeight="ExtraBold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-2,0,0"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="bg" Property="Background" Value="#2563eb"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                    </Button>
+                                                </Grid>
                                             </StackPanel>
 
                                             <StackPanel Grid.Column="1" Visibility="{Binding IsExternalCompanyVisible}" Margin="5,0,0,0">
                                                 <TextBlock Text="Dış Firma Adı" FontWeight="Bold" Foreground="#c05621" Margin="0,0,0,2" FontSize="10.5"/>
-                                                <TextBox Text="{Binding ExternalCompanyName, UpdateSourceTrigger=PropertyChanged}" Height="28" FontSize="11" BorderBrush="#fbd38d" Background="#fffaf0"/>
+                                                <TextBox Text="{Binding ExternalCompanyName, UpdateSourceTrigger=PropertyChanged}" Height="26" FontSize="10.5" BorderBrush="#fbd38d" Background="#fffaf0"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Sürümler (Tarihler) -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                                                <TextBlock Text="Planlanan Sürüm Tarihi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,2" FontSize="10.5"/>
+                                                <DatePicker SelectedDate="{Binding PlannedReleaseDate, UpdateSourceTrigger=PropertyChanged}" Height="28" FontSize="11"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                                                <TextBlock Text="Geçiş Yapılan Sürüm Tarihi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,2" FontSize="10.5"/>
+                                                <DatePicker SelectedDate="{Binding ActualReleaseDate, UpdateSourceTrigger=PropertyChanged}" Height="28" FontSize="11"/>
                                             </StackPanel>
                                         </Grid>
 
@@ -896,12 +1133,52 @@
 
                                             <StackPanel Grid.Column="0" Margin="0,0,5,0">
                                                 <TextBlock Text="🏛️ GMY" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,2" FontSize="10.5"/>
-                                                <ComboBox ItemsSource="{Binding GmyList}" Text="{Binding Gmy, UpdateSourceTrigger=PropertyChanged}" IsEditable="True" Height="28" FontSize="11"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="28"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <ComboBox Grid.Column="0" ItemsSource="{Binding GmyList}" Text="{Binding Gmy, UpdateSourceTrigger=PropertyChanged}" IsEditable="True" Height="26" FontSize="10.5"/>
+                                                    <Button Grid.Column="1" Command="{Binding AddGmyCommand}" Width="24" Height="26" Margin="4,0,0,0" ToolTip="Yeni GMY Birimi Ekle" Cursor="Hand">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="bg" Background="#eff6ff" BorderBrush="#3b82f6" BorderThickness="1.5" CornerRadius="4">
+                                                                    <TextBlock Text="+" Foreground="#1d4ed8" FontSize="16" FontWeight="ExtraBold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-2,0,0"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="bg" Property="Background" Value="#2563eb"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                    </Button>
+                                                </Grid>
                                             </StackPanel>
 
                                             <StackPanel Grid.Column="1" Margin="5,0,0,0">
                                                 <TextBlock Text="🏢 İş Birimi" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,2" FontSize="10.5"/>
-                                                <ComboBox ItemsSource="{Binding BusinessUnitList}" Text="{Binding BusinessUnit, UpdateSourceTrigger=PropertyChanged}" IsEditable="True" Height="28" FontSize="11"/>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="28"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <ComboBox Grid.Column="0" ItemsSource="{Binding BusinessUnitList}" Text="{Binding BusinessUnit, UpdateSourceTrigger=PropertyChanged}" IsEditable="True" Height="26" FontSize="10.5"/>
+                                                    <Button Grid.Column="1" Command="{Binding AddBusinessUnitCommand}" Width="24" Height="26" Margin="4,0,0,0" ToolTip="Yeni İş Birimi Ekle" Cursor="Hand">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="bg" Background="#eff6ff" BorderBrush="#3b82f6" BorderThickness="1.5" CornerRadius="4">
+                                                                    <TextBlock Text="+" Foreground="#1d4ed8" FontSize="16" FontWeight="ExtraBold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-2,0,0"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="bg" Property="Background" Value="#2563eb"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                    </Button>
+                                                </Grid>
                                             </StackPanel>
                                         </Grid>
 
@@ -946,37 +1223,72 @@
 
                                                 <DataGrid ItemsSource="{Binding PersonMonthlyCostRows}" AutoGenerateColumns="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" MinHeight="80" MaxHeight="180" CanUserAddRows="False"
                                                           FontSize="10" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+                                                    <DataGrid.ColumnHeaderStyle>
+                                                        <Style TargetType="DataGridColumnHeader">
+                                                            <Setter Property="Padding" Value="2,4"/>
+                                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                            <Setter Property="FontWeight" Value="Bold"/>
+                                                            <Setter Property="FontSize" Value="10"/>
+                                                            <Setter Property="Background" Value="#dbeafe"/>
+                                                            <Setter Property="Foreground" Value="#1e40af"/>
+                                                        </Style>
+                                                    </DataGrid.ColumnHeaderStyle>
                                                     <DataGrid.Columns>
-                                                        <DataGridTextColumn Header="Personel" Binding="{Binding User.FullName}" Width="1.1*" IsReadOnly="True" FontWeight="Bold"/>
-                                                        
-                                                        <DataGridTemplateColumn Header="{Binding Data.Month1Header, Source={StaticResource DataContextProxy}}" Width="55">
+                                                        <DataGridTextColumn Header="Personel" Binding="{Binding DisplayNameWithTitle}" Width="2.2*" IsReadOnly="True" FontWeight="Bold">
+                                                            <DataGridTextColumn.ElementStyle>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                                    <Setter Property="Padding" Value="4,0"/>
+                                                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                                                    <Setter Property="ToolTip" Value="{Binding DisplayNameWithTitle}"/>
+                                                                </Style>
+                                                            </DataGridTextColumn.ElementStyle>
+                                                        </DataGridTextColumn>
+
+                                                        <DataGridTemplateColumn Header="{Binding Data.Month1Header, Source={StaticResource DataContextProxy}}" Width="*">
                                                             <DataGridTemplateColumn.CellTemplate>
                                                                 <DataTemplate>
-                                                                    <TextBox Text="{Binding Month1ManDays, UpdateSourceTrigger=PropertyChanged, StringFormat=\{0:0.##\}}" Height="22" Width="45" TextAlignment="Center" FontWeight="Bold" BorderBrush="#cbd5e1"/>
+                                                                    <TextBox Text="{Binding Month1ManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:0.##\}}" Height="22" HorizontalAlignment="Stretch" TextAlignment="Center" FontWeight="Bold" BorderBrush="#cbd5e1" Margin="1"
+                                                                             PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus" GotFocus="CostTextBox_GotFocus" PreviewMouseLeftButtonDown="CostTextBox_PreviewMouseLeftButtonDown"/>
                                                                 </DataTemplate>
                                                             </DataGridTemplateColumn.CellTemplate>
                                                         </DataGridTemplateColumn>
 
-                                                        <DataGridTemplateColumn Header="{Binding Data.Month2Header, Source={StaticResource DataContextProxy}}" Width="55">
+                                                        <DataGridTemplateColumn Header="{Binding Data.Month2Header, Source={StaticResource DataContextProxy}}" Width="*">
                                                             <DataGridTemplateColumn.CellTemplate>
                                                                 <DataTemplate>
-                                                                    <TextBox Text="{Binding Month2ManDays, UpdateSourceTrigger=PropertyChanged, StringFormat=\{0:0.##\}}" Height="22" Width="45" TextAlignment="Center" FontWeight="Bold" BorderBrush="#cbd5e1"/>
+                                                                    <TextBox Text="{Binding Month2ManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:0.##\}}" Height="22" HorizontalAlignment="Stretch" TextAlignment="Center" FontWeight="Bold" BorderBrush="#cbd5e1" Margin="1"
+                                                                             PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus" GotFocus="CostTextBox_GotFocus" PreviewMouseLeftButtonDown="CostTextBox_PreviewMouseLeftButtonDown"/>
                                                                 </DataTemplate>
                                                             </DataGridTemplateColumn.CellTemplate>
                                                         </DataGridTemplateColumn>
 
-                                                        <DataGridTemplateColumn Header="{Binding Data.Month3Header, Source={StaticResource DataContextProxy}}" Width="55">
+                                                        <DataGridTemplateColumn Header="{Binding Data.Month3Header, Source={StaticResource DataContextProxy}}" Width="*">
                                                             <DataGridTemplateColumn.CellTemplate>
                                                                 <DataTemplate>
-                                                                    <TextBox Text="{Binding Month3ManDays, UpdateSourceTrigger=PropertyChanged, StringFormat=\{0:0.##\}}" Height="22" Width="45" TextAlignment="Center" FontWeight="Bold" BorderBrush="#cbd5e1"/>
+                                                                    <TextBox Text="{Binding Month3ManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:0.##\}}" Height="22" HorizontalAlignment="Stretch" TextAlignment="Center" FontWeight="Bold" BorderBrush="#cbd5e1" Margin="1"
+                                                                             PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus" GotFocus="CostTextBox_GotFocus" PreviewMouseLeftButtonDown="CostTextBox_PreviewMouseLeftButtonDown"/>
                                                                 </DataTemplate>
                                                             </DataGridTemplateColumn.CellTemplate>
                                                         </DataGridTemplateColumn>
 
-                                                        <DataGridTemplateColumn Header="Gerçekleşen" Width="65">
+                                                        <!-- Kişinin Planlanan Toplam Maliyet Kutucuğu -->
+                                                        <DataGridTemplateColumn Header="Toplam" Width="*">
                                                             <DataGridTemplateColumn.CellTemplate>
                                                                 <DataTemplate>
-                                                                    <TextBox Text="{Binding ActualManDays, UpdateSourceTrigger=PropertyChanged, StringFormat=\{0:0.##\}}" Height="22" Width="50" TextAlignment="Center" FontWeight="Bold" Foreground="#1d4ed8" BorderBrush="#93c5fd"/>
+                                                                    <Border Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1" CornerRadius="3" Height="22" Margin="1" ToolTip="Kişinin 3 Aylık Planlanan Toplam Maliyeti">
+                                                                        <TextBlock Text="{Binding TotalManDays, StringFormat=\{0:0.##\}}" FontWeight="ExtraBold" Foreground="#1e3a8a" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10.5"/>
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </DataGridTemplateColumn.CellTemplate>
+                                                        </DataGridTemplateColumn>
+
+                                                        <DataGridTemplateColumn Header="Gerçekleşen" Width="1.1*">
+                                                            <DataGridTemplateColumn.CellTemplate>
+                                                                <DataTemplate>
+                                                                    <TextBox Text="{Binding ActualManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:0.##\}}" Height="22" HorizontalAlignment="Stretch" TextAlignment="Center" FontWeight="Bold" Foreground="#1d4ed8" BorderBrush="#93c5fd" Margin="1"
+                                                                             PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus" GotFocus="CostTextBox_GotFocus" PreviewMouseLeftButtonDown="CostTextBox_PreviewMouseLeftButtonDown"
+                                                                             IsEnabled="{Binding Data.IsCompletedStatus, Source={StaticResource DataContextProxy}}" ToolTip="Yalnızca proje durumu Tamamlandı veya Bitti olduğunda aktif olur"/>
                                                                 </DataTemplate>
                                                             </DataGridTemplateColumn.CellTemplate>
                                                         </DataGridTemplateColumn>
@@ -1003,20 +1315,50 @@
                                             </StackPanel>
                                         </Grid>
 
+                                        <!-- Bütçe & Maliyet Uyumsuzluk Bildirim Banner'ı -->
+                                        <Border Visibility="{Binding IsCostMismatched, Converter={StaticResource BoolToVisConverter}}" 
+                                                Background="#fef3c7" BorderBrush="#d97706" BorderThickness="1.5" CornerRadius="6" Padding="8,6" Margin="0,0,0,10">
+                                            <TextBlock Text="{Binding CostMismatchWarningMessage}" FontSize="10.5" FontWeight="ExtraBold" Foreground="#92400e" TextWrapping="Wrap" HorizontalAlignment="Center"/>
+                                        </Border>
+
+                                        <!-- Gerçekleşen Efor & Bütçe Raporu Banner'ı -->
+                                        <Border Visibility="{Binding IsCompletedStatus, Converter={StaticResource BoolToVisConverter}}" 
+                                                Background="{Binding ActualBudgetFeedbackBg}" BorderBrush="{Binding ActualBudgetFeedbackColor}" BorderThickness="1.5" CornerRadius="6" Padding="8,6" Margin="0,0,0,10">
+                                            <TextBlock Text="{Binding ActualBudgetFeedbackMessage}" FontSize="10.5" FontWeight="Bold" Foreground="{Binding ActualBudgetFeedbackColor}" TextWrapping="Wrap"/>
+                                        </Border>
+
                                         <!-- Paydaşlar Seçimi -->
-                                        <TextBlock Text="🏢 Paydaş Departmanlar" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,4" FontSize="10.5"/>
-                                        <ItemsControl ItemsSource="{Binding StakeholderItems}" Margin="0,0,0,10">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <WrapPanel Orientation="Horizontal"/>
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" Content="{Binding Name}" Margin="0,0,8,4" FontSize="10.5"/>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
+                                        <StackPanel Margin="0,0,0,10">
+                                            <Grid Margin="0,0,0,4">
+                                                <TextBlock Text="🏢 Paydaş Departmanlar" FontWeight="SemiBold" Foreground="#4a5568" VerticalAlignment="Center" FontSize="10.5"/>
+                                                <Button Command="{Binding AddStakeholderCommand}" HorizontalAlignment="Right" Padding="6,3" Cursor="Hand" ToolTip="Yeni Paydaş Departman Ekleyin">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="bg" Background="#eff6ff" BorderBrush="#3b82f6" BorderThickness="1.5" CornerRadius="4" Padding="6,3">
+                                                                <TextBlock Text="+ Yeni Paydaş" Foreground="#1d4ed8" FontSize="10" FontWeight="Bold"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="bg" Property="Background" Value="#2563eb"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                            </Grid>
+                                            <ItemsControl ItemsSource="{Binding StakeholderItems}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel Orientation="Horizontal"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" Content="{Binding Name}" Margin="0,0,8,4" FontSize="10.5"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
 
                                         <!-- Açıklama -->
                                         <TextBlock Text="📝 Açıklama / Notlar" FontWeight="SemiBold" Foreground="#4a5568" Margin="0,0,0,2" FontSize="10.5"/>
@@ -1055,7 +1397,6 @@
                         </Grid>
                     </Border>
                 </Grid>
-            </Grid>
-        </ScrollViewer>
-    </Grid>
+        </Grid>
+    </ScrollViewer>
 </UserControl>

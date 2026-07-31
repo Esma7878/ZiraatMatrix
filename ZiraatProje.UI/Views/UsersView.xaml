@@ -13,7 +13,8 @@
         <helpers:TeamColorConverter x:Key="TeamColorConverter"/>
     </UserControl.Resources>
 
-    <Grid Background="Transparent" Margin="25">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True" Padding="25">
+        <Grid Background="Transparent">
         
         <!-- ========================================================================= -->
         <!-- SECTION 1: ADMIN MANAGEMENT VIEW (Only visible to Administrators)          -->
@@ -650,4 +651,5 @@
             </Border>
         </Grid>
     </Grid>
+</ScrollViewer>
 </UserControl>

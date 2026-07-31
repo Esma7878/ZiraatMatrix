@@ -123,6 +123,9 @@ namespace ZiraatProje.DataAccess
         public decimal ActualManDays { get; set; } = 0m; // Gerçekleşen efor (adam/gün)
         public DateTime StartDate { get; set; } = DateTime.Today;
         public DateTime EndDate { get; set; } = DateTime.Today.AddMonths(3);
+        
+        public DateTime? PlannedReleaseDate { get; set; } // Planlanan Sürüm (Tarihi)
+        public DateTime? ActualReleaseDate { get; set; } // Geçiş Yapılan Sürüm (Tarihi)
 
         public string? CreatedByUserName { get; set; }
         public DateTime? CreatedAt { get; set; } = DateTime.Now;

@@ -410,20 +410,64 @@ namespace ZiraatProje.UI.ViewModels
             return dashVm;
         }
 
-        private void NavigateToShifts() => CurrentViewModel = new ShiftsViewModel(IsCurrentUserAdmin, CurrentUserName);
+        private ProjectsViewModel? _cachedProjectsViewModel;
+        private ShiftsViewModel? _cachedShiftsViewModel;
+        private LeavesViewModel? _cachedLeavesViewModel;
+        private UsersViewModel? _cachedUsersViewModel;
+
+        private void NavigateToShifts()
+        {
+            _cachedShiftsViewModel ??= new ShiftsViewModel(IsCurrentUserAdmin, CurrentUserName);
+            CurrentViewModel = _cachedShiftsViewModel;
+        }
+
         private void NavigateToShiftConflict(int shiftId, string shiftCategory)
         {
-            var vm = new ShiftsViewModel(IsCurrentUserAdmin, CurrentUserName);
-            vm.SelectConflictingShift(shiftId, shiftCategory);
-            CurrentViewModel = vm;
+            _cachedShiftsViewModel ??= new ShiftsViewModel(IsCurrentUserAdmin, CurrentUserName);
+            _cachedShiftsViewModel.SelectConflictingShift(shiftId, shiftCategory);
+            CurrentViewModel = _cachedShiftsViewModel;
         }
-        private void NavigateToLeaves() => CurrentViewModel = new LeavesViewModel(IsCurrentUserAdmin, CurrentUserName);
-        private void NavigateToProjects() => CurrentViewModel = new ProjectsViewModel(IsCurrentUserAdmin, CurrentUserName, SelectedLoginTeam);
-        private void NavigateToUsers() => CurrentViewModel = new UsersViewModel(IsCurrentUserAdmin);
 
-        private void CreateLeaveRequest() => CurrentViewModel = new LeavesViewModel(IsCurrentUserAdmin, CurrentUserName, initialTabIndex: 1);
-        private void CreateShift() => CurrentViewModel = new ShiftsViewModel(IsCurrentUserAdmin, CurrentUserName, openForm: true);
-        private void CreateProject() => CurrentViewModel = new ProjectsViewModel(IsCurrentUserAdmin, CurrentUserName, SelectedLoginTeam);
-        private void CreateUser() => CurrentViewModel = new UsersViewModel(IsCurrentUserAdmin);
+        private void NavigateToLeaves()
+        {
+            _cachedLeavesViewModel ??= new LeavesViewModel(IsCurrentUserAdmin, CurrentUserName);
+            CurrentViewModel = _cachedLeavesViewModel;
+        }
+
+        private void NavigateToProjects()
+        {
+            _cachedProjectsViewModel ??= new ProjectsViewModel(IsCurrentUserAdmin, CurrentUserName, SelectedLoginTeam);
+            CurrentViewModel = _cachedProjectsViewModel;
+        }
+
+        private void NavigateToUsers()
+        {
+            _cachedUsersViewModel ??= new UsersViewModel(IsCurrentUserAdmin);
+            CurrentViewModel = _cachedUsersViewModel;
+        }
+
+        private void CreateLeaveRequest()
+        {
+            _cachedLeavesViewModel ??= new LeavesViewModel(IsCurrentUserAdmin, CurrentUserName, initialTabIndex: 1);
+            CurrentViewModel = _cachedLeavesViewModel;
+        }
+
+        private void CreateShift()
+        {
+            _cachedShiftsViewModel ??= new ShiftsViewModel(IsCurrentUserAdmin, CurrentUserName, openForm: true);
+            CurrentViewModel = _cachedShiftsViewModel;
+        }
+
+        private void CreateProject()
+        {
+            _cachedProjectsViewModel ??= new ProjectsViewModel(IsCurrentUserAdmin, CurrentUserName, SelectedLoginTeam);
+            CurrentViewModel = _cachedProjectsViewModel;
+        }
+
+        private void CreateUser()
+        {
+            _cachedUsersViewModel ??= new UsersViewModel(IsCurrentUserAdmin);
+            CurrentViewModel = _cachedUsersViewModel;
+        }
     }
 }

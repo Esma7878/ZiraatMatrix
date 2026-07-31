@@ -70,7 +70,7 @@ namespace ZiraatProje.Business
                                     (m.ReleaseDate.Date >= currentWeekStart && m.ReleaseDate.Date <= currentWeekEnd);
 
                     bool matchesToday = isWeekly
-                        ? ((m.ReleaseDate.Date >= currentWeekStart && m.ReleaseDate.Date <= currentWeekEnd) || (m.ReleaseDate.Date <= today && today <= m.ReleaseDate.Date.AddDays(6)))
+                        ? (m.ReleaseDate.Date >= currentWeekStart && m.ReleaseDate.Date <= currentWeekEnd)
                         : (m.ReleaseDate.Date == today);
 
                     if (matchesToday && !string.IsNullOrWhiteSpace(m.AssignedUsers))

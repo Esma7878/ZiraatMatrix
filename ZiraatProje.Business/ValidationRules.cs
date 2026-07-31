@@ -40,31 +40,11 @@ namespace ZiraatProje.Business
             }
         }
 
-        // 2. Proje Bütçe Aşım Kontrolü
+        // 2. Proje Bütçe Aşım Kontrolü — Devre dışı bırakıldı (serbest giriş için)
         public static void ValidateProjectBudget(AppDbContext context, int projectId, int? excludeAllocationId, decimal allocatedManDay)
         {
-            var project = context.Projects.FirstOrDefault(p => p.Id == projectId);
-            if (project == null)
-            {
-                throw new ValidationException("Proje bulunamadı!");
-            }
-
-            // Sum all other allocations for this project
-            var currentAllocationsQuery = context.ProjectAllocations
-                .Where(a => a.ProjectId == projectId);
-
-            if (excludeAllocationId.HasValue)
-            {
-                currentAllocationsQuery = currentAllocationsQuery.Where(a => a.Id != excludeAllocationId.Value);
-            }
-
-            decimal currentTotal = currentAllocationsQuery.Sum(a => (decimal?)a.AllocatedManDay) ?? 0m;
-            decimal totalWithNew = currentTotal + allocatedManDay;
-
-            if (totalWithNew > project.TotalManDayBudget)
-            {
-                throw new BudgetExceededException(currentTotal, allocatedManDay, project.TotalManDayBudget);
-            }
+            // Kısıtlama kaldırıldı — kullanıcılar maliyet ve efor verilerini serbestçe girebilir.
+            return;
         }
     }
 }

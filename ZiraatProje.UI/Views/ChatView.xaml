@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ZiraatProje.UI.Views"
+             xmlns:helpers="clr-namespace:ZiraatProje.UI.Helpers"
              mc:Ignorable="d" 
              d:DesignHeight="580" d:DesignWidth="950">
 
@@ -11,7 +12,8 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
     </UserControl.Resources>
     
-    <Grid Background="Transparent" Margin="20" Height="540">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True" Padding="20">
+        <Grid Background="Transparent" MinHeight="540">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="320"/>
             <ColumnDefinition Width="*"/>
@@ -410,4 +412,5 @@
             </Border>
         </Border>
     </Grid>
+</ScrollViewer>
 </UserControl>

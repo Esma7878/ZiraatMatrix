@@ -727,8 +727,8 @@ namespace ZiraatProje.Business
 
         public List<Project> GetProjectsByQuarter(short year, byte quarter, string team = "")
         {
-            using var context = CreateContext();
-            var query = context.Projects
+            using var context2 = CreateContext();
+            var query = context2.Projects
                 .Include(p => p.ProjectMonthlyCosts)
                 .AsNoTracking()
                 .Where(p => p.Year == year && p.Quarter == quarter);
@@ -748,6 +748,30 @@ namespace ZiraatProje.Business
                 .Include(pmc => pmc.User)
                 .AsNoTracking()
                 .Where(pmc => pmc.ProjectId == projectId)
+                .ToList();
+        }
+
+        public List<ProjectMonthlyCost> GetMonthlyCostsForProjects(IEnumerable<int> projectIds)
+        {
+            if (projectIds == null || !projectIds.Any()) return new List<ProjectMonthlyCost>();
+            var ids = projectIds.ToHashSet();
+            using var context = CreateContext();
+            return context.ProjectMonthlyCosts
+                .Include(pmc => pmc.User)
+                .AsNoTracking()
+                .Where(pmc => ids.Contains(pmc.ProjectId))
+                .ToList();
+        }
+
+        public List<ProjectAllocation> GetAllocationsForProjects(IEnumerable<int> projectIds)
+        {
+            if (projectIds == null || !projectIds.Any()) return new List<ProjectAllocation>();
+            var ids = projectIds.ToHashSet();
+            using var context = CreateContext();
+            return context.ProjectAllocations
+                .Include(pa => pa.User)
+                .AsNoTracking()
+                .Where(pa => ids.Contains(pa.ProjectId))
                 .ToList();
         }
 
@@ -778,8 +802,11 @@ namespace ZiraatProje.Business
                 {
                     foreach (var mc in monthlyCosts)
                     {
-                        mc.ProjectId = project.Id;
-                        context.ProjectMonthlyCosts.Add(mc);
+                        if (mc.ManDays > 0) // Only save > 0
+                        {
+                            mc.ProjectId = project.Id;
+                            context.ProjectMonthlyCosts.Add(mc);
+                        }
                     }
                     context.SaveChanges();
                 }
@@ -788,8 +815,11 @@ namespace ZiraatProje.Business
                 {
                     foreach (var alloc in allocations)
                     {
-                        alloc.ProjectId = project.Id;
-                        context.ProjectAllocations.Add(alloc);
+                        if (alloc.ActualManDay > 0) // Only save > 0
+                        {
+                            alloc.ProjectId = project.Id;
+                            context.ProjectAllocations.Add(alloc);
+                        }
                     }
                     context.SaveChanges();
                 }
@@ -823,6 +853,8 @@ namespace ZiraatProje.Business
                 existing.AssignedUserIds = project.AssignedUserIds;
                 existing.TotalManDayBudget = project.TotalManDayBudget;
                 existing.ActualManDays = project.ActualManDays;
+                existing.PlannedReleaseDate = project.PlannedReleaseDate;
+                existing.ActualReleaseDate = project.ActualReleaseDate;
 
                 if (!string.IsNullOrWhiteSpace(currentUserName))
                 {
@@ -871,7 +903,25 @@ namespace ZiraatProje.Business
                 }
 
                 context.SaveChanges();
+                context.SaveChanges();
             }
+        }
+
+        public void ClearAllSyntheticCosts()
+        {
+            using var context = CreateContext();
+            var allCosts = context.ProjectMonthlyCosts.ToList();
+            var allAlloc = context.ProjectAllocations.ToList();
+            context.ProjectMonthlyCosts.RemoveRange(allCosts);
+            context.ProjectAllocations.RemoveRange(allAlloc);
+            
+            // Also reset all project totals to 0
+            var allProj = context.Projects.ToList();
+            foreach(var p in allProj)
+            {
+                p.ActualManDays = 0;
+            }
+            context.SaveChanges();
         }
 
         public void DeleteProject(int projectId)

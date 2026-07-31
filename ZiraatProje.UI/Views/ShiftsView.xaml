@@ -38,11 +38,12 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Background="Transparent" Margin="25">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+        <Grid Background="Transparent" Margin="20,15,20,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
         <!-- View Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
@@ -1698,5 +1699,6 @@
             </Border>
         </Grid>
 
-    </Grid>
+        </Grid>
+    </ScrollViewer>
 </UserControl>

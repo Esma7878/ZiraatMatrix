@@ -308,6 +308,9 @@ namespace ZiraatProje.DataAccess
             }
             catch { }
 
+
+
+
             if (!context.ShiftTypes.Any(st => st.ShiftName.Contains("Yaygınlaştırma")))
             {
                 var existingNames = context.ShiftTypes.Select(st => st.ShiftName).ToList();
@@ -341,37 +344,7 @@ namespace ZiraatProje.DataAccess
                 context.SaveChanges();
             }
 
-            // Always ensure 20 projects per team (60 projects total) are seeded for Q3!
-            EnsureMockProjectsSeeded(context);
-            EnsureQuarterProjectsSeeded(context);
 
-            try
-            {
-                var completedProjects = context.Projects.Where(p => p.ProjectStatus == "Tamamlandı" && p.ActualManDays == 0m).ToList();
-                if (completedProjects.Any())
-                {
-                    int idx = 0;
-                    foreach (var p in completedProjects)
-                    {
-                        decimal baseBudget = p.TotalManDayBudget > 0 ? p.TotalManDayBudget : 45m;
-                        if (idx % 3 == 0)
-                        {
-                            p.ActualManDays = baseBudget + 15m; // Bütçesi Aşılan
-                        }
-                        else if (idx % 3 == 1)
-                        {
-                            p.ActualManDays = Math.Max(10m, baseBudget - 6m); // Bütçe Altında / Tasarruflu
-                        }
-                        else
-                        {
-                            p.ActualManDays = baseBudget; // Tam Uygun
-                        }
-                        idx++;
-                    }
-                    context.SaveChanges();
-                }
-            }
-            catch { }
 
             if (context.Users.Any())
             {
@@ -459,7 +432,7 @@ namespace ZiraatProje.DataAccess
                     new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 34 (17.08 - 23.08.2026)", ReleaseDate = new DateTime(2026, 8, 17, 0, 0, 0), AssignedUsers = "Mehmet Kaya, Ali Koç", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Neslihan Yilmaz", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 36, 22), UpdatedAt = null },
                     new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 35 (24.08 - 30.08.2026)", ReleaseDate = new DateTime(2026, 8, 24, 0, 0, 0), AssignedUsers = "Elif Aydın, Can Koç", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Neslihan Yilmaz", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 36, 22), UpdatedAt = null },
                     new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 30 (20.07 - 26.07.2026)", ReleaseDate = new DateTime(2026, 7, 20, 0, 0, 0), AssignedUsers = "Ayşe Demir, Gülşah yavuz", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = true, CreatedByUserName = "Neslihan Yilmaz", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 37, 26), UpdatedAt = null },
-                    new MonthlyReleaseShift { MonthName = "Haftalık Yaygınlaştırma: Temmuz 2026 - Hafta 4 (20.07.2026 - 26.07.2026)", ReleaseDate = new DateTime(2026, 7, 25, 0, 0, 0), AssignedUsers = "Ahmet Yılmaz, Selin Bulut, Can Koç,  Barbaros Hayrettin, Ayşe Demir, Gülşah yavuz", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 56, 57), UpdatedAt = null },
+                    new MonthlyReleaseShift { MonthName = "Haftalık Yaygınlaştırma: Temmuz 2026 - Hafta 4 (20.07.2026 - 26.07.2026)", ReleaseDate = new DateTime(2026, 7, 25, 0, 0, 0), AssignedUsers = "Ahmet Yılmaz, Selin Bulut, Can Koç,  Barbaros Hayrettin, Ayşe Demir, Gülşah yavuz", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = true, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 23, 13, 56, 57), UpdatedAt = null },
                     new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 31 (27.07 - 02.08.2026)", ReleaseDate = new DateTime(2026, 7, 27, 0, 0, 0), AssignedUsers = "Ömer Arslan, Gülşah yavuz", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 27, 11, 58, 1), UpdatedAt = null },
                     new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 32 (03.08 - 09.08.2026)", ReleaseDate = new DateTime(2026, 8, 3, 0, 0, 0), AssignedUsers = "Ayşe Demir, Zeynep Yıldız", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 27, 11, 58, 14), UpdatedAt = null },
                     new MonthlyReleaseShift { MonthName = "Haftalık: Hafta 33 (10.08 - 16.08.2026)", ReleaseDate = new DateTime(2026, 8, 10, 0, 0, 0), AssignedUsers = "Ömer Arslan, Zeynep Yıldız", JiraTicketNo = null, ExternalLink = null, Note = null, IsFinished = false, CreatedByUserName = "Esma İrem  Öztürk", UpdatedByUserName = null, CreatedAt = new DateTime(2026, 7, 27, 11, 58, 14), UpdatedAt = null },
@@ -537,570 +510,180 @@ namespace ZiraatProje.DataAccess
 
         public static void EnsureMockProjectsSeeded(AppDbContext context)
         {
-            if (context.Projects.Count() >= 20) return;
-
-            var users = context.Users.ToList();
-            if (!users.Any()) return;
-
-            var takipUsers = users.Where(u => u.Team == "Takip").ToList();
-            var tahsisUsers = users.Where(u => u.Team == "Tahsis").ToList();
-            var teminatUsers = users.Where(u => u.Team == "Teminat").ToList();
-
-            var gmyOptions = new[]
-            {
-                "Kredi Politikaları ve Risk Tasfiye GMY",
-                "Kredi Tahsis ve Yönetimi GMY",
-                "Ürün Yönetimi ve Dijital Bankacılık GMY",
-                "Strateji Planlama ve İnsan Kaynakları Grup Başkanlığı",
-                "Genel Müdürlük"
-            };
-
-            var buOptions = new[]
-            {
-                "Kredi Süreçleri Bölüm Başkanlığı",
-                "Kurumsal ve Ticari Krediler Tahsis ve Yönetimi Bölüm Başkanlığı",
-                "Kredi Risk İzleme Yapılandırma ve Tasfiye Bölüm Başkanlığı",
-                "Finansman Ürünleri Yönetimi Bölüm Başkanlığı",
-                "İnşaat ve Gayrimenkul Yönetimi Bölüm Başkanlığı",
-                "Ziraat Teknoloji"
-            };
-
-            var statusOptions = new[] { "Devam Ediyor", "Planlandı", "Tamamlandı" };
-            var typeOptions = new[] { "Proje", "KG", "Paydaş Proje", "Dış Firma" };
-            var extCompanies = new[] { "Ziraat Teknoloji A.Ş.", "FinTech Solutions", "SoftTech Yazılım", "Bitis Sistemleri" };
-            var stakeholdersList = new[] { "Bireysel Bankacılık, Risk Yönetimi", "Kurumsal Bankacılık, Hukuk", "IT Güvenlik, Operasyon", "Hazine, Finansal Kurumlar" };
-
-            var rand = new Random(42);
-
-            // 1. TAKİP PROJECTS (20 Items)
-            var takipProjectNames = new[]
-            {
-                "Bireysel Kredi Takip ve Tahsilat Modülü",
-                "Kanuni Takip Portalı Entegrasyonu",
-                "Erken Uyarı Sistemleri (EUS) Risk Takip Engine",
-                "Kredi Risk İzleme ve Yapılandırma Otomasyonu",
-                "KOBİ Kredileri İzleme Dashboadı",
-                "Takip İcra ve Hukuk Süreçleri Servisleri",
-                "Ticari Portföy Risk İzleme Modülü",
-                "Otomatik İhtarname ve Tebligat Oluşturucu",
-                "BDDK Takip Oranları Raporlama Servisi",
-                "Gecikmeli Kredi Alacak Tahsilat Uygulaması",
-                "Varlık Yönetim Şirketleri Devir Portalı",
-                "Takip Süreçleri Yapay Zeka Skorlama Motoru",
-                "Kredi Yapılandırma Hesaplama Çerçevesi",
-                "Bireysel Kart Takip Servisi",
-                "Yeniden Yapılandırma Protokol Otomasyonu",
-                "Takip Portföyü Kara Liste & KKB Entegrasyonu",
-                "Taahhütlü Alacak Takip Modülü",
-                "Borç Yapılandırma Kampanya Yönetimi",
-                "Tahsilat Çağrı Merkezi Entegrasyon Servisleri",
-                "Kredi Riski Gecikme Bildirim Motoru"
-            };
-
-            // 2. TAHSİS PROJECTS (20 Items)
-            var tahsisProjectNames = new[]
-            {
-                "Bireysel Kredi Tahsis Otomasyonu",
-                "Kurumsal ve Ticari Krediler Değerlendirme Sistemi",
-                "Otomatik Kredi Onay & Karar Destek Motoru",
-                "Mikro KOBİ Hızlı Tahsis Ekranları",
-                "Kredi Derecelendirme ve Rating Entegrasyonu",
-                "Teminatsız Kredi Tahsis Sınırlandırma Servisi",
-                "Bilanço Analiz ve Mali Tablo Çözümleme Modülü",
-                "Taşıt ve Konut Kredisi Tahsis Servisleri",
-                "Tarım Kredileri Özel Tahsis Akışları",
-                "E-Devlet Gelir Doğrulama & Tahsis Entegrasyonu",
-                "Kredi Limiti Tahsis ve Risk Grubu Yönetimi",
-                "Ticari Kredi Tahsis Komite Ekranı",
-                "Vergi Dairesi E-Beyanname Tahsis Servisi",
-                "Kredi Kartı Limit Tahsis Otomasyonu",
-                "Proje Finansmanı Tahsis ve Uygunluk Modülü",
-                "Faktoring & Forfaiting Tahsis Akışı",
-                "Katılım Bankacılığı Murabaha Tahsis Servisi",
-                "Otomatik Kredi Skor Kart Dönüşüm Engine",
-                "Kredi Limit Revizyon ve Yenileme Otomasyonu",
-                "Grup Şirketleri Kredi Tahsis Limit Kontrolü"
-            };
-
-            // 3. TEMİNAT PROJECTS (20 Items)
-            var teminatProjectNames = new[]
-            {
-                "Gayrimenkul Ekspertiz ve Teminat Otomasyonu",
-                "Teminat Mektubu ve Akreditif Yönetim Sistemi",
-                "İpotek Tescil ve Tapu Kadastro Entegrasyonu",
-                "Araç Rehnü ve E-Ekspertiz Servisleri",
-                "Mevduat ve Menkul Rehnü Yönetim Modülü",
-                "Kredi Teminat Oranı (LTV) Hesaplama Motoru",
-                "Teminat Riski ve Sigorta Takip Servisi",
-                "Hazine Bonosu & Devlet Tahvili Teminat Portalı",
-                "Şartlı Teminat & Müşterek İpotek Ekranları",
-                "Kredi Teminat Serbest Bırakma Otomasyonu",
-                "KGF (Kredi Garanti Fonu) Teminat Entegrasyonu",
-                "Fiziki Teminat Depolama ve Kasalama Servisi",
-                "Stok & Emtia Rehnü Değerleme Modülü",
-                "Teminat Mektubu Doğrulama & QR Kod Engine",
-                "Ticari İşletme Rehnü Yönetim Portalı",
-                "Ekspertiz Şirketleri Web Servis Entegrasyonu",
-                "Dövizli Teminat Kur Farkı Güncelleme Servisi",
-                "Teminat Sigorta Poliçe Yenileme Otomasyonu",
-                "Keşideci & Çek/Senet Teminat Yönetim Ekranı",
-                "Müşterek ve Müteselsil Kefalet Takip Modülü"
-            };
-
-            var teamProjectBatches = new (string TeamName, string[] Names, List<User> TeamUsers)[]
-            {
-                ("Takip", takipProjectNames, takipUsers),
-                ("Tahsis", tahsisProjectNames, tahsisUsers),
-                ("Teminat", teminatProjectNames, teminatUsers)
-            };
-
-            int pergelCounter = 1045000;
-
-            foreach (var batch in teamProjectBatches)
-            {
-                var teamUsrs = batch.TeamUsers.Count > 0 ? batch.TeamUsers : users;
-                var analysts = teamUsrs.Where(u => u.Title == "Analist").ToList();
-                var devs = teamUsrs.Where(u => u.Title == "Developer" || u.Title == "Yazılımcı").ToList();
-
-                if (!analysts.Any()) analysts = teamUsrs.Take(1).ToList();
-                if (!devs.Any()) devs = teamUsrs.Skip(1).ToList();
-
-                foreach (var pName in batch.Names)
-                {
-                    pergelCounter += rand.Next(1, 15);
-                    string pType = typeOptions[rand.Next(typeOptions.Length)];
-                    string extComp = pType == "Dış Firma" ? extCompanies[rand.Next(extCompanies.Length)] : "";
-                    decimal extCost = pType == "Dış Firma" ? (decimal)rand.Next(30, 250) : 0m;
-
-                    var selAnalyst = analysts[rand.Next(analysts.Count)];
-                    var selDev = devs[rand.Next(devs.Count)];
-
-                    var project = new Project
-                    {
-                        PergelNo = pergelCounter,
-                        ProjectName = pName,
-                        Summary = pName,
-                        ProjectStatus = statusOptions[rand.Next(statusOptions.Length)],
-                        ProjectType = pType,
-                        ExternalCompanyName = extComp,
-                        ExternalCost = extCost,
-                        Team = batch.TeamName,
-                        Year = 2026,
-                        Quarter = 3,
-                        Gmy = gmyOptions[rand.Next(gmyOptions.Length)],
-                        BusinessUnit = buOptions[rand.Next(buOptions.Length)],
-                        Stakeholders = stakeholdersList[rand.Next(stakeholdersList.Length)],
-                        Description = $"{pName} projesi kapsamındaki 2026 Q3 çeyreklik canlı geçiş ve analiz hedefleri.",
-                        AssignedAnalystNames = selAnalyst.FullName,
-                        AssignedDeveloperNames = selDev.FullName,
-                        AssignedUserNames = $"{selAnalyst.FullName} | {selDev.FullName}",
-                        AssignedUserIds = $"{selAnalyst.Id},{selDev.Id}"
-                    };
-
-                    context.Projects.Add(project);
-                    context.SaveChanges();
-
-                    // Seed monthly costs (Months 7, 8, 9 for Q3)
-                    decimal m7_1 = rand.Next(5, 20);
-                    decimal m8_1 = rand.Next(5, 20);
-                    decimal m9_1 = rand.Next(5, 20);
-
-                    decimal m7_2 = rand.Next(8, 22);
-                    decimal m8_2 = rand.Next(8, 22);
-                    decimal m9_2 = rand.Next(8, 22);
-
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = project.Id, UserId = selAnalyst.Id, Month = 7, ManDays = m7_1 });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = project.Id, UserId = selAnalyst.Id, Month = 8, ManDays = m8_1 });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = project.Id, UserId = selAnalyst.Id, Month = 9, ManDays = m9_1 });
-
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = project.Id, UserId = selDev.Id, Month = 7, ManDays = m7_2 });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = project.Id, UserId = selDev.Id, Month = 8, ManDays = m8_2 });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = project.Id, UserId = selDev.Id, Month = 9, ManDays = m9_2 });
-
-                    project.TotalManDayBudget = m7_1 + m8_1 + m9_1 + m7_2 + m8_2 + m9_2;
-                }
-            }
-
-            context.SaveChanges();
-
-            // Populate sample ActualManDays for completed projects
-            try
-            {
-                var completedProjects = context.Projects.Where(p => p.ProjectStatus == "Tamamlandı" && p.ActualManDays == 0m).ToList();
-                if (completedProjects.Any())
-                {
-                    int index = 0;
-                    foreach (var p in completedProjects)
-                    {
-                        decimal baseBudget = p.TotalManDayBudget > 0 ? p.TotalManDayBudget : 45m;
-                        if (index % 3 == 0)
-                        {
-                            p.ActualManDays = baseBudget + 15m;
-                        }
-                        else if (index % 3 == 1)
-                        {
-                            p.ActualManDays = Math.Max(10m, baseBudget - 6m);
-                        }
-                        else
-                        {
-                            p.ActualManDays = baseBudget;
-                        }
-                        index++;
-                    }
-                    context.SaveChanges();
-                }
-            }
-            catch { }
         }
 
         public static void EnsureQuarterProjectsSeeded(AppDbContext context)
         {
+            return; // Disabled automatic re-seeding of deleted projects
             var users = context.Users.ToList();
             if (!users.Any()) return;
 
-            // Always force wipe old uniform Q1, Q2, Q4 test projects if less than 30 projects exist in total across Q1, Q2, Q4
-            if (context.Projects.Count(p => p.Quarter == 1 || p.Quarter == 2 || p.Quarter == 4) < 30 ||
-                context.Projects.Any(p => p.Quarter == 1 && p.ProjectName.StartsWith("Q1")))
+            // Cleanup: Non-completed status projects (Planlandı, Devam Ediyor etc.) should not have actual release date until completed
+            var existingNonCompletedProjects = context.Projects.Where(p => p.ProjectStatus != "Tamamlandı" && p.ActualReleaseDate != null).ToList();
+            if (existingNonCompletedProjects.Any())
             {
-                try
+                foreach (var p in existingNonCompletedProjects)
                 {
-                    context.Database.ExecuteSqlRaw(@"
-                        DELETE FROM ProjectMonthlyCosts WHERE ProjectId IN (SELECT Id FROM Projects WHERE Quarter IN (1, 2, 4) OR ProjectName LIKE 'Q1%' OR ProjectName LIKE 'Q2%' OR ProjectName LIKE 'Q4%');
-                        DELETE FROM ProjectAllocations WHERE ProjectId IN (SELECT Id FROM Projects WHERE Quarter IN (1, 2, 4) OR ProjectName LIKE 'Q1%' OR ProjectName LIKE 'Q2%' OR ProjectName LIKE 'Q4%');
-                        DELETE FROM Projects WHERE Quarter IN (1, 2, 4) OR ProjectName LIKE 'Q1%' OR ProjectName LIKE 'Q2%' OR ProjectName LIKE 'Q4%';
-                    ");
+                    p.ActualReleaseDate = null;
                 }
-                catch
-                {
-                    var oldProjects = context.Projects.Where(p => p.Quarter == 1 || p.Quarter == 2 || p.Quarter == 4).ToList();
-                    foreach (var p in oldProjects)
-                    {
-                        var costs = context.ProjectMonthlyCosts.Where(c => c.ProjectId == p.Id).ToList();
-                        var allocs = context.ProjectAllocations.Where(a => a.ProjectId == p.Id).ToList();
-                        context.ProjectMonthlyCosts.RemoveRange(costs);
-                        context.ProjectAllocations.RemoveRange(allocs);
-                        context.Projects.Remove(p);
-                    }
-                    context.SaveChanges();
-                }
+                context.SaveChanges();
             }
 
-            if (context.Projects.Count(p => p.Quarter == 1 || p.Quarter == 2 || p.Quarter == 4) >= 30) return;
+            var analysts = users.Where(u => u.Title != null && u.Title.Contains("Analist")).ToList();
+            if (!analysts.Any()) analysts = users.Take(2).ToList();
 
-            var analystsPool = users.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
-            if (!analystsPool.Any()) analystsPool = users;
+            var developers = users.Where(u => u.Title != null && (u.Title.Contains("Developer") || u.Title.Contains("Yazılım"))).ToList();
+            if (!developers.Any()) developers = users.Skip(2).Take(4).ToList();
 
-            var devsPool = users.Where(u => (u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) ||
-                                              (u.Title ?? "").Contains("Yazılımcı", StringComparison.OrdinalIgnoreCase) ||
-                                              (u.Title ?? "").Contains("Mühendis", StringComparison.OrdinalIgnoreCase)).ToList();
-            if (!devsPool.Any()) devsPool = users;
+            User getAnalystUser(int idx) => analysts[idx % analysts.Count];
+            User getDevUser(int idx) => developers[idx % developers.Count];
 
-            var managersPool = users.Where(u => (u.Title ?? "").Contains("Yönetici", StringComparison.OrdinalIgnoreCase) ||
-                                                (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase) ||
-                                                u.IsAdmin).ToList();
-            if (!managersPool.Any()) managersPool = users;
-
-            var rand = new Random();
-
-            var gmyOptions = new[]
+            var quartersData = new[]
             {
-                "Kredi Politikaları ve Risk Tasfiye GMY",
-                "Kredi Tahsis ve Yönetimi GMY",
-                "Ürün Yönetimi ve Dijital Bankacılık GMY",
-                "Strateji Planlama ve İnsan Kaynakları Grup Başkanlığı",
-                "Genel Müdürlük"
+                new { Q = 1, StartMonth = 1,
+                      Projects = new[]
+                      {
+                          new { Name = "Kredi Kartı Limit Artırım Otomasyonu", Type = "Proje", Status = "Devam Ediyor", Ext = "", Team = "Takip", Budget = 60m, Actual = 40m, DelayDays = 0, PlannedDay = 15, Month = 2, Gmy = "Ürün Yönetimi ve Dijital Bankacılık GMY", Unit = "Bireysel Krediler Süreç Bölüm Bşk." },
+                          new { Name = "Mobil Bankacılık QR İle Ödeme", Type = "Proje", Status = "Tamamlandı", Ext = "", Team = "Tahsis", Budget = 45m, Actual = 45m, DelayDays = 0, PlannedDay = 10, Month = 3, Gmy = "Ürün Yönetimi ve Dijital Bankacılık GMY", Unit = "Dijital Bankacılık Bölüm Bşk." },
+                          new { Name = "POS Anlık Mutabakat Sistemi", Type = "KG", Status = "Tamamlandı", Ext = "", Team = "Teminat", Budget = 30m, Actual = 30m, DelayDays = 0, PlannedDay = 20, Month = 1, Gmy = "Operasyonel Risk ve Güvenlik GMY", Unit = "Ödeme Sistemleri Bölüm Bşk." },
+                          new { Name = "Kurumsal Kredi Risk Skorlama", Type = "Proje", Status = "Tamamlandı", Ext = "", Team = "Tahsis", Budget = 80m, Actual = 85m, DelayDays = 7, PlannedDay = 15, Month = 2, Gmy = "Kredi Tahsis ve Yönetimi GMY", Unit = "Kurumsal Krediler Bölüm Bşk." },
+                          new { Name = "KVKK Uyum & Veri Anonimleştirme", Type = "Proje", Status = "Tamamlandı", Ext = "", Team = "Takip", Budget = 50m, Actual = 50m, DelayDays = 0, PlannedDay = 28, Month = 3, Gmy = "Hukuk ve Uyum GMY", Unit = "Mevzuat ve Uyum Bölüm Bşk." },
+                          new { Name = "Bireysel Kredi Başvuru Mikroservisi", Type = "KG", Status = "Devam Ediyor", Ext = "", Team = "Teminat", Budget = 40m, Actual = 25m, DelayDays = 0, PlannedDay = 18, Month = 3, Gmy = "Kredi Politikaları GMY", Unit = "Bireysel Krediler Tahsis Bşk." },
+                          new { Name = "Dış Firma Garanti BBVA Entegrasyonu", Type = "Dış Firma", Status = "Tamamlandı", Ext = "Softtech", Team = "Tahsis", Budget = 90m, Actual = 90m, DelayDays = 0, PlannedDay = 12, Month = 2, Gmy = "Teknoloji ve Mimari GMY", Unit = "Dış Entegrasyonlar Bölüm Bşk." },
+                          new { Name = "Hazine Döviz Alım-Satım Botu", Type = "Proje", Status = "Planlandı", Ext = "", Team = "Takip", Budget = 70m, Actual = 0m, DelayDays = 0, PlannedDay = 25, Month = 3, Gmy = "Hazine ve Sermaye Piyasaları GMY", Unit = "Hazine Operasyonları Bölüm Bşk." },
+                          new { Name = "Açık Bankacılık API Gateway", Type = "Paydaş Proje", Status = "Devam Ediyor", Ext = "", Team = "Tahsis", Budget = 100m, Actual = 60m, DelayDays = 0, PlannedDay = 30, Month = 3, Gmy = "Ürün Yönetimi ve Dijital Bankacılık GMY", Unit = "Açık Bankacılık Bölüm Bşk." },
+                          new { Name = "E-Fatura & E-Defter Entegrasyonu", Type = "KG", Status = "Tamamlandı", Ext = "", Team = "Teminat", Budget = 35m, Actual = 35m, DelayDays = 0, PlannedDay = 14, Month = 1, Gmy = "Mali İşler GMY", Unit = "Muhasebe Süreçleri Bölüm Bşk." },
+                          new { Name = "Çok Faktörlü Kimlik Doğrulama (MFA)", Type = "Proje", Status = "Tamamlandı", Ext = "", Team = "Takip", Budget = 65m, Actual = 70m, DelayDays = 8, PlannedDay = 10, Month = 3, Gmy = "Siber Güvenlik GMY", Unit = "Kimlik Yönetimi Bölüm Bşk." },
+                          new { Name = "ATM Nüfus Cüzdanı Okuyucu", Type = "Paydaş Proje", Status = "Planlandı", Ext = "", Team = "Tahsis", Budget = 55m, Actual = 0m, DelayDays = 0, PlannedDay = 20, Month = 2, Gmy = "Kanal Yönetimi GMY", Unit = "ATM ve Saha Operasyonları Bölüm Bşk." }
+                      }
+                },
+                new { Q = 2, StartMonth = 4,
+                      Projects = new[]
+                      {
+                          new { Name = "Şube Ekranları Modernizasyonu", Type = "Proje", Status = "Tamamlandı", Ext = "", Team = "Takip", Budget = 75m, Actual = 75m, DelayDays = 0, PlannedDay = 16, Month = 4, Gmy = "Şube Operasyonları GMY", Unit = "Şube Süreçleri Bölüm Bşk." },
+                          new { Name = "Otomatik Tahsilat & İcra Takip", Type = "Proje", Status = "Devam Ediyor", Ext = "", Team = "Tahsis", Budget = 80m, Actual = 50m, DelayDays = 0, PlannedDay = 22, Month = 5, Gmy = "Kredi Tasfiye GMY", Unit = "İcra ve Tahsilat Bölüm Bşk." },
+                          new { Name = "Teminat Mektubu Dijitalleşme", Type = "Paydaş Proje", Status = "Tamamlandı", Ext = "", Team = "Teminat", Budget = 50m, Actual = 50m, DelayDays = 0, PlannedDay = 11, Month = 6, Gmy = "Ticari Krediler GMY", Unit = "Teminat Süreçleri Bölüm Bşk." },
+                          new { Name = "Dış Firma Veripark Mobil CRM", Type = "Dış Firma", Status = "Tamamlandı", Ext = "Veripark", Team = "Takip", Budget = 110m, Actual = 115m, DelayDays = 8, PlannedDay = 20, Month = 5, Gmy = "Pazarlama GMY", Unit = "CRM Süreçleri Bölüm Bşk." },
+                          new { Name = "KOBİ Kredi Değerlendirme Motoru", Type = "Proje", Status = "Devam Ediyor", Ext = "", Team = "Tahsis", Budget = 95m, Actual = 60m, DelayDays = 0, PlannedDay = 25, Month = 6, Gmy = "KOBİ Bankacılığı GMY", Unit = "KOBİ Tahsis Bölüm Bşk." },
+                          new { Name = "Swift Ödeme Mesajları Parse Botu", Type = "KG", Status = "Tamamlandı", Ext = "", Team = "Teminat", Budget = 30m, Actual = 30m, DelayDays = 0, PlannedDay = 15, Month = 4, Gmy = "Dış İşler Operasyon GMY", Unit = "Swift ve Transferler Bölüm Bşk." },
+                          new { Name = "Kart Temassız Limit Güncelleme", Type = "KG", Status = "Planlandı", Ext = "", Team = "Takip", Budget = 25m, Actual = 0m, DelayDays = 0, PlannedDay = 18, Month = 5, Gmy = "Kartlı Sistemler GMY", Unit = "Kredi Kartı Ürün Yönetimi" },
+                          new { Name = "Borsa & Hisse Senedi Alım Ön Yüzü", Type = "Proje", Status = "Devam Ediyor", Ext = "", Team = "Tahsis", Budget = 85m, Actual = 40m, DelayDays = 0, PlannedDay = 30, Month = 6, Gmy = "Yatırım Bankacılığı GMY", Unit = "Sermaye Piyasaları Bölüm Bşk." },
+                          new { Name = "İnternet Şubesi Şifre Sıfırlama", Type = "Paydaş Proje", Status = "Tamamlandı", Ext = "", Team = "Teminat", Budget = 40m, Actual = 40m, DelayDays = 0, PlannedDay = 10, Month = 4, Gmy = "Dijital Bankacılık GMY", Unit = "Güvenlik Süreçleri Bölüm Bşk." },
+                          new { Name = "Kara Liste & Masak Kontrol Servisi", Type = "Proje", Status = "Tamamlandı", Ext = "", Team = "Takip", Budget = 60m, Actual = 65m, DelayDays = 7, PlannedDay = 12, Month = 6, Gmy = "Mevzuat ve Suç Gelirleri GMY", Unit = "Masak Uyum Bölüm Bşk." },
+                          new { Name = "Şirketim Mobil Bildirim Servisi", Type = "KG", Status = "Devam Ediyor", Ext = "", Team = "Tahsis", Budget = 35m, Actual = 20m, DelayDays = 0, PlannedDay = 24, Month = 5, Gmy = "Kurumsal Bankacılık GMY", Unit = "Kurumsal İletişim Bölüm Bşk." },
+                          new { Name = "Ziraat Pay Sanal POS Entegrasyonu", Type = "Proje", Status = "Planlandı", Ext = "", Team = "Teminat", Budget = 70m, Actual = 0m, DelayDays = 0, PlannedDay = 28, Month = 6, Gmy = "Ödeme Hizmetleri GMY", Unit = "Sanal POS Bölüm Bşk." }
+                      }
+                },
+                new { Q = 3, StartMonth = 7,
+                      Projects = new[]
+                      {
+                          new { Name = "Ön Yüz Tasarımı & UX Yenileme", Type = "Paydaş Proje", Status = "Devam Ediyor", Ext = "", Team = "Tahsis", Budget = 80m, Actual = 45m, DelayDays = 0, PlannedDay = 20, Month = 8, Gmy = "Ürün Yönetimi GMY", Unit = "UX & Tasarım Bölüm Bşk." },
+                          new { Name = "Müşteri Analitiği & Segmentasyon", Type = "Proje", Status = "Planlandı", Ext = "", Team = "Teminat", Budget = 90m, Actual = 0m, DelayDays = 0, PlannedDay = 25, Month = 9, Gmy = "Pazarlama GMY", Unit = "Müşteri Analitiği Bölüm Bşk." },
+                          new { Name = "Çek / Senet Otomatik Okuma (OCR)", Type = "KG", Status = "Devam Ediyor", Ext = "", Team = "Takip", Budget = 40m, Actual = 20m, DelayDays = 0, PlannedDay = 15, Month = 7, Gmy = "Operasyon GMY", Unit = "Çek Senet Süreçleri Bölüm Bşk." },
+                          new { Name = "Dış Firma Innova Bulut Depolama", Type = "Dış Firma", Status = "Devam Ediyor", Ext = "Innova", Team = "Tahsis", Budget = 100m, Actual = 60m, DelayDays = 0, PlannedDay = 18, Month = 8, Gmy = "Altyapı ve Sistem GMY", Unit = "Bulut Teknolojileri Bölüm Bşk." },
+                          new { Name = "Genel Kurul & Paydaş Yönetimi", Type = "Paydaş Proje", Status = "Planlandı", Ext = "", Team = "Teminat", Budget = 50m, Actual = 0m, DelayDays = 0, PlannedDay = 30, Month = 9, Gmy = "Genel Sekreterlik GMY", Unit = "Paydaş İlişkileri Bölüm Bşk." },
+                          new { Name = "Yapay Zeka Destekli Chatbot Asistanı", Type = "Proje", Status = "Devam Ediyor", Ext = "", Team = "Takip", Budget = 120m, Actual = 70m, DelayDays = 0, PlannedDay = 22, Month = 8, Gmy = "Yapay Zeka ve Veri GMY", Unit = "AI Çözümleri Bölüm Bşk." },
+                          new { Name = "Sanal Kart Oluşturma & Limit Belirleme", Type = "KG", Status = "Tamamlandı", Ext = "", Team = "Tahsis", Budget = 30m, Actual = 30m, DelayDays = 0, PlannedDay = 10, Month = 7, Gmy = "Kart Operasyonları GMY", Unit = "Sanal Kart Süreçleri Bölüm Bşk." },
+                          new { Name = "Kıymetli Maden & Altın Hesabı", Type = "Proje", Status = "Planlandı", Ext = "", Team = "Teminat", Budget = 60m, Actual = 0m, DelayDays = 0, PlannedDay = 28, Month = 9, Gmy = "Bireysel Bankacılık GMY", Unit = "Yatırım Ürünleri Bölüm Bşk." },
+                          new { Name = "E-Devlet Kapısı Üzerinden Hesap Açma", Type = "Proje", Status = "Devam Ediyor", Ext = "", Team = "Takip", Budget = 75m, Actual = 82m, DelayDays = 7, PlannedDay = 15, Month = 8, Gmy = "Dijital Dönüşüm GMY", Unit = "Kamu Entegrasyonları Bölüm Bşk." },
+                          new { Name = "Otomatik Fatura Ödeme Talimatı", Type = "KG", Status = "Planlandı", Ext = "", Team = "Tahsis", Budget = 35m, Actual = 0m, DelayDays = 0, PlannedDay = 14, Month = 9, Gmy = "Ödeme Sistemleri GMY", Unit = "Fatura Tahsilat Bölüm Bşk." },
+                          new { Name = "Merkez Bankası FAST Ödeme Servisi", Type = "Paydaş Proje", Status = "Devam Ediyor", Ext = "", Team = "Teminat", Budget = 85m, Actual = 50m, DelayDays = 0, PlannedDay = 26, Month = 9, Gmy = "Merkez Bankası İlişkileri GMY", Unit = "FAST Ödeme Süreçleri Bölüm Bşk." }
+                      }
+                },
+                new { Q = 4, StartMonth = 10,
+                      Projects = new[]
+                      {
+                          new { Name = "Yıl Sonu Bütçe & Maliyet Konsolidasyonu", Type = "Proje", Status = "Planlandı", Ext = "", Team = "Takip", Budget = 80m, Actual = 0m, DelayDays = 0, PlannedDay = 15, Month = 12, Gmy = "Mali Analiz ve Bütçe GMY", Unit = "Bütçe ve Raporlama Bölüm Bşk." },
+                          new { Name = "Yatırım Hesabı Halka Arz Katılım", Type = "Paydaş Proje", Status = "Planlandı", Ext = "", Team = "Tahsis", Budget = 60m, Actual = 0m, DelayDays = 0, PlannedDay = 20, Month = 10, Gmy = "Yatırım Hizmetleri GMY", Unit = "Halka Arz Süreçleri Bölüm Bşk." },
+                          new { Name = "Dış Firma Obss Test Otomasyonu", Type = "Dış Firma", Status = "Planlandı", Ext = "Obss", Team = "Teminat", Budget = 90m, Actual = 0m, DelayDays = 0, PlannedDay = 10, Month = 11, Gmy = "Kalite ve Test GMY", Unit = "Yazılım Kalite Güvence Bölüm Bşk." },
+                          new { Name = "Kurumsal Tahvil & Bono Halka Arzı", Type = "Proje", Status = "Planlandı", Ext = "", Team = "Takip", Budget = 70m, Actual = 0m, DelayDays = 0, PlannedDay = 25, Month = 11, Gmy = "Sermaye Piyasaları GMY", Unit = "Tahvil ve Bono İşlemleri Bölüm Bşk." },
+                          new { Name = "Dış Ticaret Akreditif İşlemleri", Type = "KG", Status = "Planlandı", Ext = "", Team = "Tahsis", Budget = 45m, Actual = 0m, DelayDays = 0, PlannedDay = 18, Month = 10, Gmy = "Dış Ticaret Operasyon GMY", Unit = "Akreditif Bölüm Bşk." },
+                          new { Name = "Yapay Zeka İle Dolandırıcılık Tespit", Type = "Proje", Status = "Planlandı", Ext = "", Team = "Teminat", Budget = 110m, Actual = 0m, DelayDays = 0, PlannedDay = 28, Month = 12, Gmy = "Risk Yönetimi GMY", Unit = "Fraud Tespit ve Önleme Bölüm Bşk." },
+                          new { Name = "Bireysel Emeklilik (BES) Aktarım", Type = "Paydaş Proje", Status = "Planlandı", Ext = "", Team = "Takip", Budget = 50m, Actual = 0m, DelayDays = 0, PlannedDay = 12, Month = 11, Gmy = "Bireysel Bankacılık GMY", Unit = "BES ve Sigorta Bölüm Bşk." },
+                          new { Name = "Kişisel Finansal Yönetim (PFM)", Type = "Proje", Status = "Planlandı", Ext = "", Team = "Tahsis", Budget = 85m, Actual = 0m, DelayDays = 0, PlannedDay = 22, Month = 12, Gmy = "Dijital Bankacılık GMY", Unit = "PFM Süreçleri Bölüm Bşk." },
+                          new { Name = "Pos Cihazı Gün Sonu Otomasyonu", Type = "KG", Status = "Planlandı", Ext = "", Team = "Teminat", Budget = 35m, Actual = 0m, DelayDays = 0, PlannedDay = 14, Month = 10, Gmy = "Üye İşyeri Operasyon GMY", Unit = "POS Sistemleri Bölüm Bşk." },
+                          new { Name = "Sigorta Poliçesi Teklif & Onay", Type = "Proje", Status = "Planlandı", Ext = "", Team = "Takip", Budget = 65m, Actual = 0m, DelayDays = 0, PlannedDay = 19, Month = 11, Gmy = "Sigorta Hizmetleri GMY", Unit = "Elementer Sigorta Bölüm Bşk." },
+                          new { Name = "Kripto Varlık Beyan & Entegrasyon", Type = "KG", Status = "Planlandı", Ext = "", Team = "Tahsis", Budget = 55m, Actual = 0m, DelayDays = 0, PlannedDay = 30, Month = 12, Gmy = "Yenilikçi Teknolojiler GMY", Unit = "Blockchain Lab Bölüm Bşk." },
+                          new { Name = "Şube İçi Nakit Akış Optimalizasyonu", Type = "Paydaş Proje", Status = "Planlandı", Ext = "", Team = "Teminat", Budget = 75m, Actual = 0m, DelayDays = 0, PlannedDay = 16, Month = 10, Gmy = "Nakit Yönetimi GMY", Unit = "Nakit Operasyonları Bölüm Bşk." }
+                      }
+                }
             };
 
-            var buOptions = new[]
+            int projIndex = 1;
+            foreach (var qd in quartersData)
             {
-                "Kredi Süreçleri Bölüm Başkanlığı",
-                "Kurumsal ve Ticari Krediler Tahsis ve Yönetimi Bölüm Başkanlığı",
-                "Kredi Risk İzleme Yapılandırma ve Tasfiye Bölüm Başkanlığı",
-                "Finansman Ürünleri Yönetimi Bölüm Başkanlığı",
-                "İnşaat ve Gayrimenkul Yönetimi Bölüm Başkanlığı",
-                "Ziraat Teknoloji"
-            };
-
-            var typeOptions = new[] { "Proje", "KG", "Paydaş Proje", "Dış Firma" };
-            var extCompanies = new[] { "Ziraat Teknoloji A.Ş.", "FinTech Solutions", "SoftTech Yazılım", "Bitis Sistemleri" };
-            var stakeholdersList = new[] { "Bireysel Bankacılık, Risk Yönetimi", "Kurumsal Bankacılık, Hukuk", "IT Güvenlik, Operasyon", "Hazine, Finansal Kurumlar" };
-
-            int pergelCounter = 1046000;
-
-            // 1. SEED Q1 (Ocak - Mart: Past quarter, Statuses: Tamamlandı / İptal)
-            if (context.Projects.Count(p => p.Quarter == 1) < 10)
-            {
-                var q1MockData = new (string Name, string Status, decimal Budget, decimal Actual, string Team)[]
+                foreach (var pDef in qd.Projects)
                 {
-                    ("Q1 Bireysel Kredi Takip ve Tahsilat Modülü", "Tamamlandı", 65m, 75m, "Takip"),
-                    ("Q1 E-Devlet Gelir Doğrulama & Tahsis Entegrasyonu", "Tamamlandı", 50m, 42m, "Tahsis"),
-                    ("Q1 Teminat Mektubu ve Akreditif Yönetim Sistemi", "İptal", 40m, 0m, "Teminat"),
-                    ("Q1 KOBİ Kredileri İzleme Dashboardı", "Tamamlandı", 40m, 40m, "Takip"),
-                    ("Q1 Otomatik Kredi Onay & Karar Destek Motoru", "Tamamlandı", 80m, 95m, "Tahsis"),
-                    ("Q1 Araç Rehnü ve E-Ekspertiz Servisleri", "İptal", 45m, 0m, "Teminat"),
-                    ("Q1 Gecikmeli Kredi Alacak Tahsilat Uygulaması", "Tamamlandı", 55m, 48m, "Takip"),
-                    ("Q1 Bilanço Analiz ve Mali Tablo Çözümleme Modülü", "Tamamlandı", 70m, 82m, "Tahsis"),
-                    ("Q1 Mevduat ve Menkul Rehnü Yönetim Modülü", "Tamamlandı", 30m, 30m, "Teminat"),
-                    ("Q1 Takip Süreçleri Yapay Zeka Skorlama Motoru", "Tamamlandı", 90m, 80m, "Takip")
-                };
+                    if (context.Projects.Any(p => p.ProjectName == pDef.Name))
+                        continue;
 
-                int aIdx = 0, dIdx = 0;
-                foreach (var item in q1MockData)
-                {
-                    pergelCounter += rand.Next(1, 12);
-                    var analyst = analystsPool[aIdx % analystsPool.Count];
-                    aIdx++;
+                    var analystUser = getAnalystUser(projIndex);
+                    var devUser1 = getDevUser(projIndex);
+                    var devUser2 = getDevUser(projIndex + 1);
 
-                    var dev = devsPool[dIdx % devsPool.Count];
-                    dIdx++;
+                    var analystName = analystUser.FullName;
+                    var devNames = $"{devUser1.FullName}, {devUser2.FullName}";
+                    var allNames = $"{analystName}, {devNames}";
 
-                    var creator = managersPool[rand.Next(managersPool.Count)];
-                    var updater = users[rand.Next(users.Count)];
+                    DateTime plannedDate = new DateTime(2026, pDef.Month, Math.Min(pDef.PlannedDay, 28));
+                    DateTime? actualDate = string.Equals(pDef.Status, "Tamamlandı", StringComparison.OrdinalIgnoreCase) ? plannedDate.AddDays(pDef.DelayDays) : (DateTime?)null;
 
-                    string pType = typeOptions[rand.Next(typeOptions.Length)];
-                    string extComp = pType == "Dış Firma" ? extCompanies[rand.Next(extCompanies.Length)] : "";
-                    decimal extCost = pType == "Dış Firma" ? (decimal)rand.Next(30, 250) : 0m;
-
-                    var proj = new Project
+                    var newProj = new Project
                     {
-                        PergelNo = pergelCounter,
-                        ProjectName = item.Name,
-                        Summary = item.Name,
-                        ProjectStatus = item.Status,
-                        ProjectType = pType,
-                        ExternalCompanyName = extComp,
-                        ExternalCost = extCost,
-                        Team = item.Team,
+                        PergelNo = 1213000 + (qd.Q * 100) + projIndex,
+                        ProjectName = pDef.Name,
+                        Summary = $"{pDef.Name} için alt geliştirme ve test çalışmaları.",
+                        ProjectType = pDef.Type,
+                        ProjectStatus = pDef.Status,
+                        ExternalCompanyName = string.IsNullOrEmpty(pDef.Ext) ? null : pDef.Ext,
+                        Team = pDef.Team,
                         Year = 2026,
-                        Quarter = 1,
-                        Gmy = gmyOptions[rand.Next(gmyOptions.Length)],
-                        BusinessUnit = buOptions[rand.Next(buOptions.Length)],
-                        Stakeholders = stakeholdersList[rand.Next(stakeholdersList.Length)],
-                        Description = $"{item.Name} projesi Q1 çeyreklik canlı geçiş çalışması.",
-                        AssignedAnalystNames = analyst.FullName,
-                        AssignedDeveloperNames = dev.FullName,
-                        AssignedUserNames = $"{analyst.FullName} | {dev.FullName}",
-                        AssignedUserIds = $"{analyst.Id},{dev.Id}",
-                        TotalManDayBudget = item.Budget,
-                        ActualManDays = item.Actual,
-                        CreatedByUserName = creator.FullName,
-                        CreatedAt = new DateTime(2026, 1, rand.Next(2, 10), 9, 0, 0),
-                        UpdatedByUserName = updater.FullName,
-                        UpdatedAt = new DateTime(2026, 2, rand.Next(10, 25), 14, 30, 0),
-                        CompletedByUserName = item.Status == "Tamamlandı" ? dev.FullName : null,
-                        CompletedAt = item.Status == "Tamamlandı" ? new DateTime(2026, 3, rand.Next(20, 30), 17, 0, 0) : null
-                    };
-
-                    context.Projects.Add(proj);
-                    context.SaveChanges();
-
-                    // Seed monthly costs (Months 1, 2, 3)
-                    decimal m1_a = Math.Round(item.Budget * 0.15m, 1);
-                    decimal m2_a = Math.Round(item.Budget * 0.15m, 1);
-                    decimal m3_a = Math.Round(item.Budget * 0.15m, 1);
-
-                    decimal m1_d = Math.Round(item.Budget * 0.18m, 1);
-                    decimal m2_d = Math.Round(item.Budget * 0.18m, 1);
-                    decimal m3_d = Math.Round(item.Budget * 0.19m, 1);
-
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = analyst.Id, Month = 1, ManDays = m1_a });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = analyst.Id, Month = 2, ManDays = m2_a });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = analyst.Id, Month = 3, ManDays = m3_a });
-
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = dev.Id, Month = 1, ManDays = m1_d });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = dev.Id, Month = 2, ManDays = m2_d });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = dev.Id, Month = 3, ManDays = m3_d });
-
-                    if (item.Status == "Tamamlandı" && item.Actual > 0m)
-                    {
-                        decimal actAnalyst = Math.Round(item.Actual * 0.45m, 1);
-                        decimal actDev = item.Actual - actAnalyst;
-
-                        context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = proj.Id, UserId = analyst.Id, AllocatedManDay = m1_a + m2_a + m3_a, ActualManDay = actAnalyst });
-                        context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = proj.Id, UserId = dev.Id, AllocatedManDay = m1_d + m2_d + m3_d, ActualManDay = actDev });
-                    }
-                    context.SaveChanges();
-                }
-            }
-
-            // 2. SEED Q2 (Nisan - Haziran: Past quarter, Statuses: Tamamlandı / İptal)
-            if (context.Projects.Count(p => p.Quarter == 2) < 10)
-            {
-                var q2MockData = new (string Name, string Status, decimal Budget, decimal Actual, string Team)[]
-                {
-                    ("Q2 Kanuni Takip Portalı Entegrasyonu", "Tamamlandı", 60m, 72m, "Takip"),
-                    ("Q2 Mikro KOBİ Hızlı Tahsis Ekranları", "Tamamlandı", 45m, 38m, "Tahsis"),
-                    ("Q2 İpotek Tescil ve Tapu Kadastro Entegrasyonu", "İptal", 50m, 0m, "Teminat"),
-                    ("Q2 Takip İcra ve Hukuk Süreçleri Servisleri", "Tamamlandı", 75m, 75m, "Takip"),
-                    ("Q2 Kredi Derecelendirme ve Rating Entegrasyonu", "Tamamlandı", 85m, 102m, "Tahsis"),
-                    ("Q2 Kredi Teminat Oranı (LTV) Hesaplama Motoru", "İptal", 40m, 0m, "Teminat"),
-                    ("Q2 Otomatik İhtarname ve Tebligat Oluşturucu", "Tamamlandı", 35m, 30m, "Takip"),
-                    ("Q2 Taşıt ve Konut Kredisi Tahsis Servisleri", "Tamamlandı", 65m, 74m, "Tahsis"),
-                    ("Q2 Teminat Riski ve Sigorta Takip Servisi", "Tamamlandı", 40m, 40m, "Teminat"),
-                    ("Q2 Kredi Yapılandırma Hesaplama Çerçevesi", "Tamamlandı", 50m, 42m, "Takip")
-                };
-
-                int aIdx = 2, dIdx = 3;
-                foreach (var item in q2MockData)
-                {
-                    pergelCounter += rand.Next(1, 12);
-                    var analyst = analystsPool[aIdx % analystsPool.Count];
-                    aIdx++;
-
-                    var dev = devsPool[dIdx % devsPool.Count];
-                    dIdx++;
-
-                    var creator = managersPool[rand.Next(managersPool.Count)];
-                    var updater = users[rand.Next(users.Count)];
-
-                    string pType = typeOptions[rand.Next(typeOptions.Length)];
-                    string extComp = pType == "Dış Firma" ? extCompanies[rand.Next(extCompanies.Length)] : "";
-                    decimal extCost = pType == "Dış Firma" ? (decimal)rand.Next(30, 250) : 0m;
-
-                    var proj = new Project
-                    {
-                        PergelNo = pergelCounter,
-                        ProjectName = item.Name,
-                        Summary = item.Name,
-                        ProjectStatus = item.Status,
-                        ProjectType = pType,
-                        ExternalCompanyName = extComp,
-                        ExternalCost = extCost,
-                        Team = item.Team,
-                        Year = 2026,
-                        Quarter = 2,
-                        Gmy = gmyOptions[rand.Next(gmyOptions.Length)],
-                        BusinessUnit = buOptions[rand.Next(buOptions.Length)],
-                        Stakeholders = stakeholdersList[rand.Next(stakeholdersList.Length)],
-                        Description = $"{item.Name} projesi Q2 çeyreklik canlı geçiş çalışması.",
-                        AssignedAnalystNames = analyst.FullName,
-                        AssignedDeveloperNames = dev.FullName,
-                        AssignedUserNames = $"{analyst.FullName} | {dev.FullName}",
-                        AssignedUserIds = $"{analyst.Id},{dev.Id}",
-                        TotalManDayBudget = item.Budget,
-                        ActualManDays = item.Actual,
-                        CreatedByUserName = creator.FullName,
-                        CreatedAt = new DateTime(2026, 4, rand.Next(2, 10), 9, 0, 0),
-                        UpdatedByUserName = updater.FullName,
-                        UpdatedAt = new DateTime(2026, 5, rand.Next(10, 25), 11, 20, 0),
-                        CompletedByUserName = item.Status == "Tamamlandı" ? dev.FullName : null,
-                        CompletedAt = item.Status == "Tamamlandı" ? new DateTime(2026, 6, rand.Next(20, 30), 16, 45, 0) : null
-                    };
-
-                    context.Projects.Add(proj);
-                    context.SaveChanges();
-
-                    // Seed monthly costs (Months 4, 5, 6)
-                    decimal m4_a = Math.Round(item.Budget * 0.15m, 1);
-                    decimal m5_a = Math.Round(item.Budget * 0.15m, 1);
-                    decimal m6_a = Math.Round(item.Budget * 0.15m, 1);
-
-                    decimal m4_d = Math.Round(item.Budget * 0.18m, 1);
-                    decimal m5_d = Math.Round(item.Budget * 0.18m, 1);
-                    decimal m6_d = Math.Round(item.Budget * 0.19m, 1);
-
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = analyst.Id, Month = 4, ManDays = m4_a });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = analyst.Id, Month = 5, ManDays = m5_a });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = analyst.Id, Month = 6, ManDays = m6_a });
-
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = dev.Id, Month = 4, ManDays = m4_d });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = dev.Id, Month = 5, ManDays = m5_d });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = dev.Id, Month = 6, ManDays = m6_d });
-
-                    if (item.Status == "Tamamlandı" && item.Actual > 0m)
-                    {
-                        decimal actAnalyst = Math.Round(item.Actual * 0.45m, 1);
-                        decimal actDev = item.Actual - actAnalyst;
-
-                        context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = proj.Id, UserId = analyst.Id, AllocatedManDay = m4_a + m5_a + m6_a, ActualManDay = actAnalyst });
-                        context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = proj.Id, UserId = dev.Id, AllocatedManDay = m4_d + m5_d + m6_d, ActualManDay = actDev });
-                    }
-                    context.SaveChanges();
-                }
-            }
-
-            // 3. SEED Q4 (Ekim - Aralık: Future quarter, Statuses: Planlandı)
-            if (context.Projects.Count(p => p.Quarter == 4) < 10)
-            {
-                var q4MockData = new (string Name, decimal Budget, string Team)[]
-                {
-                    ("Q4 Erken Uyarı Sistemleri (EUS) Risk Takip Engine", 60m, "Takip"),
-                    ("Q4 Bireysel Kredi Tahsis Otomasyonu", 75m, "Tahsis"),
-                    ("Q4 Gayrimenkul Ekspertiz ve Teminat Otomasyonu", 50m, "Teminat"),
-                    ("Q4 BDDK Takip Oranları Raporlama Servisi", 40m, "Takip"),
-                    ("Q4 Proje Finansmanı Tahsis ve Uygunluk Modülü", 90m, "Tahsis"),
-                    ("Q4 KGF (Kredi Garanti Fonu) Teminat Entegrasyonu", 65m, "Teminat"),
-                    ("Q4 Borç Yapılandırma Kampanya Yönetimi", 55m, "Takip"),
-                    ("Q4 Kredi Kartı Limit Tahsis Otomasyonu", 70m, "Tahsis"),
-                    ("Q4 Dövizli Teminat Kur Farkı Güncelleme Servisi", 45m, "Teminat"),
-                    ("Q4 Kredi Riski Gecikme Bildirim Motoru", 50m, "Takip")
-                };
-
-                int aIdx = 4, dIdx = 1;
-                foreach (var item in q4MockData)
-                {
-                    pergelCounter += rand.Next(1, 12);
-                    var analyst = analystsPool[aIdx % analystsPool.Count];
-                    aIdx++;
-
-                    var dev = devsPool[dIdx % devsPool.Count];
-                    dIdx++;
-
-                    var creator = managersPool[rand.Next(managersPool.Count)];
-
-                    string pType = typeOptions[rand.Next(typeOptions.Length)];
-                    string extComp = pType == "Dış Firma" ? extCompanies[rand.Next(extCompanies.Length)] : "";
-                    decimal extCost = pType == "Dış Firma" ? (decimal)rand.Next(30, 250) : 0m;
-
-                    var proj = new Project
-                    {
-                        PergelNo = pergelCounter,
-                        ProjectName = item.Name,
-                        Summary = item.Name,
-                        ProjectStatus = "Planlandı",
-                        ProjectType = pType,
-                        ExternalCompanyName = extComp,
-                        ExternalCost = extCost,
-                        Team = item.Team,
-                        Year = 2026,
-                        Quarter = 4,
-                        Gmy = gmyOptions[rand.Next(gmyOptions.Length)],
-                        BusinessUnit = buOptions[rand.Next(buOptions.Length)],
-                        Stakeholders = stakeholdersList[rand.Next(stakeholdersList.Length)],
-                        Description = $"{item.Name} projesi Q4 son çeyrek planlama ve analiz hedefi.",
-                        AssignedAnalystNames = analyst.FullName,
-                        AssignedDeveloperNames = dev.FullName,
-                        AssignedUserNames = $"{analyst.FullName} | {dev.FullName}",
-                        AssignedUserIds = $"{analyst.Id},{dev.Id}",
-                        TotalManDayBudget = item.Budget,
-                        ActualManDays = 0m,
-                        CreatedByUserName = creator.FullName,
+                        Quarter = (byte)qd.Q,
+                        Gmy = pDef.Gmy,
+                        BusinessUnit = pDef.Unit,
+                        Stakeholders = "Kredi Risk, BT Altyapı",
+                        AssignedAnalystNames = analystName,
+                        AssignedDeveloperNames = devNames,
+                        AssignedUserNames = allNames,
+                        PlannedReleaseDate = plannedDate,
+                        ActualReleaseDate = actualDate,
+                        TotalManDayBudget = pDef.Budget,
+                        ActualManDays = pDef.Actual,
+                        CreatedByUserName = "Sistem",
                         CreatedAt = DateTime.Now
                     };
 
-                    context.Projects.Add(proj);
+                    context.Projects.Add(newProj);
                     context.SaveChanges();
 
-                    // Seed monthly costs (Months 10, 11, 12)
-                    decimal m10_a = Math.Round(item.Budget * 0.15m, 1);
-                    decimal m11_a = Math.Round(item.Budget * 0.15m, 1);
-                    decimal m12_a = Math.Round(item.Budget * 0.15m, 1);
+                    decimal m1Cost = pDef.Status == "Planlandı" ? 0m : Math.Round(pDef.Budget * 0.35m, 1);
+                    decimal m2Cost = pDef.Status == "Planlandı" ? 0m : Math.Round(pDef.Budget * 0.45m, 1);
+                    decimal m3Cost = pDef.Status == "Planlandı" ? 0m : Math.Round(pDef.Budget * 0.20m, 1);
 
-                    decimal m10_d = Math.Round(item.Budget * 0.18m, 1);
-                    decimal m11_d = Math.Round(item.Budget * 0.18m, 1);
-                    decimal m12_d = Math.Round(item.Budget * 0.19m, 1);
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = analystUser.Id, Month = (byte)qd.StartMonth, ManDays = Math.Round(m1Cost * 0.3m, 1) });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = analystUser.Id, Month = (byte)(qd.StartMonth + 1), ManDays = Math.Round(m2Cost * 0.3m, 1) });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = analystUser.Id, Month = (byte)(qd.StartMonth + 2), ManDays = Math.Round(m3Cost * 0.3m, 1) });
+                    context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = newProj.Id, UserId = analystUser.Id, AllocatedManDay = Math.Round(pDef.Budget * 0.3m, 1), ActualManDay = Math.Round(pDef.Actual * 0.3m, 1) });
 
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = analyst.Id, Month = 10, ManDays = m10_a });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = analyst.Id, Month = 11, ManDays = m11_a });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = analyst.Id, Month = 12, ManDays = m12_a });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser1.Id, Month = (byte)qd.StartMonth, ManDays = Math.Round(m1Cost * 0.35m, 1) });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser1.Id, Month = (byte)(qd.StartMonth + 1), ManDays = Math.Round(m2Cost * 0.35m, 1) });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser1.Id, Month = (byte)(qd.StartMonth + 2), ManDays = Math.Round(m3Cost * 0.35m, 1) });
+                    context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = newProj.Id, UserId = devUser1.Id, AllocatedManDay = Math.Round(pDef.Budget * 0.35m, 1), ActualManDay = Math.Round(pDef.Actual * 0.35m, 1) });
 
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = dev.Id, Month = 10, ManDays = m10_d });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = dev.Id, Month = 11, ManDays = m11_d });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = proj.Id, UserId = dev.Id, Month = 12, ManDays = m12_d });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser2.Id, Month = (byte)qd.StartMonth, ManDays = Math.Round(m1Cost * 0.35m, 1) });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser2.Id, Month = (byte)(qd.StartMonth + 1), ManDays = Math.Round(m2Cost * 0.35m, 1) });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser2.Id, Month = (byte)(qd.StartMonth + 2), ManDays = Math.Round(m3Cost * 0.35m, 1) });
+                    context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = newProj.Id, UserId = devUser2.Id, AllocatedManDay = Math.Round(pDef.Budget * 0.35m, 1), ActualManDay = Math.Round(pDef.Actual * 0.35m, 1) });
 
                     context.SaveChanges();
+                    projIndex++;
                 }
             }
+        }
+
+        public static void NormalizeAllProjectData(AppDbContext context)
+        {
+            // Kullanıcı tarafından girilen proje verileri ve maliyetleri birebir korunur.
         }
     }
 }

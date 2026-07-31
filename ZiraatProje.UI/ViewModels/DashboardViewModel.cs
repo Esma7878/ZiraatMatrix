@@ -697,13 +697,13 @@ namespace ZiraatProje.UI.ViewModels
                     WeeklyShiftCount = activeDutyCount;
                 }
 
-                // Detect all shift-leave conflicts for active releases and custom shifts
+                // Detect active shift-leave conflicts for upcoming/active releases and custom shifts
                 var conflictList = new List<ShiftConflictNotificationModel>();
-                var activeLeavesForScan = leaves.Where(l => (string.IsNullOrEmpty(l.Status) || string.Equals(l.Status, "Approved", StringComparison.OrdinalIgnoreCase) || string.Equals(l.Status, "Onaylandı", StringComparison.OrdinalIgnoreCase)) && !string.Equals(l.Status, "Rejected", StringComparison.OrdinalIgnoreCase) && !string.Equals(l.Status, "Reddedildi", StringComparison.OrdinalIgnoreCase)).ToList();
+                var activeLeavesForScan = leaves.Where(l => l.EndDate.Date >= today && (string.IsNullOrEmpty(l.Status) || string.Equals(l.Status, "Approved", StringComparison.OrdinalIgnoreCase) || string.Equals(l.Status, "Onaylandı", StringComparison.OrdinalIgnoreCase)) && !string.Equals(l.Status, "Rejected", StringComparison.OrdinalIgnoreCase) && !string.Equals(l.Status, "Reddedildi", StringComparison.OrdinalIgnoreCase)).ToList();
 
                 foreach (var m in monthlyReleasesAll)
                 {
-                    if (string.IsNullOrWhiteSpace(m.AssignedUsers)) continue;
+                    if (m.IsFinished || string.IsNullOrWhiteSpace(m.AssignedUsers)) continue;
 
                     bool isWeekly = (!string.IsNullOrWhiteSpace(m.MonthName) && m.MonthName.Contains("Haftalık", StringComparison.OrdinalIgnoreCase));
                     DateTime mStart = m.ReleaseDate.Date;
@@ -714,6 +714,8 @@ namespace ZiraatProje.UI.ViewModels
                         mStart = m.ReleaseDate.Date.AddDays(-mDiff);
                         mEnd = mStart.AddDays(6).Date;
                     }
+
+                    if (mEnd < today) continue; // Ignore past shifts
 
                     var assignedNames = m.AssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
                                                        .Select(n => n.Contains(':') ? n.Substring(n.IndexOf(':') + 1).Trim() : n.Trim());
@@ -741,7 +743,7 @@ namespace ZiraatProje.UI.ViewModels
 
                 foreach (var c in customShifts)
                 {
-                    if (string.IsNullOrWhiteSpace(c.AssignedUsers)) continue;
+                    if (c.IsFinished || string.IsNullOrWhiteSpace(c.AssignedUsers)) continue;
 
                     bool isWeekly = (!string.IsNullOrWhiteSpace(c.Topic) && c.Topic.Contains("Haftalık", StringComparison.OrdinalIgnoreCase)) ||
                                     (!string.IsNullOrWhiteSpace(c.Description) && c.Description.Contains("Haftalık", StringComparison.OrdinalIgnoreCase));
@@ -753,6 +755,8 @@ namespace ZiraatProje.UI.ViewModels
                         cStart = c.ShiftDate.Date.AddDays(-cDiff);
                         cEnd = cStart.AddDays(6).Date;
                     }
+
+                    if (cEnd < today) continue; // Ignore past shifts
 
                     var assignedNames = c.AssignedUsers.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
                                                        .Select(n => n.Contains(':') ? n.Substring(n.IndexOf(':') + 1).Trim() : n.Trim());

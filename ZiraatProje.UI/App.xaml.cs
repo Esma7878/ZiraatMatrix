@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Threading;
+using ZiraatProje.Business;
 
 namespace ZiraatProje.UI
 {
@@ -9,6 +11,19 @@ namespace ZiraatProje.UI
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            
+            // Clean synthetic data ONCE for the user
+            string flagFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wiped_synthetic_costs.txt");
+            if (!File.Exists(flagFile))
+            {
+                try
+                {
+                    var services = new BusinessServices();
+                    services.ClearAllSyntheticCosts();
+                    File.WriteAllText(flagFile, "Wiped on " + DateTime.Now.ToString());
+                }
+                catch { }
+            }
 
             DispatcherUnhandledException += App_DispatcherUnhandledException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;

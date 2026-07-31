@@ -469,10 +469,10 @@
                 </StackPanel>
             </Border>
 
-            <!-- Row 2: MAIN VIEW CONTENT CANVAS (WITH SMOOTH MOUSE WHEEL SCROLLING) -->
-            <ScrollViewer Grid.Row="2" Background="#F0EDE6" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+            <!-- Row 2: MAIN VIEW CONTENT CANVAS (BOUNDED HEIGHT FOR VIRTUALIZATION) -->
+            <Grid Grid.Row="2" Background="#F0EDE6">
                 <ContentControl Content="{Binding CurrentViewModel}" Margin="0"/>
-            </ScrollViewer>
+            </Grid>
         </Grid>
 
         <!-- 2. HIGH-FASHION LOGIN INPUT OVERLAY -->

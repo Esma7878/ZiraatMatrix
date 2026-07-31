@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using ZiraatProje.Business;
 using ZiraatProje.DataAccess;
@@ -41,16 +42,33 @@ namespace ZiraatProje.UI.ViewModels
         public User User { get; set; } = null!;
         public Action? OnChangedAction { get; set; }
 
+        public string DisplayNameWithTitle => User != null 
+            ? (string.IsNullOrWhiteSpace(User.Title) ? User.FullName : $"{User.FullName} ({User.Title})") 
+            : string.Empty;
+
+        public int MaxMonth1Days { get; set; } = 31;
+        public int MaxMonth2Days { get; set; } = 31;
+        public int MaxMonth3Days { get; set; } = 31;
+
+        public string Month1Header { get; set; } = "1. Ay";
+        public string Month2Header { get; set; } = "2. Ay";
+        public string Month3Header { get; set; } = "3. Ay";
+
         private decimal _month1ManDays;
         public decimal Month1ManDays
         {
             get => _month1ManDays;
             set
             {
-                _month1ManDays = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(TotalManDays));
-                OnChangedAction?.Invoke();
+                if (value < 0m) value = 0m;
+
+                if (_month1ManDays != value)
+                {
+                    _month1ManDays = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(TotalManDays));
+                    OnChangedAction?.Invoke();
+                }
             }
         }
 
@@ -60,10 +78,15 @@ namespace ZiraatProje.UI.ViewModels
             get => _month2ManDays;
             set
             {
-                _month2ManDays = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(TotalManDays));
-                OnChangedAction?.Invoke();
+                if (value < 0m) value = 0m;
+
+                if (_month2ManDays != value)
+                {
+                    _month2ManDays = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(TotalManDays));
+                    OnChangedAction?.Invoke();
+                }
             }
         }
 
@@ -73,10 +96,15 @@ namespace ZiraatProje.UI.ViewModels
             get => _month3ManDays;
             set
             {
-                _month3ManDays = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(TotalManDays));
-                OnChangedAction?.Invoke();
+                if (value < 0m) value = 0m;
+
+                if (_month3ManDays != value)
+                {
+                    _month3ManDays = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(TotalManDays));
+                    OnChangedAction?.Invoke();
+                }
             }
         }
 
@@ -86,6 +114,7 @@ namespace ZiraatProje.UI.ViewModels
             get => _actualManDays;
             set
             {
+                if (value < 0m) value = 0m;
                 _actualManDays = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(OverrunDays));
@@ -203,6 +232,101 @@ namespace ZiraatProje.UI.ViewModels
                 OnPropertyChanged(nameof(ReadVisibility));
             }
         }
+        public string ProjectStatus
+        {
+            get => Project?.ProjectStatus ?? "Planlandı";
+            set
+            {
+                if (Project != null && Project.ProjectStatus != value)
+                {
+                    Project.ProjectStatus = value;
+                    if (!string.Equals(value, "Tamamlandı", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _overrideAnalystActual = 0m;
+                        _overrideDeveloperActual = 0m;
+                        _overrideTotalActual = 0m;
+                        Project.ActualManDays = 0m;
+                        Project.ActualReleaseDate = null;
+                        if (UserBreakdownList != null)
+                        {
+                            foreach (var r in UserBreakdownList)
+                            {
+                                r.ActualManDaysShare = 0m;
+                                r.IsCompletedProject = false;
+                            }
+                        }
+                        OnPropertyChanged(nameof(ActualReleaseDate));
+                    }
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsCompleted));
+                    OnPropertyChanged(nameof(ActualManDays));
+                    OnPropertyChanged(nameof(AnalystActualManDays));
+                    OnPropertyChanged(nameof(DeveloperActualManDays));
+                    OnPropertyChanged(nameof(BudgetStatusBadge));
+                    OnPropertyChanged(nameof(BudgetStatusColor));
+                    OnPropertyChanged(nameof(BudgetStatusBg));
+                    OnPropertyChanged(nameof(IsAnyBudgetExceeded));
+                    OnPropertyChanged(nameof(BudgetExcessDays));
+                    OnPropertyChanged(nameof(IsCostOverrunWarningVisible));
+                    OnPropertyChanged(nameof(CostWarningMessage));
+                }
+            }
+        }
+
+        public DateTime? PlannedReleaseDate
+        {
+            get => Project?.PlannedReleaseDate;
+            set
+            {
+                if (Project != null && Project.PlannedReleaseDate != value)
+                {
+                    Project.PlannedReleaseDate = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ReleaseDelayDays));
+                    OnPropertyChanged(nameof(HasReleaseDelay));
+                    OnPropertyChanged(nameof(ReleaseDelayMessage));
+                    OnPropertyChanged(nameof(ReleaseDelayBannerText));
+                }
+            }
+        }
+
+        public DateTime? ActualReleaseDate
+        {
+            get => (Project != null && !string.Equals(Project.ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase)) ? null : Project?.ActualReleaseDate;
+            set
+            {
+                if (Project != null && Project.ActualReleaseDate != value)
+                {
+                    Project.ActualReleaseDate = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ReleaseDelayDays));
+                    OnPropertyChanged(nameof(HasReleaseDelay));
+                    OnPropertyChanged(nameof(ReleaseDelayMessage));
+                    OnPropertyChanged(nameof(ReleaseDelayBannerText));
+                }
+            }
+        }
+
+        public int ReleaseDelayDays
+        {
+            get
+            {
+                if (PlannedReleaseDate.HasValue && ActualReleaseDate.HasValue && ActualReleaseDate.Value > PlannedReleaseDate.Value)
+                {
+                    return (int)(ActualReleaseDate.Value - PlannedReleaseDate.Value).TotalDays;
+                }
+                return 0;
+            }
+        }
+
+        public bool HasReleaseDelay => ReleaseDelayDays > 0;
+
+        public string ReleaseDelayMessage => HasReleaseDelay ? $"⚠️ {ReleaseDelayDays} gün gecikme var" : string.Empty;
+
+        public string ReleaseDelayBannerText => HasReleaseDelay 
+            ? $"⚠️ SÜRÜM GEÇİŞİ GECİKTİ: Planlanan sürüm tarihinden {ReleaseDelayDays} gün sonra geçiş yapılmıştır! (Planlanan: {PlannedReleaseDate:dd.MM.yyyy}, Geçiş: {ActualReleaseDate:dd.MM.yyyy})" 
+            : string.Empty;
+
         public bool IsReadOnly => !_isEditing;
         public Visibility EditVisibility => _isEditing ? Visibility.Visible : Visibility.Collapsed;
         public Visibility ReadVisibility => !_isEditing ? Visibility.Visible : Visibility.Collapsed;
@@ -249,105 +373,418 @@ namespace ZiraatProje.UI.ViewModels
             }
         }
 
-        public decimal TotalInternalManDays => Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
+        private decimal? _overrideTotalCost;
+        public decimal TotalInternalManDays
+        {
+            get
+            {
+                decimal monthSum = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
+                if (monthSum > 0m) return monthSum;
+                if (_overrideTotalCost.HasValue) return _overrideTotalCost.Value;
+                if (_overrideAnalystPlanned.HasValue || _overrideDeveloperPlanned.HasValue)
+                {
+                    return AnalystPlannedManDays + DeveloperPlannedManDays;
+                }
+                return UserBreakdownList?.Sum(u => u.TotalManDays) ?? 0m;
+            }
+            set
+            {
+                _overrideTotalCost = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(AllocatedPlannedCostSum));
+                OnPropertyChanged(nameof(IsCostMismatched));
+                OnPropertyChanged(nameof(CostMismatchWarningMessage));
+                OnPropertyChanged(nameof(EffectiveBudget));
+                OnPropertyChanged(nameof(IsCostOverrunWarningVisible));
+                OnPropertyChanged(nameof(CostWarningMessage));
+                OnPropertyChanged(nameof(BudgetStatusBadge));
+            }
+        }
+
+        public decimal AllocatedPlannedCostSum => AnalystPlannedManDays + DeveloperPlannedManDays;
+
+        public bool IsCostMismatched
+        {
+            get
+            {
+                decimal target = _overrideTotalCost.HasValue ? _overrideTotalCost.Value : TotalInternalManDays;
+                decimal allocated = AllocatedPlannedCostSum;
+                return target > 0m && allocated > 0m && Math.Abs(target - allocated) > 0.5m;
+            }
+        }
+
+        public string CostMismatchWarningMessage
+        {
+            get
+            {
+                if (IsCostMismatched)
+                {
+                    decimal target = _overrideTotalCost.HasValue ? _overrideTotalCost.Value : TotalInternalManDays;
+                    decimal allocated = AllocatedPlannedCostSum;
+                    decimal diff = target - allocated;
+                    if (diff > 0)
+                        return $"⚠️ Eksik Maliyet Girişi! (Hedef Toplam: {target:N0} Gün, Dağıtılan: {allocated:N0} Gün, Kalan Dağıtılacak: {diff:N0} Gün)";
+                    else
+                        return $"⚠️ Fazla Maliyet Girişi! (Hedef Toplam: {target:N0} Gün, Dağıtılan: {allocated:N0} Gün, Fazlalık: {Math.Abs(diff):N0} Gün)";
+                }
+                return string.Empty;
+            }
+        }
 
         public List<UserCostBreakdownRow> UserBreakdownList { get; set; } = new List<UserCostBreakdownRow>();
+
+        public ObservableCollection<SelectableUserItem> AnalystUserItems { get; set; } = new ObservableCollection<SelectableUserItem>();
+        public ObservableCollection<SelectableUserItem> DeveloperUserItems { get; set; } = new ObservableCollection<SelectableUserItem>();
+        public ObservableCollection<SelectableStakeholderItem> StakeholderItems { get; set; } = new ObservableCollection<SelectableStakeholderItem>();
+
+        public void UpdateStakeholdersFromItems()
+        {
+            var selected = StakeholderItems.Where(s => s.IsSelected).Select(s => s.Name).ToList();
+            if (selected.Any())
+            {
+                Project.Stakeholders = string.Join(", ", selected);
+            }
+            else
+            {
+                Project.Stakeholders = string.Empty;
+            }
+            OnPropertyChanged(nameof(Project));
+        }
+
+
+
+        public void UpdateAssignedAnalystNamesFromItems()
+        {
+            var selected = AnalystUserItems.Where(i => i.IsSelected).Select(i => i.User.FullName).ToList();
+            if (AnalystUserItems.Any() && selected.Count == AnalystUserItems.Count)
+            {
+                Project.AssignedAnalystNames = "Herkes";
+            }
+            else if (selected.Any())
+            {
+                Project.AssignedAnalystNames = string.Join(", ", selected);
+            }
+            else if (string.IsNullOrWhiteSpace(Project?.AssignedAnalystNames))
+            {
+                if (Project != null) Project.AssignedAnalystNames = "Seçilmedi";
+            }
+            OnPropertyChanged(nameof(AssignedAnalystNames));
+            OnPropertyChanged(nameof(FormattedAnalystNames));
+        }
+
+        public void UpdateAssignedDeveloperNamesFromItems()
+        {
+            var selected = DeveloperUserItems.Where(i => i.IsSelected).Select(i => i.User.FullName).ToList();
+            if (DeveloperUserItems.Any() && selected.Count == DeveloperUserItems.Count)
+            {
+                Project.AssignedDeveloperNames = "Herkes";
+            }
+            else if (selected.Any())
+            {
+                Project.AssignedDeveloperNames = string.Join(", ", selected);
+            }
+            else if (string.IsNullOrWhiteSpace(Project?.AssignedDeveloperNames))
+            {
+                if (Project != null) Project.AssignedDeveloperNames = "Seçilmedi";
+            }
+            OnPropertyChanged(nameof(AssignedDeveloperNames));
+            OnPropertyChanged(nameof(FormattedDeveloperNames));
+        }
 
         public string FormattedAnalystNames => ProjectsViewModel.FormatNamesWithAbbreviatedSurname(Project?.AssignedAnalystNames);
         public string FormattedDeveloperNames => ProjectsViewModel.FormatNamesWithAbbreviatedSurname(Project?.AssignedDeveloperNames);
 
+        public string DisplayAnalystSummary
+        {
+            get
+            {
+                var names = FormattedAnalystNames;
+                if (string.IsNullOrWhiteSpace(names) || names == "-")
+                {
+                    names = Project?.AssignedAnalystNames;
+                }
+                return string.IsNullOrWhiteSpace(names) || names == "-" ? "Seçilmedi" : names;
+            }
+        }
+
+        public string DisplayDeveloperSummary
+        {
+            get
+            {
+                var names = FormattedDeveloperNames;
+                if (string.IsNullOrWhiteSpace(names) || names == "-")
+                {
+                    names = Project?.AssignedDeveloperNames;
+                }
+                return string.IsNullOrWhiteSpace(names) || names == "-" ? "Seçilmedi" : names;
+            }
+        }
+
+        public void NotifyAllPropertiesChanged()
+        {
+            OnPropertyChanged(nameof(Project));
+            OnPropertyChanged(nameof(Month1ManDaysTotal));
+            OnPropertyChanged(nameof(Month2ManDaysTotal));
+            OnPropertyChanged(nameof(Month3ManDaysTotal));
+            OnPropertyChanged(nameof(TotalInternalManDays));
+            OnPropertyChanged(nameof(AnalystPlannedManDays));
+            OnPropertyChanged(nameof(DeveloperPlannedManDays));
+            OnPropertyChanged(nameof(AnalystActualManDays));
+            OnPropertyChanged(nameof(DeveloperActualManDays));
+            OnPropertyChanged(nameof(BudgetStatusBadge));
+            OnPropertyChanged(nameof(BudgetStatusColor));
+            OnPropertyChanged(nameof(BudgetStatusBg));
+            OnPropertyChanged(nameof(FormattedAnalystNames));
+            OnPropertyChanged(nameof(FormattedDeveloperNames));
+            OnPropertyChanged(nameof(DisplayAnalystSummary));
+            OnPropertyChanged(nameof(DisplayDeveloperSummary));
+            OnPropertyChanged(nameof(UserBreakdownList));
+        }
+
+        public string AssignedAnalystNames
+        {
+            get => Project?.AssignedAnalystNames ?? string.Empty;
+            set
+            {
+                if (Project != null) Project.AssignedAnalystNames = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(FormattedAnalystNames));
+            }
+        }
+
+        public string AssignedDeveloperNames
+        {
+            get => Project?.AssignedDeveloperNames ?? string.Empty;
+            set
+            {
+                if (Project != null) Project.AssignedDeveloperNames = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(FormattedDeveloperNames));
+                OnPropertyChanged(nameof(AnalystPlannedManDays));
+                OnPropertyChanged(nameof(DeveloperPlannedManDays));
+            }
+        }
+
         private decimal? _overrideAnalystPlanned;
         public decimal AnalystPlannedManDays
         {
-            get => _overrideAnalystPlanned ?? (UserBreakdownList?.Where(u => string.Equals(u.Role, "Analist", StringComparison.OrdinalIgnoreCase)).Sum(u => u.TotalManDays) ?? 0m);
+            get
+            {
+                if (_overrideAnalystPlanned.HasValue) return _overrideAnalystPlanned.Value;
+
+                if (UserBreakdownList != null && UserBreakdownList.Any(u => string.Equals(u.Role, "Analist", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return UserBreakdownList.Where(u => string.Equals(u.Role, "Analist", StringComparison.OrdinalIgnoreCase)).Sum(u => u.TotalManDays);
+                }
+
+                return 0m;
+            }
             set
             {
                 _overrideAnalystPlanned = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(DeveloperPlannedManDays));
                 OnPropertyChanged(nameof(TotalInternalManDays));
+                OnPropertyChanged(nameof(AllocatedPlannedCostSum));
+                OnPropertyChanged(nameof(IsCostMismatched));
+                OnPropertyChanged(nameof(CostMismatchWarningMessage));
+                OnPropertyChanged(nameof(EffectiveBudget));
+                OnPropertyChanged(nameof(IsCostOverrunWarningVisible));
+                OnPropertyChanged(nameof(CostWarningMessage));
+                OnPropertyChanged(nameof(MaxActualOrPlannedCost));
+                OnPropertyChanged(nameof(IsAnyBudgetExceeded));
+                OnPropertyChanged(nameof(BudgetExcessDays));
+                OnPropertyChanged(nameof(BudgetStatusBadge));
+                OnPropertyChanged(nameof(BudgetStatusColor));
+                OnPropertyChanged(nameof(BudgetStatusBg));
             }
         }
 
         private decimal? _overrideDeveloperPlanned;
         public decimal DeveloperPlannedManDays
         {
-            get => _overrideDeveloperPlanned ?? (UserBreakdownList?.Where(u => string.Equals(u.Role, "Yazılımcı", StringComparison.OrdinalIgnoreCase)).Sum(u => u.TotalManDays) ?? 0m);
+            get
+            {
+                if (_overrideDeveloperPlanned.HasValue) return _overrideDeveloperPlanned.Value;
+
+                if (UserBreakdownList != null && UserBreakdownList.Any(u => string.Equals(u.Role, "Yazılımcı", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Developer", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Mühendis", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return UserBreakdownList.Where(u => string.Equals(u.Role, "Yazılımcı", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Developer", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Mühendis", StringComparison.OrdinalIgnoreCase)).Sum(u => u.TotalManDays);
+                }
+
+                return 0m;
+            }
             set
             {
                 _overrideDeveloperPlanned = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(AnalystPlannedManDays));
                 OnPropertyChanged(nameof(TotalInternalManDays));
+                OnPropertyChanged(nameof(AllocatedPlannedCostSum));
+                OnPropertyChanged(nameof(IsCostMismatched));
+                OnPropertyChanged(nameof(CostMismatchWarningMessage));
+                OnPropertyChanged(nameof(EffectiveBudget));
+                OnPropertyChanged(nameof(IsCostOverrunWarningVisible));
+                OnPropertyChanged(nameof(CostWarningMessage));
+                OnPropertyChanged(nameof(MaxActualOrPlannedCost));
+                OnPropertyChanged(nameof(IsAnyBudgetExceeded));
+                OnPropertyChanged(nameof(BudgetExcessDays));
+                OnPropertyChanged(nameof(BudgetStatusBadge));
+                OnPropertyChanged(nameof(BudgetStatusColor));
+                OnPropertyChanged(nameof(BudgetStatusBg));
             }
         }
 
         private decimal? _overrideAnalystActual;
         public decimal AnalystActualManDays
         {
-            get => _overrideAnalystActual ?? (UserBreakdownList?.Where(u => string.Equals(u.Role, "Analist", StringComparison.OrdinalIgnoreCase)).Sum(u => u.ActualManDaysShare) ?? 0m);
+            get
+            {
+                if (_overrideAnalystActual.HasValue) return _overrideAnalystActual.Value;
+
+                if (UserBreakdownList != null && UserBreakdownList.Any(u => string.Equals(u.Role, "Analist", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return UserBreakdownList.Where(u => string.Equals(u.Role, "Analist", StringComparison.OrdinalIgnoreCase)).Sum(u => u.ActualManDaysShare);
+                }
+
+                return 0m;
+            }
             set
             {
                 _overrideAnalystActual = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(DeveloperActualManDays));
                 OnPropertyChanged(nameof(ActualManDays));
+                OnPropertyChanged(nameof(MaxActualOrPlannedCost));
+                OnPropertyChanged(nameof(IsAnyBudgetExceeded));
+                OnPropertyChanged(nameof(BudgetExcessDays));
                 OnPropertyChanged(nameof(BudgetStatusBadge));
+                OnPropertyChanged(nameof(BudgetStatusColor));
+                OnPropertyChanged(nameof(BudgetStatusBg));
+                OnPropertyChanged(nameof(OverrunSummaryText));
             }
         }
 
         private decimal? _overrideDeveloperActual;
         public decimal DeveloperActualManDays
         {
-            get => _overrideDeveloperActual ?? (UserBreakdownList?.Where(u => string.Equals(u.Role, "Yazılımcı", StringComparison.OrdinalIgnoreCase)).Sum(u => u.ActualManDaysShare) ?? 0m);
+            get
+            {
+                if (_overrideDeveloperActual.HasValue) return _overrideDeveloperActual.Value;
+
+                if (UserBreakdownList != null && UserBreakdownList.Any(u => string.Equals(u.Role, "Yazılımcı", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Developer", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Mühendis", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return UserBreakdownList.Where(u => string.Equals(u.Role, "Yazılımcı", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Developer", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Mühendis", StringComparison.OrdinalIgnoreCase)).Sum(u => u.ActualManDaysShare);
+                }
+
+                return 0m;
+            }
             set
             {
                 _overrideDeveloperActual = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(AnalystActualManDays));
                 OnPropertyChanged(nameof(ActualManDays));
+                OnPropertyChanged(nameof(MaxActualOrPlannedCost));
+                OnPropertyChanged(nameof(IsAnyBudgetExceeded));
+                OnPropertyChanged(nameof(BudgetExcessDays));
                 OnPropertyChanged(nameof(BudgetStatusBadge));
+                OnPropertyChanged(nameof(BudgetStatusColor));
+                OnPropertyChanged(nameof(BudgetStatusBg));
+                OnPropertyChanged(nameof(OverrunSummaryText));
             }
         }
 
+        public bool HasAnalystActualOverride => _overrideAnalystActual.HasValue;
+        public bool HasDeveloperActualOverride => _overrideDeveloperActual.HasValue;
+
+        private decimal? _overrideTotalActual;
         public decimal ActualManDays
         {
-            get => (_overrideAnalystActual.HasValue || _overrideDeveloperActual.HasValue) 
-                ? (_overrideAnalystActual ?? 0m) + (_overrideDeveloperActual ?? 0m) 
-                : (Project?.ActualManDays ?? 0m);
+            get
+            {
+                if (_overrideTotalActual.HasValue) return _overrideTotalActual.Value;
+                if (_overrideAnalystActual.HasValue || _overrideDeveloperActual.HasValue)
+                {
+                    return (_overrideAnalystActual ?? AnalystActualManDays) + (_overrideDeveloperActual ?? DeveloperActualManDays);
+                }
+                return Project?.ActualManDays ?? 0m;
+            }
             set
             {
+                _overrideTotalActual = value;
                 if (Project != null) Project.ActualManDays = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(AnalystActualManDays));
+                OnPropertyChanged(nameof(DeveloperActualManDays));
+                OnPropertyChanged(nameof(MaxActualOrPlannedCost));
+                OnPropertyChanged(nameof(IsAnyBudgetExceeded));
+                OnPropertyChanged(nameof(BudgetExcessDays));
                 OnPropertyChanged(nameof(BudgetStatusBadge));
+                OnPropertyChanged(nameof(BudgetStatusColor));
+                OnPropertyChanged(nameof(BudgetStatusBg));
+            }
+        }
+
+        public decimal TargetManDayBudget => Project?.TotalManDayBudget > 0 ? Project.TotalManDayBudget : TotalInternalManDays;
+
+        public decimal MaxActualOrPlannedCost => Math.Max(TotalInternalManDays, ActualManDays);
+
+        public bool IsAnyBudgetExceeded => EffectiveBudget > 0 && ActualManDays > EffectiveBudget;
+
+        public decimal BudgetExcessDays => IsAnyBudgetExceeded ? (ActualManDays - EffectiveBudget) : 0m;
+
+        public bool IsCostOverrunWarningVisible => IsAnyBudgetExceeded;
+
+        public string CostWarningMessage
+        {
+            get
+            {
+                if (IsCostOverrunWarningVisible)
+                {
+                    return $"⚠️ Gerçekleşen efor bütçeyi aştı! (Bütçe: {EffectiveBudget:N0} Gün, Harcanan Efor: {ActualManDays:N0} Gün, Aşım: +{BudgetExcessDays:N0} Gün)";
+                }
+                return string.Empty;
             }
         }
         public bool IsCompleted => string.Equals(Project?.ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase);
-        public decimal EffectiveBudget => Project?.TotalManDayBudget > 0 ? Project.TotalManDayBudget : TotalInternalManDays;
+        public decimal EffectiveBudget => TargetManDayBudget;
         public decimal VarianceDays => ActualManDays - EffectiveBudget;
 
-        public bool IsActualBudgetExceeded => IsCompleted && EffectiveBudget > 0 && ActualManDays > EffectiveBudget;
+        public bool IsActualBudgetExceeded => IsAnyBudgetExceeded;
         public bool IsActualBudgetWithin => IsCompleted && EffectiveBudget > 0 && ActualManDays <= EffectiveBudget;
 
         public string BudgetStatusBadge
         {
             get
             {
-                if (!IsCompleted)
+                if (IsAnyBudgetExceeded)
                 {
-                    return EffectiveBudget > 0 ? $"Bütçe: {EffectiveBudget:N0} Gün" : "-";
+                    return $"⚠️ Bütçe Aşıldı (+{BudgetExcessDays:N0} Gün)";
                 }
-                if (ActualManDays == 0m)
+
+                decimal monthSum = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
+                decimal roleSum = AnalystPlannedManDays + DeveloperPlannedManDays;
+
+                if (IsEditing && monthSum > 0 && roleSum > 0 && Math.Abs(monthSum - roleSum) > 0.01m)
                 {
-                    return "Efor Girilmedi";
+                    return $"⚠️ Dağılım Uyuşmazlığı ({monthSum:N0} / {roleSum:N0})";
                 }
-                if (ActualManDays > EffectiveBudget)
+
+                if (IsCompleted)
                 {
-                    decimal excess = ActualManDays - EffectiveBudget;
-                    return $"⚠️ Bütçe Aşıldı (+{excess:N0} Gün)";
+                    if (ActualManDays == 0m)
+                    {
+                        return "Efor Girilmedi";
+                    }
+                    if (ActualManDays < EffectiveBudget)
+                    {
+                        decimal savings = EffectiveBudget - ActualManDays;
+                        return $"✅ Bütçe Uygun (-{savings:N0} Gün)";
+                    }
+                    return "✅ Bütçe Tam Uygun";
                 }
-                if (ActualManDays < EffectiveBudget)
-                {
-                    decimal savings = EffectiveBudget - ActualManDays;
-                    return $"✅ Bütçe Uygun (-{savings:N0} Gün)";
-                }
-                return "✅ Bütçe Tam Uygun";
+                return EffectiveBudget > 0 ? $"Bütçe: {EffectiveBudget:N0} Gün" : "-";
             }
         }
 
@@ -355,10 +792,23 @@ namespace ZiraatProje.UI.ViewModels
         {
             get
             {
-                if (!IsCompleted) return "#475569";
-                if (ActualManDays == 0m) return "#d97706";
-                if (ActualManDays > EffectiveBudget) return "#991b1b";
-                return "#166534";
+                if (IsAnyBudgetExceeded)
+                {
+                    return "#dc2626";
+                }
+                decimal monthSum = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
+                decimal roleSum = AnalystPlannedManDays + DeveloperPlannedManDays;
+
+                if (IsEditing && monthSum > 0 && roleSum > 0 && Math.Abs(monthSum - roleSum) > 0.01m)
+                {
+                    return "#d97706";
+                }
+                if (IsCompleted)
+                {
+                    if (ActualManDays == 0m) return "#d97706";
+                    return "#166534";
+                }
+                return "#475569";
             }
         }
 
@@ -366,10 +816,23 @@ namespace ZiraatProje.UI.ViewModels
         {
             get
             {
-                if (!IsCompleted) return "#f1f5f9";
-                if (ActualManDays == 0m) return "#fef3c7";
-                if (ActualManDays > EffectiveBudget) return "#fee2e2";
-                return "#dcfce7";
+                if (IsAnyBudgetExceeded)
+                {
+                    return "#fee2e2";
+                }
+                decimal monthSum = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
+                decimal roleSum = AnalystPlannedManDays + DeveloperPlannedManDays;
+
+                if (IsEditing && monthSum > 0 && roleSum > 0 && Math.Abs(monthSum - roleSum) > 0.01m)
+                {
+                    return "#fef3c7";
+                }
+                if (IsCompleted)
+                {
+                    if (ActualManDays == 0m) return "#fef3c7";
+                    return "#dcfce7";
+                }
+                return "#f1f5f9";
             }
         }
 
@@ -501,6 +964,28 @@ namespace ZiraatProje.UI.ViewModels
             }
 
             return result.Any() ? string.Join(", ", result) : "-";
+        }
+
+        public static bool IsNameMatched(string fullName, IEnumerable<string> namesSet)
+        {
+            if (string.IsNullOrWhiteSpace(fullName) || namesSet == null) return false;
+            string abbreviated = FormatNamesWithAbbreviatedSurname(fullName);
+            foreach (var n in namesSet)
+            {
+                if (string.IsNullOrWhiteSpace(n)) continue;
+                if (string.Equals(n, "Herkes", StringComparison.OrdinalIgnoreCase)) return true;
+                if (string.Equals(fullName, n, StringComparison.OrdinalIgnoreCase)) return true;
+                if (string.Equals(abbreviated, n, StringComparison.OrdinalIgnoreCase)) return true;
+
+                var parts1 = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var parts2 = n.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts1.Length > 0 && parts2.Length > 0 && string.Equals(parts1[0], parts2[0], StringComparison.OrdinalIgnoreCase))
+                {
+                    if (parts1.Length == 1 || parts2.Length == 1) return true;
+                    if (parts1[1][0] == parts2[1][0]) return true;
+                }
+            }
+            return false;
         }
 
         private readonly BusinessServices _services = new BusinessServices();
@@ -750,12 +1235,40 @@ namespace ZiraatProje.UI.ViewModels
             set { _month3Header = value; OnPropertyChanged(); }
         }
 
+        public (int max1, int max2, int max3) GetQuarterMonthMaxDays()
+        {
+            int year = SelectedYear > 0 ? SelectedYear : DateTime.Today.Year;
+            int q = SelectedQuarter >= 1 && SelectedQuarter <= 4 ? SelectedQuarter : 3;
+            int m1 = (q - 1) * 3 + 1;
+            int m2 = (q - 1) * 3 + 2;
+            int m3 = (q - 1) * 3 + 3;
+            return (
+                DateTime.DaysInMonth(year, m1),
+                DateTime.DaysInMonth(year, m2),
+                DateTime.DaysInMonth(year, m3)
+            );
+        }
+
         private void UpdateQuarterMonthNames()
         {
             var currentTab = QuarterTabs.FirstOrDefault(q => q.Quarter == SelectedQuarter) ?? QuarterTabs[2];
             Month1Header = currentTab.Months[0];
             Month2Header = currentTab.Months[1];
             Month3Header = currentTab.Months[2];
+
+            var (max1, max2, max3) = GetQuarterMonthMaxDays();
+            if (PersonMonthlyCostRows != null)
+            {
+                foreach (var row in PersonMonthlyCostRows)
+                {
+                    row.MaxMonth1Days = max1;
+                    row.MaxMonth2Days = max2;
+                    row.MaxMonth3Days = max3;
+                    row.Month1Header = Month1Header;
+                    row.Month2Header = Month2Header;
+                    row.Month3Header = Month3Header;
+                }
+            }
         }
 
         // Project Display List
@@ -775,18 +1288,30 @@ namespace ZiraatProje.UI.ViewModels
                 if (_selectedProjectDisplay == value) return;
                 _selectedProjectDisplay = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(UserBreakdownList));
                 if (_selectedProjectDisplay != null)
                 {
                     SelectedProject = _selectedProjectDisplay.Project;
+                    if (!_selectedProjectDisplay.IsEditing)
+                    {
+                        IsDetailPanelVisible = true;
+                    }
+                    else
+                    {
+                        IsDetailPanelVisible = false;
+                    }
                     IsNewProjectMode = false;
-                    LoadSelectedProject();
+                    IsEditMode = false;
                 }
                 else
                 {
+                    IsDetailPanelVisible = false;
                     IsEditMode = false;
                 }
             }
         }
+
+        public List<UserCostBreakdownRow> UserBreakdownList => SelectedProjectDisplay?.UserBreakdownList ?? new List<UserCostBreakdownRow>();
 
         private Project? _selectedProject;
         public Project? SelectedProject
@@ -807,15 +1332,15 @@ namespace ZiraatProje.UI.ViewModels
         }
 
         // Form Options
-        public List<string> StatusList { get; } = new List<string> { "Planlandı", "Devam Ediyor", "Tamamlandı", "İptal" };
-        public List<string> TypeList { get; } = new List<string> { "Proje", "KG", "Paydaş Proje", "Dış Firma" };
+        public ObservableCollection<string> StatusList { get; } = new ObservableCollection<string> { "Planlandı", "Devam Ediyor", "Tamamlandı", "İptal" };
+        public ObservableCollection<string> TypeList { get; } = new ObservableCollection<string> { "Proje", "KG", "Paydaş Proje", "Dış Firma" };
         
-        public List<string> StatusOptions => StatusList;
-        public List<string> ProjectTypeOptions => TypeList;
-        public List<string> GmyOptions => GmyList;
-        public List<string> BusinessUnitOptions => BusinessUnitList;
+        public ObservableCollection<string> StatusOptions => StatusList;
+        public ObservableCollection<string> ProjectTypeOptions => TypeList;
+        public ObservableCollection<string> GmyOptions => GmyList;
+        public ObservableCollection<string> BusinessUnitOptions => BusinessUnitList;
 
-        public List<string> GmyList { get; } = new List<string>
+        public ObservableCollection<string> GmyList { get; } = new ObservableCollection<string>
         {
             "Kredi Politikaları ve Risk Tasfiye GMY",
             "Kredi Tahsis ve Yönetimi GMY",
@@ -824,7 +1349,7 @@ namespace ZiraatProje.UI.ViewModels
             "Genel Müdürlük"
         };
 
-        public List<string> BusinessUnitList { get; } = new List<string>
+        public ObservableCollection<string> BusinessUnitList { get; } = new ObservableCollection<string>
         {
             "Kredi Süreçleri Bölüm Başkanlığı",
             "Kurumsal ve Ticari Krediler Tahsis ve Yönetimi Bölüm Başkanlığı",
@@ -870,6 +1395,56 @@ namespace ZiraatProje.UI.ViewModels
             set { _summary = value; OnPropertyChanged(); }
         }
 
+        private DateTime? _plannedReleaseDate;
+        public DateTime? PlannedReleaseDate
+        {
+            get => _plannedReleaseDate;
+            set
+            {
+                _plannedReleaseDate = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ReleaseDelayDays));
+                OnPropertyChanged(nameof(HasReleaseDelay));
+                OnPropertyChanged(nameof(ReleaseDelayMessage));
+                OnPropertyChanged(nameof(ReleaseDelayBannerText));
+            }
+        }
+
+        private DateTime? _actualReleaseDate;
+        public DateTime? ActualReleaseDate
+        {
+            get => !string.Equals(ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase) ? null : _actualReleaseDate;
+            set
+            {
+                _actualReleaseDate = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ReleaseDelayDays));
+                OnPropertyChanged(nameof(HasReleaseDelay));
+                OnPropertyChanged(nameof(ReleaseDelayMessage));
+                OnPropertyChanged(nameof(ReleaseDelayBannerText));
+            }
+        }
+
+        public int ReleaseDelayDays
+        {
+            get
+            {
+                if (PlannedReleaseDate.HasValue && ActualReleaseDate.HasValue && ActualReleaseDate.Value > PlannedReleaseDate.Value)
+                {
+                    return (int)(ActualReleaseDate.Value - PlannedReleaseDate.Value).TotalDays;
+                }
+                return 0;
+            }
+        }
+
+        public bool HasReleaseDelay => ReleaseDelayDays > 0;
+
+        public string ReleaseDelayMessage => HasReleaseDelay ? $"⚠️ {ReleaseDelayDays} gün gecikme var" : string.Empty;
+
+        public string ReleaseDelayBannerText => HasReleaseDelay 
+            ? $"⚠️ SÜRÜM GEÇİŞİ GECİKTİ: Planlanan sürüm tarihinden {ReleaseDelayDays} gün sonra geçiş yapılmıştır! (Planlanan: {PlannedReleaseDate:dd.MM.yyyy}, Geçiş: {ActualReleaseDate:dd.MM.yyyy})" 
+            : string.Empty;
+
         private string _projectStatus = "Planlandı";
         public string ProjectStatus
         {
@@ -877,6 +1452,18 @@ namespace ZiraatProje.UI.ViewModels
             set
             {
                 _projectStatus = value;
+                if (!string.Equals(value, "Tamamlandı", StringComparison.OrdinalIgnoreCase))
+                {
+                    ActualManDays = 0m;
+                    ActualReleaseDate = null;
+                    if (PersonMonthlyCostRows != null)
+                    {
+                        foreach (var r in PersonMonthlyCostRows)
+                        {
+                            r.ActualManDays = 0m;
+                        }
+                    }
+                }
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsCompletedStatus));
                 OnPropertyChanged(nameof(ActualBudgetFeedbackMessage));
@@ -885,7 +1472,42 @@ namespace ZiraatProje.UI.ViewModels
             }
         }
 
-        public bool IsCompletedStatus => string.Equals(ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase);
+        public bool IsCompletedStatus => string.Equals(ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase) || string.Equals(ProjectStatus, "Bitti", StringComparison.OrdinalIgnoreCase);
+
+        public decimal FormAnalystPlannedTotal => PersonMonthlyCostRows?
+            .Where(r => (r.User?.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase))
+            .Sum(r => r.TotalManDays) ?? 0m;
+
+        public decimal FormDeveloperPlannedTotal => PersonMonthlyCostRows?
+            .Where(r => !(r.User?.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase))
+            .Sum(r => r.TotalManDays) ?? 0m;
+
+        public decimal FormAnalystActualTotal => PersonMonthlyCostRows?
+            .Where(r => (r.User?.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase))
+            .Sum(r => r.ActualManDays) ?? 0m;
+
+        public decimal FormDeveloperActualTotal => PersonMonthlyCostRows?
+            .Where(r => !(r.User?.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase))
+            .Sum(r => r.ActualManDays) ?? 0m;
+
+        public bool IsCostMismatched => TotalManDayBudget > 0m && TotalInternalManDays > 0m && Math.Abs(TotalInternalManDays - TotalManDayBudget) > 0.01m;
+
+        public string CostMismatchWarningMessage
+        {
+            get
+            {
+                if (!IsCostMismatched) return string.Empty;
+                decimal diff = Math.Abs(TotalInternalManDays - TotalManDayBudget);
+                if (TotalInternalManDays > TotalManDayBudget)
+                {
+                    return $"⚠️ BÜTÇE VE MALİYET UYUMSUZLUĞU: Girilen personel maliyetleri toplamı ({TotalInternalManDays:N0} Gün), tanımlanan proje bütçesini ({TotalManDayBudget:N0} Gün) {diff:N0} Gün AŞMAKTADIR! Lütfen bütçeyi veya personel maliyetlerini düzenleyiniz.";
+                }
+                else
+                {
+                    return $"⚠️ BÜTÇE VE MALİYET UYUMSUZLUĞU: Girilen personel maliyetleri toplamı ({TotalInternalManDays:N0} Gün), tanımlanan proje bütçesinden ({TotalManDayBudget:N0} Gün) {diff:N0} Gün EKSİKTİR! Lütfen bütçeyi veya personel maliyetlerini düzenleyiniz.";
+                }
+            }
+        }
 
         private decimal _actualManDays = 0m;
         public decimal ActualManDays
@@ -914,25 +1536,50 @@ namespace ZiraatProje.UI.ViewModels
                     return $"ℹ️ Proje tamamlandı olarak işaretlendi. Lütfen yukarıdaki tablodan çalışanların gerçekleşen eforlarını (gün sayısı) giriniz. Gerçekleşen toplam efor otomatik hesaplanacaktır. (Tanımlı Bütçe: {(budget > 0 ? budget.ToString("N0") : "Henüz Belirtilmedi")} Adam/Gün)";
                 }
 
+                decimal analystPlanned = FormAnalystPlannedTotal;
+                decimal devPlanned = FormDeveloperPlannedTotal;
+                decimal analystActual = FormAnalystActualTotal;
+                decimal devActual = FormDeveloperActualTotal;
+
+                decimal analystDiff = analystActual - analystPlanned;
+                decimal devDiff = devActual - devPlanned;
+
+                string analystPart = analystDiff > 0 
+                    ? $"• Analistler: +{analystDiff:N0} Gün Aşım (Plan: {analystPlanned:N0}, Gerçekleşen: {analystActual:N0})"
+                    : (analystDiff < 0 
+                        ? $"• Analistler: -{Math.Abs(analystDiff):N0} Gün Tasarruf (Plan: {analystPlanned:N0}, Gerçekleşen: {analystActual:N0})"
+                        : $"• Analistler: Tam Dengeli (Plan: {analystPlanned:N0}, Gerçekleşen: {analystActual:N0})");
+
+                string devPart = devDiff > 0 
+                    ? $"• Yazılımcılar: +{devDiff:N0} Gün Aşım (Plan: {devPlanned:N0}, Gerçekleşen: {devActual:N0})"
+                    : (devDiff < 0 
+                        ? $"• Yazılımcılar: -{Math.Abs(devDiff):N0} Gün Tasarruf (Plan: {devPlanned:N0}, Gerçekleşen: {devActual:N0})"
+                        : $"• Yazılımcılar: Tam Dengeli (Plan: {devPlanned:N0}, Gerçekleşen: {devActual:N0})");
+
+                string totalPart = string.Empty;
                 if (budget > 0m)
                 {
                     if (ActualManDays > budget)
                     {
                         decimal diff = ActualManDays - budget;
-                        return $"⚠️ BÜTÇE AŞILDI! Tanımlanan Bütçe: {budget:N0} Adam/Gün | Gerçekleşen Efor: {ActualManDays:N0} Adam/Gün. Projede {diff:N0} Gün BÜTÇE AŞIMINIZ VAR!";
+                        totalPart = $"• ⚠️ TOPLAM BÜTÇE AŞILDI (+{diff:N0} Gün Aşım | Bütçe: {budget:N0}, Gerçekleşen: {ActualManDays:N0})";
                     }
                     else if (ActualManDays < budget)
                     {
                         decimal diff = budget - ActualManDays;
-                        return $"✅ BÜTÇE AŞILMADI. Tanımlanan Bütçe: {budget:N0} Adam/Gün | Gerçekleşen Efor: {ActualManDays:N0} Adam/Gün. ({diff:N0} Gün bütçe tasarrufu sağlandı)";
+                        totalPart = $"• ✅ TOPLAM BÜTÇE KORUNDU (-{diff:N0} Gün Tasarruf | Bütçe: {budget:N0}, Gerçekleşen: {ActualManDays:N0})";
                     }
                     else
                     {
-                        return $"✅ BÜTÇE TAM UYGUN! Tanımlanan Bütçe: {budget:N0} Adam/Gün | Gerçekleşen Efor: {ActualManDays:N0} Adam/Gün.";
+                        totalPart = $"• ✅ TOPLAM BÜTÇE TAM UYGUN (Bütçe: {budget:N0}, Gerçekleşen: {ActualManDays:N0})";
                     }
                 }
+                else
+                {
+                    totalPart = $"• ℹ️ Toplam Gerçekleşen Efor: {ActualManDays:N0} Adam/Gün";
+                }
 
-                return $"ℹ️ Gerçekleşen Efor: {ActualManDays:N0} Adam/Gün.";
+                return $"📊 EFOR VE BÜTÇE GERÇEKLEŞME RAPORU:\n{analystPart}\n{devPart}\n{totalPart}";
             }
         }
 
@@ -1019,14 +1666,36 @@ namespace ZiraatProje.UI.ViewModels
         private string _displayAnalystSummary = "Seçilmedi";
         public string DisplayAnalystSummary
         {
-            get => _displayAnalystSummary;
+            get
+            {
+                if (string.IsNullOrWhiteSpace(_displayAnalystSummary) || _displayAnalystSummary == "Seçilmedi" || _displayAnalystSummary == "-")
+                {
+                    if (SelectedProject != null)
+                    {
+                        var names = FormatNamesWithAbbreviatedSurname(SelectedProject.AssignedAnalystNames);
+                        if (!string.IsNullOrWhiteSpace(names) && names != "-") return names;
+                    }
+                }
+                return string.IsNullOrWhiteSpace(_displayAnalystSummary) ? "Seçilmedi" : _displayAnalystSummary;
+            }
             set { _displayAnalystSummary = value; OnPropertyChanged(); }
         }
 
         private string _displayDeveloperSummary = "Seçilmedi";
         public string DisplayDeveloperSummary
         {
-            get => _displayDeveloperSummary;
+            get
+            {
+                if (string.IsNullOrWhiteSpace(_displayDeveloperSummary) || _displayDeveloperSummary == "Seçilmedi" || _displayDeveloperSummary == "-")
+                {
+                    if (SelectedProject != null)
+                    {
+                        var names = FormatNamesWithAbbreviatedSurname(SelectedProject.AssignedDeveloperNames);
+                        if (!string.IsNullOrWhiteSpace(names) && names != "-") return names;
+                    }
+                }
+                return string.IsNullOrWhiteSpace(_displayDeveloperSummary) ? "Seçilmedi" : _displayDeveloperSummary;
+            }
             set { _displayDeveloperSummary = value; OnPropertyChanged(); }
         }
 
@@ -1046,6 +1715,8 @@ namespace ZiraatProje.UI.ViewModels
             set { _personMonthlyCostRows = value; OnPropertyChanged(); }
         }
 
+        private bool _isManuallyEditedBudget = false;
+
         private decimal _totalManDayBudget;
         public decimal TotalManDayBudget
         {
@@ -1053,8 +1724,25 @@ namespace ZiraatProje.UI.ViewModels
             set
             {
                 _totalManDayBudget = value;
+                if (!_isLoadingProject)
+                {
+                    _isManuallyEditedBudget = (value > 0m);
+                }
                 OnPropertyChanged();
-                RecalculateTotals();
+                OnPropertyChanged(nameof(IsCostMismatched));
+                OnPropertyChanged(nameof(CostMismatchWarningMessage));
+                OnPropertyChanged(nameof(IsBudgetExceeded));
+                OnPropertyChanged(nameof(IsBudgetCritical));
+                OnPropertyChanged(nameof(HasBudgetWarning));
+                OnPropertyChanged(nameof(BudgetWarningMessage));
+                OnPropertyChanged(nameof(TotalProjectCostFormatted));
+                OnPropertyChanged(nameof(ActualBudgetFeedbackMessage));
+                OnPropertyChanged(nameof(ActualBudgetFeedbackColor));
+                OnPropertyChanged(nameof(ActualBudgetFeedbackBg));
+                OnPropertyChanged(nameof(IsSideCardBudgetExceeded));
+                OnPropertyChanged(nameof(SideCardBudgetFeedbackMessage));
+                OnPropertyChanged(nameof(SideCardVarianceText));
+                OnPropertyChanged(nameof(SideCardVarianceColor));
             }
         }
 
@@ -1195,6 +1883,99 @@ namespace ZiraatProje.UI.ViewModels
         public ICommand SaveRowEditCommand { get; }
         public ICommand CancelRowEditCommand { get; }
 
+        public ICommand AddProjectTypeCommand { get; }
+        public ICommand AddGmyCommand { get; }
+        public ICommand AddBusinessUnitCommand { get; }
+        public ICommand AddStakeholderCommand { get; }
+
+        public ICommand RemoveProjectTypeCommand { get; }
+        public ICommand RemoveGmyCommand { get; }
+        public ICommand RemoveBusinessUnitCommand { get; }
+
+        public static string ShowInputDialog(string title, string promptText, string defaultValue = "")
+        {
+            string input = string.Empty;
+            var win = new Window
+            {
+                Title = title,
+                Width = 420,
+                Height = 175,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                ResizeMode = ResizeMode.NoResize,
+                WindowStyle = WindowStyle.ToolWindow,
+                Background = System.Windows.Media.Brushes.White
+            };
+
+            var grid = new Grid { Margin = new Thickness(15) };
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            var lbl = new TextBlock
+            {
+                Text = promptText,
+                FontWeight = FontWeights.Bold,
+                FontSize = 11.5,
+                Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFrom("#1e293b")!,
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+            Grid.SetRow(lbl, 0);
+
+            var txt = new TextBox
+            {
+                Text = defaultValue,
+                Height = 28,
+                FontSize = 11,
+                Padding = new Thickness(4, 2, 4, 2),
+                Margin = new Thickness(0, 0, 0, 12)
+            };
+            Grid.SetRow(txt, 1);
+
+            var btnPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+
+            var btnOk = new Button
+            {
+                Content = "➕ Ekle ve Seç",
+                Width = 135,
+                Height = 28,
+                IsDefault = true,
+                FontWeight = FontWeights.Bold,
+                Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFrom("#16a34a")!,
+                Foreground = System.Windows.Media.Brushes.White,
+                Margin = new Thickness(0, 0, 8, 0)
+            };
+
+            var btnCancel = new Button
+            {
+                Content = "İptal",
+                Width = 65,
+                Height = 28,
+                IsCancel = true
+            };
+
+            btnOk.Click += (s, e) => { win.DialogResult = true; win.Close(); };
+            btnCancel.Click += (s, e) => { win.DialogResult = false; win.Close(); };
+
+            btnPanel.Children.Add(btnOk);
+            btnPanel.Children.Add(btnCancel);
+            Grid.SetRow(btnPanel, 2);
+
+            grid.Children.Add(lbl);
+            grid.Children.Add(txt);
+            grid.Children.Add(btnPanel);
+
+            win.Content = grid;
+            if (win.ShowDialog() == true)
+            {
+                input = txt.Text.Trim();
+            }
+            return input;
+        }
+
         public ProjectsViewModel() : this(false, "", "") { }
         public ProjectsViewModel(string loggedTeam) : this(false, "", loggedTeam) { }
 
@@ -1224,8 +2005,116 @@ namespace ZiraatProje.UI.ViewModels
             GetAIProjectAllocationsCommand = new RelayCommand(ExecuteGetAIProjectAllocations);
             ToggleAiProjectCardCommand = new RelayCommand(_ => { IsAiProjectCardExpanded = !IsAiProjectCardExpanded; });
 
+            AddProjectTypeCommand = new RelayCommand(_ =>
+            {
+                string val = ShowInputDialog("Yeni Proje Türü Ekleyin", "Eklenecek yeni proje türünün adını giriniz:");
+                if (!string.IsNullOrWhiteSpace(val))
+                {
+                    if (!TypeList.Contains(val)) TypeList.Add(val);
+                    ProjectType = val;
+                }
+            });
+
+            AddGmyCommand = new RelayCommand(_ =>
+            {
+                string val = ShowInputDialog("Yeni GMY Birimi Ekleyin", "Eklenecek yeni GMY biriminin adını giriniz:");
+                if (!string.IsNullOrWhiteSpace(val))
+                {
+                    if (!GmyList.Contains(val)) GmyList.Add(val);
+                    Gmy = val;
+                }
+            });
+
+            AddBusinessUnitCommand = new RelayCommand(_ =>
+            {
+                string val = ShowInputDialog("Yeni İş Birimi Ekleyin", "Eklenecek yeni iş biriminin adını giriniz:");
+                if (!string.IsNullOrWhiteSpace(val))
+                {
+                    if (!BusinessUnitList.Contains(val)) BusinessUnitList.Add(val);
+                    BusinessUnit = val;
+                }
+            });
+
+            RemoveProjectTypeCommand = new RelayCommand(_ =>
+            {
+                if (string.IsNullOrWhiteSpace(ProjectType)) return;
+                var confirm = MessageBox.Show($"Seçili '{ProjectType}' proje türünü seçenekler listesinden silmek istediğinize emin misiniz?", "Seçenek Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (confirm == MessageBoxResult.Yes)
+                {
+                    string toRemove = ProjectType;
+                    TypeList.Remove(toRemove);
+                    ProjectType = TypeList.FirstOrDefault() ?? "Proje";
+                }
+            });
+
+            RemoveGmyCommand = new RelayCommand(_ =>
+            {
+                if (string.IsNullOrWhiteSpace(Gmy)) return;
+                var confirm = MessageBox.Show($"Seçili '{Gmy}' GMY birimini seçenekler listesinden silmek istediğinize emin misiniz?", "Seçenek Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (confirm == MessageBoxResult.Yes)
+                {
+                    string toRemove = Gmy;
+                    GmyList.Remove(toRemove);
+                    Gmy = string.Empty;
+                }
+            });
+
+            RemoveBusinessUnitCommand = new RelayCommand(_ =>
+            {
+                if (string.IsNullOrWhiteSpace(BusinessUnit)) return;
+                var confirm = MessageBox.Show($"Seçili '{BusinessUnit}' iş birimini seçenekler listesinden silmek istediğinize emin misiniz?", "Seçenek Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (confirm == MessageBoxResult.Yes)
+                {
+                    string toRemove = BusinessUnit;
+                    BusinessUnitList.Remove(toRemove);
+                    BusinessUnit = string.Empty;
+                }
+            });
+
+            AddStakeholderCommand = new RelayCommand(_ =>
+            {
+                string val = ShowInputDialog("Yeni Paydaş Departman Ekleyin", "Eklenecek yeni paydaş departmanın adını giriniz:");
+                if (!string.IsNullOrWhiteSpace(val))
+                {
+                    if (SelectedProjectDisplay != null)
+                    {
+                        var existing = SelectedProjectDisplay.StakeholderItems.FirstOrDefault(s => string.Equals(s.Name, val, StringComparison.OrdinalIgnoreCase));
+                        if (existing != null)
+                        {
+                            existing.IsSelected = true;
+                        }
+                        else
+                        {
+                            var newItem = new SelectableStakeholderItem
+                            {
+                                Name = val,
+                                IsSelected = true,
+                                OnSelectionChangedAction = () => SelectedProjectDisplay.UpdateStakeholdersFromItems()
+                            };
+                            SelectedProjectDisplay.StakeholderItems.Add(newItem);
+                            SelectedProjectDisplay.UpdateStakeholdersFromItems();
+                        }
+                    }
+
+                    var formExisting = StakeholderItems.FirstOrDefault(s => string.Equals(s.Name, val, StringComparison.OrdinalIgnoreCase));
+                    if (formExisting != null)
+                    {
+                        formExisting.IsSelected = true;
+                    }
+                    else
+                    {
+                        StakeholderItems.Add(new SelectableStakeholderItem
+                        {
+                            Name = val,
+                            IsSelected = true,
+                            OnSelectionChangedAction = RefreshAssigneesAndCostRows
+                        });
+                    }
+                }
+            });
+
             SaveProjectCommand = new RelayCommand(ExecuteSaveProject);
-            DeleteProjectCommand = new RelayCommand(ExecuteDeleteProject, _ => SelectedProject != null);
+            DeleteProjectCommand = new RelayCommand(ExecuteDeleteProject);
             ClearFormCommand = new RelayCommand(_ => ClearForm());
             SelectQuarterCommand = new RelayCommand(param =>
             {
@@ -1281,6 +2170,7 @@ namespace ZiraatProje.UI.ViewModels
             {
                 IsNewProjectMode = false;
                 IsEditMode = true;
+                LoadSelectedProject();
             });
 
             SaveInlineCommand = new RelayCommand(_ =>
@@ -1318,8 +2208,11 @@ namespace ZiraatProje.UI.ViewModels
             {
                 if (param is ProjectDisplayItem item)
                 {
-                    SelectedProjectDisplay = item;
-                    item.IsEditing = true;
+                    item.IsEditing = !item.IsEditing;
+                    if (item.IsEditing)
+                    {
+                        IsDetailPanelVisible = false;
+                    }
                 }
             });
 
@@ -1336,7 +2229,6 @@ namespace ZiraatProje.UI.ViewModels
                 if (param is ProjectDisplayItem item)
                 {
                     item.IsEditing = false;
-                    LoadProjects();
                 }
             });
 
@@ -1367,19 +2259,24 @@ namespace ZiraatProje.UI.ViewModels
         {
             try
             {
-                _allUsers = _services.GetAllUsers() ?? new List<User>();
-
-                if (string.IsNullOrWhiteSpace(SelectedTeam))
+                if (_allUsers == null || !_allUsers.Any())
                 {
-                    AnalystUserItems = new ObservableCollection<SelectableUserItem>();
-                    DeveloperUserItems = new ObservableCollection<SelectableUserItem>();
-                    return;
+                    _allUsers = _services.GetAllUsers() ?? new List<User>();
                 }
 
-                var teamUsers = _allUsers.Where(u => string.Equals(u.Team, SelectedTeam, StringComparison.OrdinalIgnoreCase)).ToList();
+                var teamUsers = (string.IsNullOrWhiteSpace(SelectedTeam) || SelectedTeam == "Tüm Ekipler")
+                    ? _allUsers
+                    : _allUsers.Where(u => string.Equals(u.Team, SelectedTeam, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                if (!teamUsers.Any()) teamUsers = _allUsers;
 
                 var analysts = teamUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
-                var developers = teamUsers.Where(u => (u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yazılımcı", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Mühendis", StringComparison.OrdinalIgnoreCase)).ToList();
+                if (!analysts.Any())
+                {
+                    analysts = teamUsers.Take(Math.Max(1, teamUsers.Count / 2)).ToList();
+                }
+
+                var developers = teamUsers.Except(analysts).ToList();
 
                 AnalystUserItems = new ObservableCollection<SelectableUserItem>(
                     analysts.Select(u => new SelectableUserItem
@@ -1415,6 +2312,8 @@ namespace ZiraatProje.UI.ViewModels
                 DisplayAnalystSummary = "Herkes";
             else if (selectedAnalysts.Any())
                 DisplayAnalystSummary = string.Join(", ", selectedAnalysts.Select(i => i.User.FullName));
+            else if (SelectedProject != null && !string.IsNullOrWhiteSpace(SelectedProject.AssignedAnalystNames) && SelectedProject.AssignedAnalystNames != "Seçilmedi")
+                DisplayAnalystSummary = SelectedProject.AssignedAnalystNames;
             else
                 DisplayAnalystSummary = "Seçilmedi";
 
@@ -1423,18 +2322,27 @@ namespace ZiraatProje.UI.ViewModels
                 DisplayDeveloperSummary = "Herkes";
             else if (selectedDevelopers.Any())
                 DisplayDeveloperSummary = string.Join(", ", selectedDevelopers.Select(i => i.User.FullName));
+            else if (SelectedProject != null && !string.IsNullOrWhiteSpace(SelectedProject.AssignedDeveloperNames) && SelectedProject.AssignedDeveloperNames != "Seçilmedi")
+                DisplayDeveloperSummary = SelectedProject.AssignedDeveloperNames;
             else
                 DisplayDeveloperSummary = "Seçilmedi";
 
             var allSelectedUsers = selectedAnalysts.Concat(selectedDevelopers).Select(i => i.User).ToList();
             var existingRows = PersonMonthlyCostRows.ToList();
             var newRows = new ObservableCollection<ProjectPersonMonthlyCostRow>();
+            var maxDays = GetQuarterMonthMaxDays();
 
             foreach (var user in allSelectedUsers)
             {
                 var existingRow = existingRows.FirstOrDefault(r => r.User.Id == user.Id);
                 if (existingRow != null)
                 {
+                    existingRow.MaxMonth1Days = maxDays.max1;
+                    existingRow.MaxMonth2Days = maxDays.max2;
+                    existingRow.MaxMonth3Days = maxDays.max3;
+                    existingRow.Month1Header = Month1Header;
+                    existingRow.Month2Header = Month2Header;
+                    existingRow.Month3Header = Month3Header;
                     newRows.Add(existingRow);
                 }
                 else
@@ -1443,6 +2351,12 @@ namespace ZiraatProje.UI.ViewModels
                     newRows.Add(new ProjectPersonMonthlyCostRow
                     {
                         User = user,
+                        MaxMonth1Days = maxDays.max1,
+                        MaxMonth2Days = maxDays.max2,
+                        MaxMonth3Days = maxDays.max3,
+                        Month1Header = Month1Header,
+                        Month2Header = Month2Header,
+                        Month3Header = Month3Header,
                         Month1ManDays = 0m,
                         Month2ManDays = 0m,
                         Month3ManDays = 0m,
@@ -1455,6 +2369,92 @@ namespace ZiraatProje.UI.ViewModels
             RecalculateTotals();
         }
 
+        public decimal TotalActualManDays => PersonMonthlyCostRows != null && PersonMonthlyCostRows.Any()
+            ? PersonMonthlyCostRows.Sum(r => r.ActualManDays)
+            : ActualManDays;
+
+        public bool IsSideCardBudgetExceeded => TotalManDayBudget > 0m && TotalActualManDays > TotalManDayBudget;
+
+        public decimal SideCardBudgetExcessDays => IsSideCardBudgetExceeded ? (TotalActualManDays - TotalManDayBudget) : 0m;
+
+        public string SideCardBudgetFeedbackMessage
+        {
+            get
+            {
+                if (IsSideCardBudgetExceeded)
+                {
+                    return $"⚠️ BÜTÇE AŞILDI! (Bütçe: {TotalManDayBudget:N0} Gün, Harcanan: {TotalActualManDays:N0} Gün, Aşım: +{SideCardBudgetExcessDays:N0} Gün)";
+                }
+                if (IsCompletedStatus && TotalManDayBudget > 0m && TotalActualManDays > 0m && TotalActualManDays <= TotalManDayBudget)
+                {
+                    decimal savings = TotalManDayBudget - TotalActualManDays;
+                    if (savings > 0m) return $"✅ BÜTÇE UYGUN (Bütçe: {TotalManDayBudget:N0} Gün, Harcanan: {TotalActualManDays:N0} Gün, Tasarruf: -{savings:N0} Gün)";
+                    return $"✅ BÜTÇE TAM UYGUN ({TotalManDayBudget:N0} Gün)";
+                }
+                return string.Empty;
+            }
+        }
+
+        public string SideCardRoleBalanceFeedbackMessage
+        {
+            get
+            {
+                if (SelectedProjectDisplay == null) return string.Empty;
+
+                decimal analystPlanned = SelectedProjectDisplay.AnalystPlannedManDays;
+                decimal devPlanned = SelectedProjectDisplay.DeveloperPlannedManDays;
+                decimal analystActual = SelectedProjectDisplay.AnalystActualManDays;
+                decimal devActual = SelectedProjectDisplay.DeveloperActualManDays;
+
+                if (analystActual == 0m && devActual == 0m) return string.Empty;
+
+                decimal analystDiff = analystActual - analystPlanned;
+                decimal devDiff = devActual - devPlanned;
+
+                decimal totalPlanned = analystPlanned + devPlanned;
+                decimal totalActual = analystActual + devActual;
+
+                if (totalPlanned > 0m && Math.Abs(totalActual - totalPlanned) <= 0.01m && (Math.Abs(analystDiff) > 0.01m || Math.Abs(devDiff) > 0.01m))
+                {
+                    string analystStr = analystDiff > 0 ? $"Analist eforu +{analystDiff:N0} gün fazla" : (analystDiff < 0 ? $"Analist eforu -{Math.Abs(analystDiff):N0} gün eksik" : "Analist eforu dengeli");
+                    string devStr = devDiff > 0 ? $"Yazılımcı eforu +{devDiff:N0} gün fazla" : (devDiff < 0 ? $"Yazılımcı eforu -{Math.Abs(devDiff):N0} gün eksik" : "Yazılımcı eforu dengeli");
+
+                    return $"ℹ️ ROL DAĞILIM DENGESİ: {analystStr}, {devStr} gerçekleşmiştir. Toplam bütçe ({totalPlanned:N0} Adam/Gün) tam korunmuştur.";
+                }
+
+                return string.Empty;
+            }
+        }
+
+        public bool HasRoleBalanceFeedback => !string.IsNullOrEmpty(SideCardRoleBalanceFeedbackMessage);
+
+        public string SideCardVarianceText
+        {
+            get
+            {
+                if (TotalManDayBudget <= 0m || TotalActualManDays <= 0m) return "-";
+                decimal diff = TotalActualManDays - TotalManDayBudget;
+                if (diff > 0m) return $"⚠️ +{diff:N0} Gün (Aşım)";
+                if (diff < 0m) return $"✅ -{Math.Abs(diff):N0} Gün (Tasarruf)";
+                if (HasRoleBalanceFeedback) return $"✅ Toplam Bütçe Korundu ({TotalManDayBudget:N0} Gün)";
+                return "✅ 0 Gün (Tam Sınır)";
+            }
+        }
+
+        public string SideCardVarianceColor
+        {
+            get
+            {
+                if (TotalManDayBudget <= 0m || TotalActualManDays <= 0m) return "#475569";
+                decimal diff = TotalActualManDays - TotalManDayBudget;
+                if (diff > 0m) return "#dc2626";
+                if (diff < 0m) return "#166534";
+                return "#166534";
+            }
+        }
+
+        private bool _isLoadingProject = false;
+
         private void RecalculateTotals()
         {
             if (PersonMonthlyCostRows != null && PersonMonthlyCostRows.Any())
@@ -1462,12 +2462,60 @@ namespace ZiraatProje.UI.ViewModels
                 decimal totalPersonActual = PersonMonthlyCostRows.Sum(r => r.ActualManDays);
                 _actualManDays = totalPersonActual;
                 OnPropertyChanged(nameof(ActualManDays));
+                OnPropertyChanged(nameof(TotalActualManDays));
+                OnPropertyChanged(nameof(IsSideCardBudgetExceeded));
+                OnPropertyChanged(nameof(SideCardBudgetFeedbackMessage));
+                OnPropertyChanged(nameof(SideCardVarianceText));
+                OnPropertyChanged(nameof(SideCardVarianceColor));
                 OnPropertyChanged(nameof(ActualBudgetFeedbackMessage));
                 OnPropertyChanged(nameof(ActualBudgetFeedbackColor));
                 OnPropertyChanged(nameof(ActualBudgetFeedbackBg));
             }
+
             OnPropertyChanged(nameof(TotalInternalManDays));
+
+            if (SelectedProjectDisplay != null && PersonMonthlyCostRows != null)
+            {
+                SelectedProjectDisplay.Month1ManDaysTotal = PersonMonthlyCostRows.Sum(r => r.Month1ManDays);
+                SelectedProjectDisplay.Month2ManDaysTotal = PersonMonthlyCostRows.Sum(r => r.Month2ManDays);
+                SelectedProjectDisplay.Month3ManDaysTotal = PersonMonthlyCostRows.Sum(r => r.Month3ManDays);
+                
+                var breakdown = new List<UserCostBreakdownRow>();
+                foreach (var row in PersonMonthlyCostRows)
+                {
+                    breakdown.Add(new UserCostBreakdownRow
+                    {
+                        UserId = row.User.Id,
+                        FullName = row.User.FullName,
+                        Role = row.User.Title ?? "",
+                        Month1ManDays = row.Month1ManDays,
+                        Month2ManDays = row.Month2ManDays,
+                        Month3ManDays = row.Month3ManDays,
+                        ActualManDaysShare = row.ActualManDays
+                    });
+                }
+                SelectedProjectDisplay.UserBreakdownList = breakdown;
+                SelectedProjectDisplay.NotifyAllPropertiesChanged();
+            }
+
+            if (!_isLoadingProject && !_isManuallyEditedBudget)
+            {
+                _totalManDayBudget = TotalInternalManDays;
+                OnPropertyChanged(nameof(TotalManDayBudget));
+            }
+
+            OnPropertyChanged(nameof(IsCostMismatched));
+            OnPropertyChanged(nameof(CostMismatchWarningMessage));
+            OnPropertyChanged(nameof(FormAnalystPlannedTotal));
+            OnPropertyChanged(nameof(FormDeveloperPlannedTotal));
+            OnPropertyChanged(nameof(FormAnalystActualTotal));
+            OnPropertyChanged(nameof(FormDeveloperActualTotal));
             OnPropertyChanged(nameof(TotalProjectCostFormatted));
+            OnPropertyChanged(nameof(TotalActualManDays));
+            OnPropertyChanged(nameof(IsSideCardBudgetExceeded));
+            OnPropertyChanged(nameof(SideCardBudgetFeedbackMessage));
+            OnPropertyChanged(nameof(SideCardVarianceText));
+            OnPropertyChanged(nameof(SideCardVarianceColor));
             OnPropertyChanged(nameof(IsBudgetExceeded));
             OnPropertyChanged(nameof(IsBudgetCritical));
             OnPropertyChanged(nameof(HasBudgetWarning));
@@ -1488,6 +2536,9 @@ namespace ZiraatProje.UI.ViewModels
                 int m2 = startMonth + 1;
                 int m3 = startMonth + 2;
 
+                var projectIds = list.Select(p => p.Id).ToList();
+                var allProjectCosts = _services.GetMonthlyCostsForProjects(projectIds);
+                var allProjectAllocations = _services.GetAllocationsForProjects(projectIds);
                 var displayItems = new ObservableCollection<ProjectDisplayItem>();
 
                 foreach (var p in list)
@@ -1511,44 +2562,109 @@ namespace ZiraatProje.UI.ViewModels
                         p.AssignedDeveloperNames = "-";
                     }
 
-                    var dbCosts = _services.GetProjectMonthlyCosts(p.Id) ?? new List<ProjectMonthlyCost>();
-                    var dbAllocations = _services.GetAllocationsByProject(p.Id) ?? new List<ProjectAllocation>();
+                    var dbCosts = allProjectCosts.Where(c => c.ProjectId == p.Id).ToList();
+                    var dbAllocations = allProjectAllocations.Where(a => a.ProjectId == p.Id).ToList();
+
+                    var analystsList = _allUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
+                    var devList = _allUsers.Where(u => (u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yazılımcı", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Mühendis", StringComparison.OrdinalIgnoreCase)).ToList();
+
+                    var rawAnalysts = p.AssignedAnalystNames ?? string.Empty;
+                    var analystNamesSet = rawAnalysts.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
+                    bool isAnalystHerkes = string.Equals(rawAnalysts, "Herkes", StringComparison.OrdinalIgnoreCase);
+
+                    var rawDevs = p.AssignedDeveloperNames ?? string.Empty;
+                    var devNamesSet = rawDevs.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
+                    bool isDevHerkes = string.Equals(rawDevs, "Herkes", StringComparison.OrdinalIgnoreCase);
+
+                    var assignedAnalystUsers = analystsList.Where(u => isAnalystHerkes || IsNameMatched(u.FullName, analystNamesSet)).ToList();
+                    var assignedDevUsers = devList.Where(u => isDevHerkes || IsNameMatched(u.FullName, devNamesSet)).ToList();
+                    var allAssignedUsers = assignedAnalystUsers.Concat(assignedDevUsers).DistinctBy(u => u.Id).ToList();
+
+                    // Fallback 1: If monthly costs are empty but TotalManDayBudget > 0, generate monthly breakdown
+                    if (!dbCosts.Any(c => c.ManDays > 0m) && p.TotalManDayBudget > 0m)
+                    {
+                        decimal b = p.TotalManDayBudget;
+                        int numA = assignedAnalystUsers.Count > 0 ? assignedAnalystUsers.Count : 1;
+                        int numD = assignedDevUsers.Count > 0 ? assignedDevUsers.Count : 1;
+                        decimal aBudget = Math.Round(b * 0.30m, 1);
+                        decimal dBudget = b - aBudget;
+
+                        foreach (var au in assignedAnalystUsers)
+                        {
+                            decimal share = Math.Round(aBudget / numA, 1);
+                            dbCosts.Add(new ProjectMonthlyCost { ProjectId = p.Id, UserId = au.Id, Month = (byte)m1, ManDays = Math.Round(share * 0.35m, 1) });
+                            dbCosts.Add(new ProjectMonthlyCost { ProjectId = p.Id, UserId = au.Id, Month = (byte)m2, ManDays = Math.Round(share * 0.45m, 1) });
+                            dbCosts.Add(new ProjectMonthlyCost { ProjectId = p.Id, UserId = au.Id, Month = (byte)m3, ManDays = Math.Round(share * 0.20m, 1) });
+                        }
+                        foreach (var du in assignedDevUsers)
+                        {
+                            decimal share = Math.Round(dBudget / numD, 1);
+                            dbCosts.Add(new ProjectMonthlyCost { ProjectId = p.Id, UserId = du.Id, Month = (byte)m1, ManDays = Math.Round(share * 0.35m, 1) });
+                            dbCosts.Add(new ProjectMonthlyCost { ProjectId = p.Id, UserId = du.Id, Month = (byte)m2, ManDays = Math.Round(share * 0.45m, 1) });
+                            dbCosts.Add(new ProjectMonthlyCost { ProjectId = p.Id, UserId = du.Id, Month = (byte)m3, ManDays = Math.Round(share * 0.20m, 1) });
+                        }
+                    }
+
+                    // Reset actual effort if project status is not completed
+                    bool isCompletedProject = string.Equals(p.ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase);
+                    if (!isCompletedProject)
+                    {
+                        p.ActualManDays = 0m;
+                        p.ActualReleaseDate = null;
+                        foreach (var a in dbAllocations)
+                        {
+                            a.ActualManDay = 0m;
+                        }
+                    }
 
                     decimal m1Sum = dbCosts.Where(c => c.Month == m1).Sum(c => c.ManDays);
                     decimal m2Sum = dbCosts.Where(c => c.Month == m2).Sum(c => c.ManDays);
                     decimal m3Sum = dbCosts.Where(c => c.Month == m3).Sum(c => c.ManDays);
 
-                    // Build user breakdown list for row details template
-                    var userGroupIds = dbCosts.Select(c => c.UserId).Union(dbAllocations.Select(a => a.UserId)).Distinct().ToList();
+                    // Build user breakdown list for row details template & detail card
+                    var userGroupIds = dbCosts.Select(c => c.UserId)
+                        .Union(dbAllocations.Select(a => a.UserId))
+                        .Union(allAssignedUsers.Select(u => u.Id))
+                        .Where(id => id > 0)
+                        .Distinct()
+                        .ToList();
+
                     var breakdown = new List<UserCostBreakdownRow>();
                     decimal totalPlannedInternal = m1Sum + m2Sum + m3Sum;
-                    bool isCompletedProject = string.Equals(p.ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase);
+
+                    bool hasSpecificUserDbCosts = dbCosts.Any(c => allAssignedUsers.Any(au => au.Id == c.UserId) && c.ManDays > 0);
 
                     foreach (var uid in userGroupIds)
                     {
                         var u = _allUsers.FirstOrDefault(usr => usr.Id == uid);
                         string name = u?.FullName ?? $"Personel #{uid}";
-                        string role = (u?.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase) ? "Analist" : "Yazılımcı";
+                        
+                        bool isDevAssigned = assignedDevUsers.Any(du => du.Id == uid);
+                        bool isAnalystAssigned = assignedAnalystUsers.Any(au => au.Id == uid);
+
+                        string role = "Yazılımcı";
+                        if (isAnalystAssigned && !isDevAssigned)
+                        {
+                            role = "Analist";
+                        }
+                        else if (!isAnalystAssigned && isDevAssigned)
+                        {
+                            role = "Yazılımcı";
+                        }
+                        else
+                        {
+                            bool isAnalystTitle = (u?.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase);
+                            role = isAnalystTitle ? "Analist" : "Yazılımcı";
+                        }
 
                         decimal uM1 = dbCosts.FirstOrDefault(c => c.UserId == uid && c.Month == m1)?.ManDays ?? 0m;
                         decimal uM2 = dbCosts.FirstOrDefault(c => c.UserId == uid && c.Month == m2)?.ManDays ?? 0m;
                         decimal uM3 = dbCosts.FirstOrDefault(c => c.UserId == uid && c.Month == m3)?.ManDays ?? 0m;
+
                         decimal uTotalPlanned = uM1 + uM2 + uM3;
 
                         var alloc = dbAllocations.FirstOrDefault(a => a.UserId == uid);
                         decimal uActual = alloc != null && alloc.ActualManDay > 0m ? alloc.ActualManDay : 0m;
-
-                        if (uActual == 0m && isCompletedProject && p.ActualManDays > 0m && userGroupIds.Count > 0)
-                        {
-                            if (totalPlannedInternal > 0m)
-                            {
-                                uActual = Math.Round((uTotalPlanned / totalPlannedInternal) * p.ActualManDays, 0);
-                            }
-                            else
-                            {
-                                uActual = Math.Round(p.ActualManDays / userGroupIds.Count, 0);
-                            }
-                        }
 
                         breakdown.Add(new UserCostBreakdownRow
                         {
@@ -1563,19 +2679,68 @@ namespace ZiraatProje.UI.ViewModels
                         });
                     }
 
-                    displayItems.Add(new ProjectDisplayItem
+                    var item = new ProjectDisplayItem
                     {
                         Project = p,
                         Month1ManDaysTotal = m1Sum,
                         Month2ManDaysTotal = m2Sum,
                         Month3ManDaysTotal = m3Sum,
                         UserBreakdownList = breakdown
-                    });
+                    };
+
+                    item.AnalystUserItems = new ObservableCollection<SelectableUserItem>(
+                        analystsList.Select(u => new SelectableUserItem
+                        {
+                            User = u,
+                            IsSelected = isAnalystHerkes || IsNameMatched(u.FullName, analystNamesSet),
+                            OnSelectionChangedAction = () => item.UpdateAssignedAnalystNamesFromItems()
+                        })
+                    );
+
+                    item.DeveloperUserItems = new ObservableCollection<SelectableUserItem>(
+                        devList.Select(u => new SelectableUserItem
+                        {
+                            User = u,
+                            IsSelected = isDevHerkes || IsNameMatched(u.FullName, devNamesSet),
+                            OnSelectionChangedAction = () => item.UpdateAssignedDeveloperNamesFromItems()
+                        })
+                    );
+
+                    var defaultDeptNames = new[] { 
+                        "Kredi Risk", "Bireysel Bankacılık", "BT Altyapı", "Raporlama & Veri", 
+                        "Muhasebe & Finans", "Uyum & Mevzuat", "Dijital Bankacılık", "Kurumsal Bankacılık", 
+                        "Hazine, Finansal Kurumlar", "IT Güvenlik, Operasyon" 
+                    };
+                    var currentStakeholders = (p.Stakeholders ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
+                    var allDeptNames = defaultDeptNames.Union(currentStakeholders).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
+
+                    item.StakeholderItems = new ObservableCollection<SelectableStakeholderItem>(
+                        allDeptNames.Select(d => new SelectableStakeholderItem
+                        {
+                            Name = d,
+                            IsSelected = currentStakeholders.Contains(d),
+                            OnSelectionChangedAction = () => item.UpdateStakeholdersFromItems()
+                        })
+                    );
+
+                    displayItems.Add(item);
                 }
 
                 _allProjectsList = displayItems.ToList();
                 FilterProjectsList();
                 StatusMessage = string.Empty;
+
+                // Proje listesi boşsa detay panelini kapat ve formu sıfırla
+                if (!_allProjectsList.Any())
+                {
+                    IsDetailPanelVisible = false;
+                    IsEditMode = false;
+                    IsNewProjectMode = false;
+                    _selectedProject = null;
+                    _selectedProjectDisplay = null;
+                    OnPropertyChanged(nameof(SelectedProject));
+                    OnPropertyChanged(nameof(SelectedProjectDisplay));
+                }
             }
             catch (Exception ex)
             {
@@ -1631,108 +2796,181 @@ namespace ZiraatProje.UI.ViewModels
         private void LoadSelectedProject()
         {
             if (SelectedProject == null) return;
+            _isLoadingProject = true;
 
-            PergelNo = SelectedProject.PergelNo > 0 ? SelectedProject.PergelNo : (1000000 + Random.Shared.Next(100000, 999999));
-            ProjectName = SelectedProject.ProjectName ?? string.Empty;
-            Summary = SelectedProject.Summary ?? string.Empty;
-            ProjectStatus = string.IsNullOrWhiteSpace(SelectedProject.ProjectStatus) ? "Planlandı" : SelectedProject.ProjectStatus;
-            ProjectType = string.IsNullOrWhiteSpace(SelectedProject.ProjectType) ? "Proje" : SelectedProject.ProjectType;
-            ExternalCompanyName = SelectedProject.ExternalCompanyName ?? string.Empty;
-            ExternalCost = SelectedProject.ExternalCost;
-            Gmy = SelectedProject.Gmy ?? string.Empty;
-            BusinessUnit = SelectedProject.BusinessUnit ?? string.Empty;
-            Description = SelectedProject.Description ?? string.Empty;
-            TotalManDayBudget = SelectedProject.TotalManDayBudget;
-            ActualManDays = SelectedProject.ActualManDays;
-
-            SelectedTeam = SelectedProject.Team ?? string.Empty;
-
-            var stakeholdersList = (SelectedProject.Stakeholders ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
-            foreach (var sh in StakeholderItems)
+            try
             {
-                sh.IsSelected = stakeholdersList.Contains(sh.Name);
-            }
+                PergelNo = SelectedProject.PergelNo > 0 ? SelectedProject.PergelNo : (1000000 + Random.Shared.Next(100000, 999999));
+                ProjectName = SelectedProject.ProjectName ?? string.Empty;
+                Summary = SelectedProject.Summary ?? string.Empty;
+                ProjectStatus = string.IsNullOrWhiteSpace(SelectedProject.ProjectStatus) ? "Planlandı" : SelectedProject.ProjectStatus;
+                ProjectType = string.IsNullOrWhiteSpace(SelectedProject.ProjectType) ? "Proje" : SelectedProject.ProjectType;
+                ExternalCompanyName = SelectedProject.ExternalCompanyName ?? string.Empty;
+                ExternalCost = SelectedProject.ExternalCost;
+                Gmy = SelectedProject.Gmy ?? string.Empty;
+                BusinessUnit = SelectedProject.BusinessUnit ?? string.Empty;
+                Description = SelectedProject.Description ?? string.Empty;
+                TotalManDayBudget = SelectedProject.TotalManDayBudget;
+                _isManuallyEditedBudget = SelectedProject.TotalManDayBudget > 0m;
+                ActualManDays = SelectedProject.ActualManDays;
+                PlannedReleaseDate = SelectedProject.PlannedReleaseDate;
+                ActualReleaseDate = string.Equals(ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase) ? SelectedProject.ActualReleaseDate : null;
 
-            var analystNames = (SelectedProject.AssignedAnalystNames ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
-            bool isAnalystHerkes = string.Equals(SelectedProject.AssignedAnalystNames, "Herkes", StringComparison.OrdinalIgnoreCase);
+                SelectedTeam = SelectedProject.Team ?? string.Empty;
 
-            foreach (var item in AnalystUserItems)
-            {
-                item.IsSelected = isAnalystHerkes || analystNames.Contains(item.User.FullName);
-            }
-
-            var devNames = (SelectedProject.AssignedDeveloperNames ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
-            bool isDevHerkes = string.Equals(SelectedProject.AssignedDeveloperNames, "Herkes", StringComparison.OrdinalIgnoreCase);
-
-            foreach (var item in DeveloperUserItems)
-            {
-                item.IsSelected = isDevHerkes || devNames.Contains(item.User.FullName);
-            }
-
-            // Load Monthly Costs and Allocations
-            var dbCosts = _services.GetProjectMonthlyCosts(SelectedProject.Id) ?? new List<ProjectMonthlyCost>();
-            var dbAllocations = _services.GetAllocationsByProject(SelectedProject.Id) ?? new List<ProjectAllocation>();
-
-            var selectedUserIds = AnalystUserItems.Concat(DeveloperUserItems).Where(i => i.IsSelected).Select(i => i.User.Id).ToHashSet();
-
-            bool isAssigned = false;
-            if (!string.IsNullOrWhiteSpace(LoggedUserName))
-            {
-                var assignedStr = $"{SelectedProject?.AssignedAnalystNames} | {SelectedProject?.AssignedDeveloperNames} | {SelectedProject?.AssignedUserNames}";
-                if (assignedStr.Contains(LoggedUserName, StringComparison.OrdinalIgnoreCase))
+                var stakeholdersList = (SelectedProject.Stakeholders ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
+                foreach (var sh in StakeholderItems)
                 {
-                    isAssigned = true;
+                    sh.IsSelected = stakeholdersList.Contains(sh.Name);
+                }
+
+                var analystNames = (SelectedProject.AssignedAnalystNames ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
+                bool isAnalystHerkes = string.Equals(SelectedProject.AssignedAnalystNames, "Herkes", StringComparison.OrdinalIgnoreCase);
+
+                foreach (var item in AnalystUserItems)
+                {
+                    item.IsSelected = isAnalystHerkes || IsNameMatched(item.User.FullName, analystNames);
+                }
+
+                var devNames = (SelectedProject.AssignedDeveloperNames ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
+                bool isDevHerkes = string.Equals(SelectedProject.AssignedDeveloperNames, "Herkes", StringComparison.OrdinalIgnoreCase);
+
+                foreach (var item in DeveloperUserItems)
+                {
+                    item.IsSelected = isDevHerkes || IsNameMatched(item.User.FullName, devNames);
+                }
+
+                RefreshAssigneesAndCostRows();
+
+                // Load Monthly Costs and Allocations
+                var dbCosts = _services.GetProjectMonthlyCosts(SelectedProject.Id) ?? new List<ProjectMonthlyCost>();
+                var dbAllocations = _services.GetAllocationsByProject(SelectedProject.Id) ?? new List<ProjectAllocation>();
+
+                var assignedUserIds = _allUsers.Where(u =>
+                    isAnalystHerkes ||
+                    isDevHerkes ||
+                    IsNameMatched(u.FullName, analystNames) ||
+                    IsNameMatched(u.FullName, devNames)
+                ).Select(u => u.Id).ToHashSet();
+
+                var selectedUserIds = AnalystUserItems.Concat(DeveloperUserItems)
+                    .Where(i => i.IsSelected)
+                    .Select(i => i.User.Id)
+                    .Union(dbCosts.Select(c => c.UserId))
+                    .Union(dbAllocations.Select(a => a.UserId))
+                    .Union(assignedUserIds)
+                    .Where(id => id > 0)
+                    .ToHashSet();
+
+                bool isAssigned = false;
+                if (!string.IsNullOrWhiteSpace(LoggedUserName))
+                {
+                    var assignedStr = $"{SelectedProject?.AssignedAnalystNames} | {SelectedProject?.AssignedDeveloperNames} | {SelectedProject?.AssignedUserNames}";
+                    if (assignedStr.Contains(LoggedUserName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        isAssigned = true;
+                    }
+                    else
+                    {
+                        var loggedUserObj = _allUsers.FirstOrDefault(u =>
+                            u.FullName.Equals(LoggedUserName, StringComparison.OrdinalIgnoreCase) ||
+                            (!string.IsNullOrWhiteSpace(u.Name) && LoggedUserName.Contains(u.Name, StringComparison.OrdinalIgnoreCase)));
+
+                        if (loggedUserObj != null)
+                        {
+                            isAssigned = selectedUserIds.Contains(loggedUserObj.Id);
+                        }
+                    }
                 }
                 else
                 {
-                    var loggedUserObj = _allUsers.FirstOrDefault(u =>
-                        u.FullName.Equals(LoggedUserName, StringComparison.OrdinalIgnoreCase) ||
-                        (!string.IsNullOrWhiteSpace(u.Name) && LoggedUserName.Contains(u.Name, StringComparison.OrdinalIgnoreCase)));
+                    isAssigned = true;
+                }
 
-                    if (loggedUserObj != null)
+                var rows = new ObservableCollection<ProjectPersonMonthlyCostRow>();
+
+                int startMonth = (SelectedQuarter - 1) * 3 + 1;
+                int m1 = startMonth;
+                int m2 = startMonth + 1;
+                int m3 = startMonth + 2;
+
+                var maxDays = GetQuarterMonthMaxDays();
+
+                // Compute total fallback budget/actual if dbCosts or dbAllocations are empty for this project
+                decimal fallbackBudget = TotalManDayBudget > 0m ? TotalManDayBudget : (SelectedProject?.TotalManDayBudget ?? 0m);
+                decimal fallbackActual = ActualManDays > 0m ? ActualManDays : (SelectedProject?.ActualManDays > 0m ? SelectedProject.ActualManDays : (string.Equals(ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase) ? fallbackBudget : 0m));
+
+                int totalStaffCount = selectedUserIds.Count > 0 ? selectedUserIds.Count : 1;
+
+                foreach (var uId in selectedUserIds)
+                {
+                    var userObj = _allUsers.FirstOrDefault(u => u.Id == uId);
+                    if (userObj == null) continue;
+
+                    var userDbCosts = dbCosts.Where(c => c.UserId == uId).ToList();
+                    decimal md1 = userDbCosts.FirstOrDefault(c => c.Month == m1)?.ManDays ?? 0m;
+                    decimal md2 = userDbCosts.FirstOrDefault(c => c.Month == m2)?.ManDays ?? 0m;
+                    decimal md3 = userDbCosts.FirstOrDefault(c => c.Month == m3)?.ManDays ?? 0m;
+
+                    // Fallback for monthly costs if 0
+                    if (md1 == 0m && md2 == 0m && md3 == 0m && fallbackBudget > 0m)
                     {
-                        isAssigned = selectedUserIds.Contains(loggedUserObj.Id);
+                        decimal userBudgetShare = Math.Round(fallbackBudget / totalStaffCount, 1);
+                        md1 = Math.Round(userBudgetShare * 0.35m, 1);
+                        md2 = Math.Round(userBudgetShare * 0.45m, 1);
+                        md3 = Math.Round(userBudgetShare * 0.20m, 1);
                     }
+
+                    var alloc = dbAllocations.FirstOrDefault(a => a.UserId == uId);
+                    decimal actualMd = alloc?.ActualManDay ?? 0m;
+
+                    rows.Add(new ProjectPersonMonthlyCostRow
+                    {
+                        User = userObj,
+                        MaxMonth1Days = maxDays.max1,
+                        MaxMonth2Days = maxDays.max2,
+                        MaxMonth3Days = maxDays.max3,
+                        Month1Header = Month1Header,
+                        Month2Header = Month2Header,
+                        Month3Header = Month3Header,
+                        Month1ManDays = md1,
+                        Month2ManDays = md2,
+                        Month3ManDays = md3,
+                        ActualManDays = actualMd,
+                        OnChangedAction = RecalculateTotals
+                    });
+                }
+
+                PersonMonthlyCostRows = rows;
+                RefreshAssigneesAndCostRows();
+
+                // Update UserBreakdownList on SelectedProjectDisplay so Detail Card DataGrid & Cost Summary update live
+                var userBreakdown = rows.Select(r =>
+                {
+                    bool isAnalyst = analystNames.Any(n => IsNameMatched(r.User.FullName, new[] { n }));
+                    return new UserCostBreakdownRow
+                    {
+                        UserId = r.User.Id,
+                        FullName = r.User.FullName,
+                        Role = isAnalyst ? "Analist" : "Yazılımcı",
+                        Month1ManDays = r.Month1ManDays,
+                        Month2ManDays = r.Month2ManDays,
+                        Month3ManDays = r.Month3ManDays,
+                        ActualManDaysShare = r.ActualManDays,
+                        IsCompletedProject = string.Equals(ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase)
+                    };
+                }).ToList();
+
+                if (SelectedProjectDisplay != null)
+                {
+                    SelectedProjectDisplay.UserBreakdownList = userBreakdown;
+                    SelectedProjectDisplay.NotifyAllPropertiesChanged();
                 }
             }
-            else
+            finally
             {
-                isAssigned = true;
+                _isLoadingProject = false;
             }
-
-            var rows = new ObservableCollection<ProjectPersonMonthlyCostRow>();
-
-            int startMonth = (SelectedQuarter - 1) * 3 + 1;
-            int m1 = startMonth;
-            int m2 = startMonth + 1;
-            int m3 = startMonth + 2;
-
-            foreach (var uId in selectedUserIds)
-            {
-                var userObj = _allUsers.FirstOrDefault(u => u.Id == uId);
-                if (userObj == null) continue;
-
-                var userDbCosts = dbCosts.Where(c => c.UserId == uId).ToList();
-                decimal md1 = userDbCosts.FirstOrDefault(c => c.Month == m1)?.ManDays ?? 0m;
-                decimal md2 = userDbCosts.FirstOrDefault(c => c.Month == m2)?.ManDays ?? 0m;
-                decimal md3 = userDbCosts.FirstOrDefault(c => c.Month == m3)?.ManDays ?? 0m;
-
-                var alloc = dbAllocations.FirstOrDefault(a => a.UserId == uId);
-                decimal actualMd = alloc?.ActualManDay ?? 0m;
-
-                rows.Add(new ProjectPersonMonthlyCostRow
-                {
-                    User = userObj,
-                    Month1ManDays = md1,
-                    Month2ManDays = md2,
-                    Month3ManDays = md3,
-                    ActualManDays = actualMd,
-                    OnChangedAction = RecalculateTotals
-                });
-            }
-
-            PersonMonthlyCostRows = rows;
-            RefreshAssigneesAndCostRows();
         }
 
         private void ExecuteSaveProject(object? param)
@@ -1769,45 +3007,19 @@ namespace ZiraatProje.UI.ViewModels
                 p.AssignedDeveloperNames = DisplayDeveloperSummary;
                 p.AssignedUserNames = $"{DisplayAnalystSummary} | {DisplayDeveloperSummary}";
                 p.ActualManDays = ActualManDays;
+                p.PlannedReleaseDate = PlannedReleaseDate;
+                p.ActualReleaseDate = string.Equals(ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase) ? ActualReleaseDate : null;
 
-                // If TotalManDayBudget is not set manually, default to TotalInternalManDays
-                if (TotalManDayBudget <= 0m && TotalInternalManDays > 0m)
-                {
-                    TotalManDayBudget = TotalInternalManDays;
-                }
+                // Sync project budget with form budget
                 p.TotalManDayBudget = TotalManDayBudget;
-
-                if (IsCompletedStatus && p.ActualManDays > 0m)
-                {
-                    decimal budget = p.TotalManDayBudget > 0 ? p.TotalManDayBudget : TotalInternalManDays;
-                    if (budget > 0m && p.ActualManDays > budget)
-                    {
-                        decimal excess = p.ActualManDays - budget;
-                        var confirm = MessageBox.Show(
-                            $"⚠️ TAMAMLANAN PROJEDE BÜTÇE AŞIMI VAR!\n\nProje Bütçesi: {budget:N0} Adam/Gün\nHarcanan Gerçekleşen Efor: {p.ActualManDays:N0} Adam/Gün\n\n{excess:N0} gün BÜTÇE AŞIMINIZ bulunmaktadır.\n\nYine de kaydetmek istiyor musunuz?",
-                            "Bütçe Aşımı Bildirimi",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Warning);
-
-                        if (confirm != MessageBoxResult.Yes) return;
-                    }
-                }
-
-                if (IsBudgetExceeded)
-                {
-                    decimal excess = TotalInternalManDays - TotalManDayBudget;
-                    var confirm = MessageBox.Show(
-                        $"⚠️ BÜTÇE AŞIMI TESPİT EDİLDİ!\n\nGirilen toplam adam/gün maliyeti ({TotalInternalManDays:N0}), tanımlanan proje bütçesini ({TotalManDayBudget:N0}) {excess:N0} adam/gün AŞMAKTADIR.\n\nYine de bu kaydı bu şekilde onaylayıp kaydetmek istiyor musunuz?",
-                        "Bütçe Aşımı Uyarısı",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Warning);
-
-                    if (confirm != MessageBoxResult.Yes) return;
-                }
 
                 int startMonth = (SelectedQuarter - 1) * 3 + 1;
                 var monthlyCosts = new List<ProjectMonthlyCost>();
                 var allocations = new List<ProjectAllocation>();
+
+                bool isCompletedForm = string.Equals(ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase);
+                p.ActualManDays = isCompletedForm ? ActualManDays : 0m;
+                p.ActualReleaseDate = isCompletedForm ? ActualReleaseDate : null;
 
                 foreach (var row in PersonMonthlyCostRows)
                 {
@@ -1819,22 +3031,53 @@ namespace ZiraatProje.UI.ViewModels
                     {
                         UserId = row.User.Id,
                         AllocatedManDay = row.TotalManDays,
-                        ActualManDay = row.ActualManDays
+                        ActualManDay = isCompletedForm ? row.ActualManDays : 0m
                     });
+                }
+
+                // Efor uyumsuzluğu kontrolü
+                decimal totalRows = PersonMonthlyCostRows.Sum(r => r.Month1ManDays + r.Month2ManDays + r.Month3ManDays);
+                if (TotalManDayBudget > 0 && Math.Abs(TotalManDayBudget - totalRows) > 0.01m)
+                {
+                    StatusMessage = $"⚠️ DİKKAT: Toplam proje bütçesi ({TotalManDayBudget:N1} gün) ile girdiğiniz eforların toplamı ({totalRows:N1} gün) uyumlu değil! Lütfen düzeltin.";
+                    return;
                 }
 
                 _services.SaveProjectWithMonthlyCosts(p, monthlyCosts, allocations, LoggedUserName);
 
-                StatusMessage = $"✅ '{p.ProjectName}' projesi başarıyla kaydedildi.";
-                ClearForm();
+                StatusMessage = $"✅ '{p.ProjectName}' projesinin bütçe ve efor bilgileri başarıyla kaydedildi.";
+                IsEditMode = false;
                 IsFormOpen = false;
+
+                long savedProjectId = p.Id;
                 LoadProjects();
+
+                // Kaydet dedikten sonra detay panelini kapatıp satır görünümüne dönüyoruz
+                IsDetailPanelVisible = false;
+                IsEditMode = false;
+                IsNewProjectMode = false;
+                IsFormOpen = false;
+                _selectedProjectDisplay = null;
+                OnPropertyChanged(nameof(SelectedProjectDisplay));
+                OnPropertyChanged(nameof(UserBreakdownList));
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Kaydetme Hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        public List<string> AllAnalystNames => _allUsers
+            .Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase))
+            .Select(u => u.FullName)
+            .Distinct()
+            .ToList();
+
+        public List<string> AllDeveloperNames => _allUsers
+            .Where(u => (u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yazılımcı", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Mühendis", StringComparison.OrdinalIgnoreCase))
+            .Select(u => u.FullName)
+            .Distinct()
+            .ToList();
 
         private void ExecuteSaveRowItem(ProjectDisplayItem item)
         {
@@ -1848,31 +3091,161 @@ namespace ZiraatProje.UI.ViewModels
                     return;
                 }
 
+                // Sync status and actual effort onto project object
+                p.ProjectStatus = item.ProjectStatus;
+                p.ActualManDays = item.ActualManDays;
+                p.PlannedReleaseDate = item.PlannedReleaseDate;
+                p.ActualReleaseDate = item.ActualReleaseDate;
+
+                decimal monthSum = item.Month1ManDaysTotal + item.Month2ManDaysTotal + item.Month3ManDaysTotal;
+                decimal roleSum = item.AnalystPlannedManDays + item.DeveloperPlannedManDays;
+
+                // Only warn about mismatch if user actually entered both month and role costs
+                if (monthSum > 0 && roleSum > 0 && Math.Abs(monthSum - roleSum) > 2m)
+                {
+                    decimal diff = monthSum - roleSum;
+                    string diffDetail = diff > 0 
+                        ? $"Ay bazlı toplam maliyet ({monthSum:N0} Gün), Analist & Yazılımcı toplam maliyetinden ({roleSum:N0} Gün) {diff:N0} gün FAZLADIR."
+                        : $"Analist & Yazılımcı toplam maliyeti ({roleSum:N0} Gün), ay bazlı toplam maliyetten ({monthSum:N0} Gün) {Math.Abs(diff):N0} gün FAZLADIR.";
+
+                    MessageBox.Show(
+                        $"⚠️ MALİYET DAĞILIMI UYUŞMAZLIĞI!\n\n" +
+                        $"{diffDetail}\n\n" +
+                        $"Lütfen Analist veya Yazılımcı maliyet tutarlarında da gerekli güncellemeyi yaparak toplam maliyeti ({monthSum:N0} Adam/Gün) eşitleyin.",
+                        "Maliyet Dağılım Uyuşmazlığı",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    return;
+                }
+
+                decimal totalCost = monthSum > 0 ? monthSum : (roleSum > 0 ? roleSum : item.TotalInternalManDays);
+
+                // Update project budget with the new total cost entered by the user
+                if (totalCost > 0m)
+                {
+                    p.TotalManDayBudget = totalCost;
+                }
+
                 int startMonth = (SelectedQuarter - 1) * 3 + 1;
                 var monthlyCosts = new List<ProjectMonthlyCost>();
                 var allocations = new List<ProjectAllocation>();
 
-                if (item.UserBreakdownList != null && item.UserBreakdownList.Any())
-                {
-                    foreach (var row in item.UserBreakdownList)
-                    {
-                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = row.UserId, Month = startMonth, ManDays = row.Month1ManDays });
-                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = row.UserId, Month = startMonth + 1, ManDays = row.Month2ManDays });
-                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = row.UserId, Month = startMonth + 2, ManDays = row.Month3ManDays });
+                var analystsList = _allUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
+                var devList = _allUsers.Where(u => (u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yazılımcı", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Mühendis", StringComparison.OrdinalIgnoreCase)).ToList();
 
-                        allocations.Add(new ProjectAllocation
+                var rawAnalysts = p.AssignedAnalystNames ?? string.Empty;
+                var analystNamesSet = rawAnalysts.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
+                bool isAnalystHerkes = string.Equals(rawAnalysts, "Herkes", StringComparison.OrdinalIgnoreCase);
+
+                var rawDevs = p.AssignedDeveloperNames ?? string.Empty;
+                var devNamesSet = rawDevs.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
+                bool isDevHerkes = string.Equals(rawDevs, "Herkes", StringComparison.OrdinalIgnoreCase);
+
+                var analystUsers = analystsList.Where(u => isAnalystHerkes || IsNameMatched(u.FullName, analystNamesSet)).ToList();
+                var devUsers = devList.Where(u => isDevHerkes || IsNameMatched(u.FullName, devNamesSet)).ToList();
+
+                if (!analystUsers.Any())
+                {
+                    var defaultAnalyst = analystsList.FirstOrDefault() ?? _allUsers.FirstOrDefault();
+                    if (defaultAnalyst != null) analystUsers.Add(defaultAnalyst);
+                }
+                if (!devUsers.Any())
+                {
+                    var defaultDev = devList.FirstOrDefault() ?? _allUsers.LastOrDefault();
+                    if (defaultDev != null) devUsers.Add(defaultDev);
+                }
+
+                // Distribute actual effort if overridden in the left grid
+                decimal totalAnalystActual = item.AnalystActualManDays;
+                decimal totalDevActual = item.DeveloperActualManDays;
+
+                var allAssigned = analystUsers.Concat(devUsers).DistinctBy(u => u.Id).ToList();
+                int numAnalysts = Math.Max(1, analystUsers.Count);
+                int numDevs = Math.Max(1, devUsers.Count);
+                int numAll = Math.Max(1, allAssigned.Count);
+
+                bool isCompletedRow = string.Equals(item.ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase);
+
+                if (!isCompletedRow)
+                {
+                    item.AnalystActualManDays = 0m;
+                    item.DeveloperActualManDays = 0m;
+                    item.ActualManDays = 0m;
+                    item.ActualReleaseDate = null;
+                    p.ActualManDays = 0m;
+                    p.ActualReleaseDate = null;
+                }
+
+                foreach (var u in allAssigned)
+                {
+                    var existingRow = item.UserBreakdownList?.FirstOrDefault(r => r.UserId == u.Id);
+                    
+                    decimal allocated = existingRow?.TotalManDays ?? Math.Round((item.Month1ManDaysTotal + item.Month2ManDaysTotal + item.Month3ManDaysTotal) / numAll, 0);
+
+                    bool isAnalyst = analystUsers.Any(a => a.Id == u.Id);
+                    bool isDev = devUsers.Any(d => d.Id == u.Id);
+
+                    decimal actualShare = 0m;
+                    if (isCompletedRow)
+                    {
+                        if (isDev && totalDevActual > 0m)
                         {
-                            UserId = row.UserId,
-                            AllocatedManDay = row.TotalManDays,
-                            ActualManDay = row.ActualManDaysShare
-                        });
+                            actualShare = Math.Round(totalDevActual / numDevs, 1);
+                        }
+                        else if (isAnalyst && totalAnalystActual > 0m)
+                        {
+                            actualShare = Math.Round(totalAnalystActual / numAnalysts, 1);
+                        }
+                        else
+                        {
+                            actualShare = existingRow?.ActualManDaysShare ?? 0m;
+                        }
+                    }
+
+                    allocations.Add(new ProjectAllocation
+                    {
+                        UserId = u.Id,
+                        AllocatedManDay = allocated,
+                        ActualManDay = actualShare
+                    });
+
+                    if (existingRow != null)
+                    {
+                        existingRow.ActualManDaysShare = actualShare;
+                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth, ManDays = existingRow.Month1ManDays });
+                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth + 1, ManDays = existingRow.Month2ManDays });
+                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth + 2, ManDays = existingRow.Month3ManDays });
+                    }
+                    else
+                    {
+                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth, ManDays = Math.Round(item.Month1ManDaysTotal / numAll, 0) });
+                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth + 1, ManDays = Math.Round(item.Month2ManDaysTotal / numAll, 0) });
+                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth + 2, ManDays = Math.Round(item.Month3ManDaysTotal / numAll, 0) });
                     }
                 }
 
+                // Row üzerinden efor kontrolü
+                decimal totalRows = item.Month1ManDaysTotal + item.Month2ManDaysTotal + item.Month3ManDaysTotal;
+                if (item.Project.TotalManDayBudget > 0 && Math.Abs(item.Project.TotalManDayBudget - totalRows) > 0.01m)
+                {
+                    StatusMessage = $"⚠️ DİKKAT: Toplam proje bütçesi ({item.Project.TotalManDayBudget:N1} gün) ile aylara girdiğiniz eforların toplamı ({totalRows:N1} gün) uyumlu değil! Lütfen düzeltin.";
+                    return; // Düzenleme modunda kal
+                }
+
                 _services.SaveProjectWithMonthlyCosts(p, monthlyCosts, allocations, LoggedUserName);
-                StatusMessage = $"✅ '{p.ProjectName}' projesi başarıyla kaydedildi.";
+                StatusMessage = $"✅ '{p.ProjectName}' projesinin bütçesi ve durumu GÜNCELLENDİ.";
                 item.IsEditing = false;
+                item.NotifyAllPropertiesChanged();
+
+                long savedProjectId = p.Id;
                 LoadProjects();
+
+                // Kaydet butonuna basılınca bilgi kartı açılmasın
+                IsDetailPanelVisible = false;
+                _selectedProjectDisplay = null;
+                OnPropertyChanged(nameof(SelectedProjectDisplay));
+                OnPropertyChanged(nameof(UserBreakdownList));
             }
             catch (Exception ex)
             {
@@ -1882,16 +3255,40 @@ namespace ZiraatProje.UI.ViewModels
 
         private void ExecuteDeleteProject(object? param)
         {
-            if (SelectedProject == null) return;
-            var confirm = MessageBox.Show($"'{SelectedProject.ProjectName}' projesini silmek istediğinize emin misiniz?", "Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            Project? projToDelete = null;
+            if (param is ProjectDisplayItem pdi)
+            {
+                projToDelete = pdi.Project;
+            }
+            else if (param is Project p)
+            {
+                projToDelete = p;
+            }
+            else
+            {
+                projToDelete = SelectedProject ?? SelectedProjectDisplay?.Project;
+            }
+
+            if (projToDelete == null) return;
+
+            var confirm = MessageBox.Show($"'{projToDelete.ProjectName}' projesini silmek istediğinize emin misiniz?", "Proje Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (confirm == MessageBoxResult.Yes)
             {
                 try
                 {
-                    _services.DeleteProject(SelectedProject.Id);
-                    StatusMessage = "🗑️ Proje kaydı silindi.";
-                    ClearForm();
+                    _services.DeleteProject(projToDelete.Id);
+                    StatusMessage = $"🗑️ '{projToDelete.ProjectName}' projesi başarıyla silindi.";
+
+                    IsDetailPanelVisible = false;
                     IsFormOpen = false;
+                    IsEditMode = false;
+                    IsNewProjectMode = false;
+                    _selectedProject = null;
+                    _selectedProjectDisplay = null;
+                    OnPropertyChanged(nameof(SelectedProject));
+                    OnPropertyChanged(nameof(SelectedProjectDisplay));
+                    OnPropertyChanged(nameof(UserBreakdownList));
+
                     LoadProjects();
                 }
                 catch (Exception ex)
@@ -1928,6 +3325,7 @@ namespace ZiraatProje.UI.ViewModels
             foreach (var item in DeveloperUserItems) item.IsSelected = false;
             foreach (var item in StakeholderItems) item.IsSelected = false;
 
+            _isManuallyEditedBudget = false;
             PersonMonthlyCostRows.Clear();
             DisplayAnalystSummary = "Seçilmedi";
             DisplayDeveloperSummary = "Seçilmedi";

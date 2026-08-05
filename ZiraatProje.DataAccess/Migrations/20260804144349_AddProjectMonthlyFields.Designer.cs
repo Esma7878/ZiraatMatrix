@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ZiraatProje.DataAccess;
 
@@ -11,13 +12,15 @@ using ZiraatProje.DataAccess;
 namespace ZiraatProje.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260804144349_AddProjectMonthlyFields")]
+    partial class AddProjectMonthlyFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.2")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -299,9 +302,6 @@ namespace ZiraatProje.DataAccess.Migrations
                     b.Property<decimal>("AnalistAy3")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("AnalystActualManDays")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("AssignedAnalystNames")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -334,9 +334,6 @@ namespace ZiraatProje.DataAccess.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("DeveloperActualManDays")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");

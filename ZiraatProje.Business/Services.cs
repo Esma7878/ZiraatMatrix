@@ -805,6 +805,7 @@ namespace ZiraatProje.Business
                         if (mc.ManDays > 0) // Only save > 0
                         {
                             mc.ProjectId = project.Id;
+                            mc.User = null; // Prevent tracking conflicts
                             context.ProjectMonthlyCosts.Add(mc);
                         }
                     }
@@ -818,6 +819,7 @@ namespace ZiraatProje.Business
                         if (alloc.ActualManDay > 0) // Only save > 0
                         {
                             alloc.ProjectId = project.Id;
+                            alloc.User = null; // Prevent tracking conflicts
                             context.ProjectAllocations.Add(alloc);
                         }
                     }
@@ -852,7 +854,17 @@ namespace ZiraatProje.Business
                 existing.AssignedDeveloperNames = project.AssignedDeveloperNames;
                 existing.AssignedUserIds = project.AssignedUserIds;
                 existing.TotalManDayBudget = project.TotalManDayBudget;
+                existing.AnalystPlannedManDays = project.AnalystPlannedManDays;
+                existing.DeveloperPlannedManDays = project.DeveloperPlannedManDays;
+                existing.AnalistAy1 = project.AnalistAy1;
+                existing.AnalistAy2 = project.AnalistAy2;
+                existing.AnalistAy3 = project.AnalistAy3;
+                existing.YazilimciAy1 = project.YazilimciAy1;
+                existing.YazilimciAy2 = project.YazilimciAy2;
+                existing.YazilimciAy3 = project.YazilimciAy3;
                 existing.ActualManDays = project.ActualManDays;
+                existing.AnalystActualManDays = project.AnalystActualManDays;
+                existing.DeveloperActualManDays = project.DeveloperActualManDays;
                 existing.PlannedReleaseDate = project.PlannedReleaseDate;
                 existing.ActualReleaseDate = project.ActualReleaseDate;
 
@@ -884,6 +896,7 @@ namespace ZiraatProje.Business
                     {
                         mc.Id = 0;
                         mc.ProjectId = project.Id;
+                        mc.User = null; // EF Core tracking hatasını önlemek için
                         context.ProjectMonthlyCosts.Add(mc);
                     }
                 }
@@ -898,6 +911,7 @@ namespace ZiraatProje.Business
                     {
                         alloc.Id = 0;
                         alloc.ProjectId = project.Id;
+                        alloc.User = null; // EF Core tracking hatasını önlemek için
                         context.ProjectAllocations.Add(alloc);
                     }
                 }

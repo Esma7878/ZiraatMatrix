@@ -120,7 +120,21 @@ namespace ZiraatProje.DataAccess
         public string? AssignedUserIds { get; set; } = string.Empty;
 
         public decimal TotalManDayBudget { get; set; }
-        public decimal ActualManDays { get; set; } = 0m; // Gerçekleşen efor (adam/gün)
+        [NotMapped]
+        public decimal AnalystPlannedManDays { get; set; } = 0m;
+        [NotMapped]
+        public decimal DeveloperPlannedManDays { get; set; } = 0m;
+
+        // Çeyreklik ay bazlı girilmiş değerler (dağıtılmamış, birebir girilen)
+        public decimal AnalistAy1 { get; set; } = 0m;
+        public decimal AnalistAy2 { get; set; } = 0m;
+        public decimal AnalistAy3 { get; set; } = 0m;
+        public decimal YazilimciAy1 { get; set; } = 0m;
+        public decimal YazilimciAy2 { get; set; } = 0m;
+        public decimal YazilimciAy3 { get; set; } = 0m;
+        public decimal AnalystActualManDays { get; set; } = 0m; // Gerçekleşen analist eforu
+        public decimal DeveloperActualManDays { get; set; } = 0m; // Gerçekleşen yazılımcı eforu
+        public decimal ActualManDays { get; set; } = 0m; // Gerçekleşen toplam efor (adam/gün)
         public DateTime StartDate { get; set; } = DateTime.Today;
         public DateTime EndDate { get; set; } = DateTime.Today.AddMonths(3);
         

@@ -470,6 +470,18 @@
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
+                                <!-- Ekip -->
+                                <DataGridTemplateColumn Header="Ekip" Width="85">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Project.Team, TargetNullValue='-'}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Project.Team}" HorizontalAlignment="Center" Visibility="{Binding ReadVisibility}"/>
+                                                <ComboBox ItemsSource="{Binding Data.TeamOptions, Source={StaticResource DataContextProxy}}" SelectedItem="{Binding Project.Team, UpdateSourceTrigger=PropertyChanged}" Background="White" Foreground="#0f172a" FontSize="9.5" Padding="2,1" Visibility="{Binding EditVisibility}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
                                 <!-- Planlanan Sürüm -->
                                 <DataGridTemplateColumn Header="Planlanan&#10;Sürüm" Width="92">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -931,32 +943,30 @@
                                             </StackPanel>
                                         </Border>
 
-                                        <!-- Personel & Aylık Efor Matrisi -->
+                                        <!-- Çeyreklik Efor Özeti (Read-Only) -->
                                         <Border BorderBrush="#bfdbfe" BorderThickness="1" Background="#eff6ff" CornerRadius="6" Padding="8" Margin="0,0,0,10">
                                             <StackPanel>
-                                                <TextBlock Text="📋 Personel Bazlı Ay ve Efor Dağılımı" FontWeight="Bold" FontSize="10.5" Foreground="#1e40af" Margin="0,0,0,6"/>
+                                                <TextBlock Text="🗓️ AYLIK EFOR ÖZETİ" FontWeight="Bold" FontSize="10.5" Foreground="#1e40af" Margin="0,0,0,6"/>
                                                 
-                                                <DataGrid ItemsSource="{Binding SelectedProjectDisplay.UserBreakdownList}" AutoGenerateColumns="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" MinHeight="60" MaxHeight="180" CanUserAddRows="False"
-                                                          FontSize="10" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
-                                                    <DataGrid.ColumnHeaderStyle>
-                                                        <Style TargetType="DataGridColumnHeader">
-                                                            <Setter Property="Padding" Value="2,4"/>
-                                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                                                            <Setter Property="FontWeight" Value="Bold"/>
-                                                            <Setter Property="FontSize" Value="10"/>
-                                                            <Setter Property="Background" Value="#dbeafe"/>
-                                                            <Setter Property="Foreground" Value="#1e40af"/>
-                                                        </Style>
-                                                    </DataGrid.ColumnHeaderStyle>
-                                                    <DataGrid.Columns>
-                                                        <DataGridTextColumn Header="Personel" Binding="{Binding FullName}" Width="110" IsReadOnly="True" FontWeight="Bold"/>
-                                                        <DataGridTextColumn Header="{Binding Data.Month1Header, Source={StaticResource DataContextProxy}}" Binding="{Binding Month1ManDays, StringFormat=\{0:N0\}}" Width="65" IsReadOnly="True"/>
-                                                        <DataGridTextColumn Header="{Binding Data.Month2Header, Source={StaticResource DataContextProxy}}" Binding="{Binding Month2ManDays, StringFormat=\{0:N0\}}" Width="65" IsReadOnly="True"/>
-                                                        <DataGridTextColumn Header="{Binding Data.Month3Header, Source={StaticResource DataContextProxy}}" Binding="{Binding Month3ManDays, StringFormat=\{0:N0\}}" Width="60" IsReadOnly="True"/>
-                                                        <DataGridTextColumn Header="Planlanan" Binding="{Binding TotalManDays, StringFormat=\{0:N0\}}" Width="65" IsReadOnly="True" FontWeight="Bold"/>
-                                                        <DataGridTextColumn Header="Gerçekleşen" Binding="{Binding ActualManDaysShare, StringFormat=\{0:0.##\}}" Width="75" IsReadOnly="True" FontWeight="Bold"/>
-                                                    </DataGrid.Columns>
-                                                </DataGrid>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding Data.Month1Header, Source={StaticResource DataContextProxy}}" FontSize="10" Foreground="#475569"/>
+                                                        <TextBlock Text="{Binding SelectedProjectDisplay.Month1ManDaysTotal, TargetNullValue='0', StringFormat='\{0:N0\} Gün'}" FontWeight="Bold" FontSize="11" Foreground="#0f172a" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Text="{Binding Data.Month2Header, Source={StaticResource DataContextProxy}}" FontSize="10" Foreground="#475569"/>
+                                                        <TextBlock Text="{Binding SelectedProjectDisplay.Month2ManDaysTotal, TargetNullValue='0', StringFormat='\{0:N0\} Gün'}" FontWeight="Bold" FontSize="11" Foreground="#0f172a" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2">
+                                                        <TextBlock Text="{Binding Data.Month3Header, Source={StaticResource DataContextProxy}}" FontSize="10" Foreground="#475569"/>
+                                                        <TextBlock Text="{Binding SelectedProjectDisplay.Month3ManDaysTotal, TargetNullValue='0', StringFormat='\{0:N0\} Gün'}" FontWeight="Bold" FontSize="11" Foreground="#0f172a" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                </Grid>
                                             </StackPanel>
                                         </Border>
 
@@ -1216,84 +1226,45 @@
                                             </Grid>
                                         </Border>
 
-                                        <!-- Düzenlenebilir Efor Dağılım Tablosu -->
+                                        <!-- Efor Özet Tablosu -->
                                         <Border BorderBrush="#bfdbfe" BorderThickness="1.5" Background="#eff6ff" CornerRadius="6" Padding="8" Margin="0,0,0,10">
                                             <StackPanel>
-                                                <TextBlock Text="🗓️ ÇEYREK AYLIK ADAM-GÜN MALİYETİ" FontWeight="Bold" FontSize="10.5" Foreground="#1e40af" Margin="0,0,0,6"/>
-
-                                                <DataGrid ItemsSource="{Binding PersonMonthlyCostRows}" AutoGenerateColumns="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" MinHeight="80" MaxHeight="180" CanUserAddRows="False"
-                                                          FontSize="10" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
-                                                    <DataGrid.ColumnHeaderStyle>
-                                                        <Style TargetType="DataGridColumnHeader">
-                                                            <Setter Property="Padding" Value="2,4"/>
-                                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                                                            <Setter Property="FontWeight" Value="Bold"/>
-                                                            <Setter Property="FontSize" Value="10"/>
-                                                            <Setter Property="Background" Value="#dbeafe"/>
-                                                            <Setter Property="Foreground" Value="#1e40af"/>
-                                                        </Style>
-                                                    </DataGrid.ColumnHeaderStyle>
-                                                    <DataGrid.Columns>
-                                                        <DataGridTextColumn Header="Personel" Binding="{Binding DisplayNameWithTitle}" Width="2.2*" IsReadOnly="True" FontWeight="Bold">
-                                                            <DataGridTextColumn.ElementStyle>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                                                    <Setter Property="Padding" Value="4,0"/>
-                                                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                                                                    <Setter Property="ToolTip" Value="{Binding DisplayNameWithTitle}"/>
-                                                                </Style>
-                                                            </DataGridTextColumn.ElementStyle>
-                                                        </DataGridTextColumn>
-
-                                                        <DataGridTemplateColumn Header="{Binding Data.Month1Header, Source={StaticResource DataContextProxy}}" Width="*">
-                                                            <DataGridTemplateColumn.CellTemplate>
-                                                                <DataTemplate>
-                                                                    <TextBox Text="{Binding Month1ManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:0.##\}}" Height="22" HorizontalAlignment="Stretch" TextAlignment="Center" FontWeight="Bold" BorderBrush="#cbd5e1" Margin="1"
-                                                                             PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus" GotFocus="CostTextBox_GotFocus" PreviewMouseLeftButtonDown="CostTextBox_PreviewMouseLeftButtonDown"/>
-                                                                </DataTemplate>
-                                                            </DataGridTemplateColumn.CellTemplate>
-                                                        </DataGridTemplateColumn>
-
-                                                        <DataGridTemplateColumn Header="{Binding Data.Month2Header, Source={StaticResource DataContextProxy}}" Width="*">
-                                                            <DataGridTemplateColumn.CellTemplate>
-                                                                <DataTemplate>
-                                                                    <TextBox Text="{Binding Month2ManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:0.##\}}" Height="22" HorizontalAlignment="Stretch" TextAlignment="Center" FontWeight="Bold" BorderBrush="#cbd5e1" Margin="1"
-                                                                             PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus" GotFocus="CostTextBox_GotFocus" PreviewMouseLeftButtonDown="CostTextBox_PreviewMouseLeftButtonDown"/>
-                                                                </DataTemplate>
-                                                            </DataGridTemplateColumn.CellTemplate>
-                                                        </DataGridTemplateColumn>
-
-                                                        <DataGridTemplateColumn Header="{Binding Data.Month3Header, Source={StaticResource DataContextProxy}}" Width="*">
-                                                            <DataGridTemplateColumn.CellTemplate>
-                                                                <DataTemplate>
-                                                                    <TextBox Text="{Binding Month3ManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:0.##\}}" Height="22" HorizontalAlignment="Stretch" TextAlignment="Center" FontWeight="Bold" BorderBrush="#cbd5e1" Margin="1"
-                                                                             PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus" GotFocus="CostTextBox_GotFocus" PreviewMouseLeftButtonDown="CostTextBox_PreviewMouseLeftButtonDown"/>
-                                                                </DataTemplate>
-                                                            </DataGridTemplateColumn.CellTemplate>
-                                                        </DataGridTemplateColumn>
-
-                                                        <!-- Kişinin Planlanan Toplam Maliyet Kutucuğu -->
-                                                        <DataGridTemplateColumn Header="Toplam" Width="*">
-                                                            <DataGridTemplateColumn.CellTemplate>
-                                                                <DataTemplate>
-                                                                    <Border Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1" CornerRadius="3" Height="22" Margin="1" ToolTip="Kişinin 3 Aylık Planlanan Toplam Maliyeti">
-                                                                        <TextBlock Text="{Binding TotalManDays, StringFormat=\{0:0.##\}}" FontWeight="ExtraBold" Foreground="#1e3a8a" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10.5"/>
-                                                                    </Border>
-                                                                </DataTemplate>
-                                                            </DataGridTemplateColumn.CellTemplate>
-                                                        </DataGridTemplateColumn>
-
-                                                        <DataGridTemplateColumn Header="Gerçekleşen" Width="1.1*">
-                                                            <DataGridTemplateColumn.CellTemplate>
-                                                                <DataTemplate>
-                                                                    <TextBox Text="{Binding ActualManDays, UpdateSourceTrigger=LostFocus, TargetNullValue='0', StringFormat=\{0:0.##\}}" Height="22" HorizontalAlignment="Stretch" TextAlignment="Center" FontWeight="Bold" Foreground="#1d4ed8" BorderBrush="#93c5fd" Margin="1"
-                                                                             PreviewKeyDown="CostTextBox_PreviewKeyDown" GotKeyboardFocus="CostTextBox_GotKeyboardFocus" GotFocus="CostTextBox_GotFocus" PreviewMouseLeftButtonDown="CostTextBox_PreviewMouseLeftButtonDown"
-                                                                             IsEnabled="{Binding Data.IsCompletedStatus, Source={StaticResource DataContextProxy}}" ToolTip="Yalnızca proje durumu Tamamlandı veya Bitti olduğunda aktif olur"/>
-                                                                </DataTemplate>
-                                                            </DataGridTemplateColumn.CellTemplate>
-                                                        </DataGridTemplateColumn>
-                                                    </DataGrid.Columns>
-                                                </DataGrid>
+                                                <TextBlock Text="🗓️ ÇEYREKLİK EFOR ÖZETİ" FontWeight="Bold" FontSize="10.5" Foreground="#1e40af" Margin="0,0,0,6"/>
+                                                
+                                                <Grid Margin="0,0,0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                                                        <TextBlock Text="{Binding Data.Month1Header, Source={StaticResource DataContextProxy}}" FontSize="10" Foreground="#475569"/>
+                                                        <TextBox PreviewKeyDown="CostTextBox_PreviewKeyDown" Text="{Binding Month1ManDaysTotal, UpdateSourceTrigger=PropertyChanged, TargetNullValue='0', StringFormat=\{0:0.##\}}" FontWeight="Bold" Height="24" FontSize="11" Background="White" Foreground="#0f172a" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Margin="4,0,4,0">
+                                                        <TextBlock Text="{Binding Data.Month2Header, Source={StaticResource DataContextProxy}}" FontSize="10" Foreground="#475569"/>
+                                                        <TextBox PreviewKeyDown="CostTextBox_PreviewKeyDown" Text="{Binding Month2ManDaysTotal, UpdateSourceTrigger=PropertyChanged, TargetNullValue='0', StringFormat=\{0:0.##\}}" FontWeight="Bold" Height="24" FontSize="11" Background="White" Foreground="#0f172a" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2" Margin="4,0,0,0">
+                                                        <TextBlock Text="{Binding Data.Month3Header, Source={StaticResource DataContextProxy}}" FontSize="10" Foreground="#475569"/>
+                                                        <TextBox PreviewKeyDown="CostTextBox_PreviewKeyDown" Text="{Binding Month3ManDaysTotal, UpdateSourceTrigger=PropertyChanged, TargetNullValue='0', StringFormat=\{0:0.##\}}" FontWeight="Bold" Height="24" FontSize="11" Background="White" Foreground="#0f172a" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                                
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                                                        <TextBlock Text="Analist Maliyet" FontSize="10" Foreground="#1e40af" FontWeight="Bold"/>
+                                                        <TextBox PreviewKeyDown="CostTextBox_PreviewKeyDown" Text="{Binding AnalystPlannedManDays, UpdateSourceTrigger=PropertyChanged, TargetNullValue='0', StringFormat=\{0:0.##\}}" Foreground="#1e40af" FontWeight="Bold" Height="24" FontSize="11" Background="White" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                                        <TextBlock Text="Yazılım Maliyet" FontSize="10" Foreground="#065f46" FontWeight="Bold"/>
+                                                        <TextBox PreviewKeyDown="CostTextBox_PreviewKeyDown" Text="{Binding DeveloperPlannedManDays, UpdateSourceTrigger=PropertyChanged, TargetNullValue='0', StringFormat=\{0:0.##\}}" Foreground="#065f46" FontWeight="Bold" Height="24" FontSize="11" Background="White" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Grid>
                                             </StackPanel>
                                         </Border>
 

@@ -656,24 +656,24 @@ namespace ZiraatProje.DataAccess
                     context.Projects.Add(newProj);
                     context.SaveChanges();
 
-                    decimal m1Cost = pDef.Status == "Planlandı" ? 0m : Math.Round(pDef.Budget * 0.35m, 1);
-                    decimal m2Cost = pDef.Status == "Planlandı" ? 0m : Math.Round(pDef.Budget * 0.45m, 1);
-                    decimal m3Cost = pDef.Status == "Planlandı" ? 0m : Math.Round(pDef.Budget * 0.20m, 1);
+                    decimal m1Cost = 0m;
+                    decimal m2Cost = 0m;
+                    decimal m3Cost = 0m;
 
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = analystUser.Id, Month = (byte)qd.StartMonth, ManDays = Math.Round(m1Cost * 0.3m, 1) });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = analystUser.Id, Month = (byte)(qd.StartMonth + 1), ManDays = Math.Round(m2Cost * 0.3m, 1) });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = analystUser.Id, Month = (byte)(qd.StartMonth + 2), ManDays = Math.Round(m3Cost * 0.3m, 1) });
-                    context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = newProj.Id, UserId = analystUser.Id, AllocatedManDay = Math.Round(pDef.Budget * 0.3m, 1), ActualManDay = Math.Round(pDef.Actual * 0.3m, 1) });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = analystUser.Id, Month = (byte)qd.StartMonth, ManDays = 0m });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = analystUser.Id, Month = (byte)(qd.StartMonth + 1), ManDays = 0m });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = analystUser.Id, Month = (byte)(qd.StartMonth + 2), ManDays = 0m });
+                    context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = newProj.Id, UserId = analystUser.Id, AllocatedManDay = 0m, ActualManDay = 0m });
 
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser1.Id, Month = (byte)qd.StartMonth, ManDays = Math.Round(m1Cost * 0.35m, 1) });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser1.Id, Month = (byte)(qd.StartMonth + 1), ManDays = Math.Round(m2Cost * 0.35m, 1) });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser1.Id, Month = (byte)(qd.StartMonth + 2), ManDays = Math.Round(m3Cost * 0.35m, 1) });
-                    context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = newProj.Id, UserId = devUser1.Id, AllocatedManDay = Math.Round(pDef.Budget * 0.35m, 1), ActualManDay = Math.Round(pDef.Actual * 0.35m, 1) });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser1.Id, Month = (byte)qd.StartMonth, ManDays = 0m });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser1.Id, Month = (byte)(qd.StartMonth + 1), ManDays = 0m });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser1.Id, Month = (byte)(qd.StartMonth + 2), ManDays = 0m });
+                    context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = newProj.Id, UserId = devUser1.Id, AllocatedManDay = 0m, ActualManDay = 0m });
 
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser2.Id, Month = (byte)qd.StartMonth, ManDays = Math.Round(m1Cost * 0.35m, 1) });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser2.Id, Month = (byte)(qd.StartMonth + 1), ManDays = Math.Round(m2Cost * 0.35m, 1) });
-                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser2.Id, Month = (byte)(qd.StartMonth + 2), ManDays = Math.Round(m3Cost * 0.35m, 1) });
-                    context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = newProj.Id, UserId = devUser2.Id, AllocatedManDay = Math.Round(pDef.Budget * 0.35m, 1), ActualManDay = Math.Round(pDef.Actual * 0.35m, 1) });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser2.Id, Month = (byte)qd.StartMonth, ManDays = 0m });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser2.Id, Month = (byte)(qd.StartMonth + 1), ManDays = 0m });
+                    context.ProjectMonthlyCosts.Add(new ProjectMonthlyCost { ProjectId = newProj.Id, UserId = devUser2.Id, Month = (byte)(qd.StartMonth + 2), ManDays = 0m });
+                    context.ProjectAllocations.Add(new ProjectAllocation { ProjectId = newProj.Id, UserId = devUser2.Id, AllocatedManDay = 0m, ActualManDay = 0m });
 
                     context.SaveChanges();
                     projIndex++;

@@ -339,6 +339,7 @@ namespace ZiraatProje.UI.ViewModels
             {
                 _month1ManDaysTotal = value;
                 OnPropertyChanged();
+                if (IsEditing) TotalManDayBudget = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
                 OnPropertyChanged(nameof(TotalInternalManDays));
                 OnPropertyChanged(nameof(EffectiveBudget));
                 OnPropertyChanged(nameof(BudgetStatusBadge));
@@ -353,6 +354,7 @@ namespace ZiraatProje.UI.ViewModels
             {
                 _month2ManDaysTotal = value;
                 OnPropertyChanged();
+                if (IsEditing) TotalManDayBudget = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
                 OnPropertyChanged(nameof(TotalInternalManDays));
                 OnPropertyChanged(nameof(EffectiveBudget));
                 OnPropertyChanged(nameof(BudgetStatusBadge));
@@ -367,6 +369,7 @@ namespace ZiraatProje.UI.ViewModels
             {
                 _month3ManDaysTotal = value;
                 OnPropertyChanged();
+                if (IsEditing) TotalManDayBudget = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
                 OnPropertyChanged(nameof(TotalInternalManDays));
                 OnPropertyChanged(nameof(EffectiveBudget));
                 OnPropertyChanged(nameof(BudgetStatusBadge));
@@ -381,11 +384,11 @@ namespace ZiraatProje.UI.ViewModels
                 decimal monthSum = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
                 if (monthSum > 0m) return monthSum;
                 if (_overrideTotalCost.HasValue) return _overrideTotalCost.Value;
-                if (_overrideAnalystPlanned.HasValue || _overrideDeveloperPlanned.HasValue)
-                {
-                    return AnalystPlannedManDays + DeveloperPlannedManDays;
-                }
-                return UserBreakdownList?.Sum(u => u.TotalManDays) ?? 0m;
+                
+                decimal roleSum = AnalystPlannedManDays + DeveloperPlannedManDays;
+                if (roleSum > 0m) return roleSum;
+
+                return TotalManDayBudget;
             }
             set
             {
@@ -398,6 +401,24 @@ namespace ZiraatProje.UI.ViewModels
                 OnPropertyChanged(nameof(IsCostOverrunWarningVisible));
                 OnPropertyChanged(nameof(CostWarningMessage));
                 OnPropertyChanged(nameof(BudgetStatusBadge));
+            }
+        }
+
+        public decimal TotalManDayBudget
+        {
+            get => Project?.TotalManDayBudget ?? 0m;
+            set
+            {
+                if (Project != null && Project.TotalManDayBudget != value)
+                {
+                    Project.TotalManDayBudget = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(TotalInternalManDays));
+                    OnPropertyChanged(nameof(AllocatedPlannedCostSum));
+                    OnPropertyChanged(nameof(IsCostMismatched));
+                    OnPropertyChanged(nameof(CostMismatchWarningMessage));
+                    OnPropertyChanged(nameof(EffectiveBudget));
+                }
             }
         }
 
@@ -565,73 +586,57 @@ namespace ZiraatProje.UI.ViewModels
             }
         }
 
-        private decimal? _overrideAnalystPlanned;
+        private decimal _analystPlannedManDays;
         public decimal AnalystPlannedManDays
         {
-            get
-            {
-                if (_overrideAnalystPlanned.HasValue) return _overrideAnalystPlanned.Value;
-
-                if (UserBreakdownList != null && UserBreakdownList.Any(u => string.Equals(u.Role, "Analist", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return UserBreakdownList.Where(u => string.Equals(u.Role, "Analist", StringComparison.OrdinalIgnoreCase)).Sum(u => u.TotalManDays);
-                }
-
-                return 0m;
-            }
+            get => _analystPlannedManDays;
             set
             {
-                _overrideAnalystPlanned = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(DeveloperPlannedManDays));
-                OnPropertyChanged(nameof(TotalInternalManDays));
-                OnPropertyChanged(nameof(AllocatedPlannedCostSum));
-                OnPropertyChanged(nameof(IsCostMismatched));
-                OnPropertyChanged(nameof(CostMismatchWarningMessage));
-                OnPropertyChanged(nameof(EffectiveBudget));
-                OnPropertyChanged(nameof(IsCostOverrunWarningVisible));
-                OnPropertyChanged(nameof(CostWarningMessage));
-                OnPropertyChanged(nameof(MaxActualOrPlannedCost));
-                OnPropertyChanged(nameof(IsAnyBudgetExceeded));
-                OnPropertyChanged(nameof(BudgetExcessDays));
-                OnPropertyChanged(nameof(BudgetStatusBadge));
-                OnPropertyChanged(nameof(BudgetStatusColor));
-                OnPropertyChanged(nameof(BudgetStatusBg));
+                if (_analystPlannedManDays != value)
+                {
+                    _analystPlannedManDays = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(TotalInternalManDays));
+                    OnPropertyChanged(nameof(AllocatedPlannedCostSum));
+                    OnPropertyChanged(nameof(IsCostMismatched));
+                    OnPropertyChanged(nameof(CostMismatchWarningMessage));
+                    OnPropertyChanged(nameof(EffectiveBudget));
+                    OnPropertyChanged(nameof(IsCostOverrunWarningVisible));
+                    OnPropertyChanged(nameof(CostWarningMessage));
+                    OnPropertyChanged(nameof(MaxActualOrPlannedCost));
+                    OnPropertyChanged(nameof(IsAnyBudgetExceeded));
+                    OnPropertyChanged(nameof(BudgetExcessDays));
+                    OnPropertyChanged(nameof(BudgetStatusBadge));
+                    OnPropertyChanged(nameof(BudgetStatusColor));
+                    OnPropertyChanged(nameof(BudgetStatusBg));
+                }
             }
         }
 
-        private decimal? _overrideDeveloperPlanned;
+        private decimal _developerPlannedManDays;
         public decimal DeveloperPlannedManDays
         {
-            get
-            {
-                if (_overrideDeveloperPlanned.HasValue) return _overrideDeveloperPlanned.Value;
-
-                if (UserBreakdownList != null && UserBreakdownList.Any(u => string.Equals(u.Role, "Yazılımcı", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Developer", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Mühendis", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return UserBreakdownList.Where(u => string.Equals(u.Role, "Yazılımcı", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Developer", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Mühendis", StringComparison.OrdinalIgnoreCase)).Sum(u => u.TotalManDays);
-                }
-
-                return 0m;
-            }
+            get => _developerPlannedManDays;
             set
             {
-                _overrideDeveloperPlanned = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(AnalystPlannedManDays));
-                OnPropertyChanged(nameof(TotalInternalManDays));
-                OnPropertyChanged(nameof(AllocatedPlannedCostSum));
-                OnPropertyChanged(nameof(IsCostMismatched));
-                OnPropertyChanged(nameof(CostMismatchWarningMessage));
-                OnPropertyChanged(nameof(EffectiveBudget));
-                OnPropertyChanged(nameof(IsCostOverrunWarningVisible));
-                OnPropertyChanged(nameof(CostWarningMessage));
-                OnPropertyChanged(nameof(MaxActualOrPlannedCost));
-                OnPropertyChanged(nameof(IsAnyBudgetExceeded));
-                OnPropertyChanged(nameof(BudgetExcessDays));
-                OnPropertyChanged(nameof(BudgetStatusBadge));
-                OnPropertyChanged(nameof(BudgetStatusColor));
-                OnPropertyChanged(nameof(BudgetStatusBg));
+                if (_developerPlannedManDays != value)
+                {
+                    _developerPlannedManDays = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(TotalInternalManDays));
+                    OnPropertyChanged(nameof(AllocatedPlannedCostSum));
+                    OnPropertyChanged(nameof(IsCostMismatched));
+                    OnPropertyChanged(nameof(CostMismatchWarningMessage));
+                    OnPropertyChanged(nameof(EffectiveBudget));
+                    OnPropertyChanged(nameof(IsCostOverrunWarningVisible));
+                    OnPropertyChanged(nameof(CostWarningMessage));
+                    OnPropertyChanged(nameof(MaxActualOrPlannedCost));
+                    OnPropertyChanged(nameof(IsAnyBudgetExceeded));
+                    OnPropertyChanged(nameof(BudgetExcessDays));
+                    OnPropertyChanged(nameof(BudgetStatusBadge));
+                    OnPropertyChanged(nameof(BudgetStatusColor));
+                    OnPropertyChanged(nameof(BudgetStatusBg));
+                }
             }
         }
 
@@ -641,13 +646,7 @@ namespace ZiraatProje.UI.ViewModels
             get
             {
                 if (_overrideAnalystActual.HasValue) return _overrideAnalystActual.Value;
-
-                if (UserBreakdownList != null && UserBreakdownList.Any(u => string.Equals(u.Role, "Analist", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return UserBreakdownList.Where(u => string.Equals(u.Role, "Analist", StringComparison.OrdinalIgnoreCase)).Sum(u => u.ActualManDaysShare);
-                }
-
-                return 0m;
+                return Project?.AnalystActualManDays ?? 0m;
             }
             set
             {
@@ -671,13 +670,7 @@ namespace ZiraatProje.UI.ViewModels
             get
             {
                 if (_overrideDeveloperActual.HasValue) return _overrideDeveloperActual.Value;
-
-                if (UserBreakdownList != null && UserBreakdownList.Any(u => string.Equals(u.Role, "Yazılımcı", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Developer", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Mühendis", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return UserBreakdownList.Where(u => string.Equals(u.Role, "Yazılımcı", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Developer", StringComparison.OrdinalIgnoreCase) || string.Equals(u.Role, "Mühendis", StringComparison.OrdinalIgnoreCase)).Sum(u => u.ActualManDaysShare);
-                }
-
-                return 0m;
+                return Project?.DeveloperActualManDays ?? 0m;
             }
             set
             {
@@ -706,7 +699,7 @@ namespace ZiraatProje.UI.ViewModels
                 if (_overrideTotalActual.HasValue) return _overrideTotalActual.Value;
                 if (_overrideAnalystActual.HasValue || _overrideDeveloperActual.HasValue)
                 {
-                    return (_overrideAnalystActual ?? AnalystActualManDays) + (_overrideDeveloperActual ?? DeveloperActualManDays);
+                    return (_overrideAnalystActual ?? (Project?.AnalystActualManDays ?? 0m)) + (_overrideDeveloperActual ?? (Project?.DeveloperActualManDays ?? 0m));
                 }
                 return Project?.ActualManDays ?? 0m;
             }
@@ -730,9 +723,9 @@ namespace ZiraatProje.UI.ViewModels
 
         public decimal MaxActualOrPlannedCost => Math.Max(TotalInternalManDays, ActualManDays);
 
-        public bool IsAnyBudgetExceeded => EffectiveBudget > 0 && ActualManDays > EffectiveBudget;
+        public bool IsAnyBudgetExceeded => EffectiveBudget > 0m && Math.Round(ActualManDays, 1) > Math.Round(EffectiveBudget, 1);
 
-        public decimal BudgetExcessDays => IsAnyBudgetExceeded ? (ActualManDays - EffectiveBudget) : 0m;
+        public decimal BudgetExcessDays => IsAnyBudgetExceeded ? (Math.Round(ActualManDays, 1) - Math.Round(EffectiveBudget, 1)) : 0m;
 
         public bool IsCostOverrunWarningVisible => IsAnyBudgetExceeded;
 
@@ -1090,6 +1083,13 @@ namespace ZiraatProje.UI.ViewModels
         public ObservableCollection<string> TeamFilterList { get; } = new ObservableCollection<string>
         {
             "Tüm Ekipler",
+            "Takip",
+            "Tahsis",
+            "Teminat"
+        };
+
+        public ObservableCollection<string> TeamOptions { get; } = new ObservableCollection<string>
+        {
             "Takip",
             "Tahsis",
             "Teminat"
@@ -1490,21 +1490,35 @@ namespace ZiraatProje.UI.ViewModels
             .Where(r => !(r.User?.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase))
             .Sum(r => r.ActualManDays) ?? 0m;
 
-        public bool IsCostMismatched => TotalManDayBudget > 0m && TotalInternalManDays > 0m && Math.Abs(TotalInternalManDays - TotalManDayBudget) > 0.01m;
+        public bool IsCostMismatched
+        {
+            get
+            {
+                decimal monthSum = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
+                decimal roleSum = AnalystPlannedManDays + DeveloperPlannedManDays;
+                if (monthSum > 0 && roleSum > 0)
+                {
+                    return Math.Abs(monthSum - roleSum) > 0.01m;
+                }
+                return false;
+            }
+        }
 
         public string CostMismatchWarningMessage
         {
             get
             {
                 if (!IsCostMismatched) return string.Empty;
-                decimal diff = Math.Abs(TotalInternalManDays - TotalManDayBudget);
-                if (TotalInternalManDays > TotalManDayBudget)
+                decimal monthSum = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
+                decimal roleSum = AnalystPlannedManDays + DeveloperPlannedManDays;
+                decimal diff = Math.Abs(monthSum - roleSum);
+                if (monthSum > roleSum)
                 {
-                    return $"⚠️ BÜTÇE VE MALİYET UYUMSUZLUĞU: Girilen personel maliyetleri toplamı ({TotalInternalManDays:N0} Gün), tanımlanan proje bütçesini ({TotalManDayBudget:N0} Gün) {diff:N0} Gün AŞMAKTADIR! Lütfen bütçeyi veya personel maliyetlerini düzenleyiniz.";
+                    return $"⚠️ BÜTÇE VE MALİYET UYUMSUZLUĞU: Girilen ay maliyetleri toplamı ({monthSum:N0} Gün), rol maliyetleri toplamını ({roleSum:N0} Gün) {diff:N0} Gün AŞMAKTADIR!";
                 }
                 else
                 {
-                    return $"⚠️ BÜTÇE VE MALİYET UYUMSUZLUĞU: Girilen personel maliyetleri toplamı ({TotalInternalManDays:N0} Gün), tanımlanan proje bütçesinden ({TotalManDayBudget:N0} Gün) {diff:N0} Gün EKSİKTİR! Lütfen bütçeyi veya personel maliyetlerini düzenleyiniz.";
+                    return $"⚠️ BÜTÇE VE MALİYET UYUMSUZLUĞU: Girilen ay maliyetleri toplamı ({monthSum:N0} Gün), rol maliyetleri toplamından ({roleSum:N0} Gün) {diff:N0} Gün EKSİKTİR!";
                 }
             }
         }
@@ -1746,7 +1760,19 @@ namespace ZiraatProje.UI.ViewModels
             }
         }
 
-        public decimal TotalInternalManDays => PersonMonthlyCostRows.Sum(r => r.TotalManDays);
+        public decimal TotalInternalManDays
+        {
+            get
+            {
+                decimal monthSum = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
+                if (monthSum > 0m) return monthSum;
+
+                decimal roleSum = AnalystPlannedManDays + DeveloperPlannedManDays;
+                if (roleSum > 0m) return roleSum;
+
+                return PersonMonthlyCostRows != null && PersonMonthlyCostRows.Any() ? PersonMonthlyCostRows.Sum(r => r.TotalManDays) : 0m;
+            }
+        }
         
         public bool IsBudgetExceeded => TotalManDayBudget > 0 && TotalInternalManDays > TotalManDayBudget;
 
@@ -2369,13 +2395,11 @@ namespace ZiraatProje.UI.ViewModels
             RecalculateTotals();
         }
 
-        public decimal TotalActualManDays => PersonMonthlyCostRows != null && PersonMonthlyCostRows.Any()
-            ? PersonMonthlyCostRows.Sum(r => r.ActualManDays)
-            : ActualManDays;
+        public decimal TotalActualManDays => SelectedProjectDisplay?.ActualManDays ?? ActualManDays;
 
-        public bool IsSideCardBudgetExceeded => TotalManDayBudget > 0m && TotalActualManDays > TotalManDayBudget;
+        public bool IsSideCardBudgetExceeded => TotalManDayBudget > 0m && Math.Round(TotalActualManDays, 1) > Math.Round(TotalManDayBudget, 1);
 
-        public decimal SideCardBudgetExcessDays => IsSideCardBudgetExceeded ? (TotalActualManDays - TotalManDayBudget) : 0m;
+        public decimal SideCardBudgetExcessDays => IsSideCardBudgetExceeded ? (Math.Round(TotalActualManDays, 1) - Math.Round(TotalManDayBudget, 1)) : 0m;
 
         public string SideCardBudgetFeedbackMessage
         {
@@ -2476,18 +2500,27 @@ namespace ZiraatProje.UI.ViewModels
 
             if (SelectedProjectDisplay != null && PersonMonthlyCostRows != null)
             {
-                SelectedProjectDisplay.Month1ManDaysTotal = PersonMonthlyCostRows.Sum(r => r.Month1ManDays);
-                SelectedProjectDisplay.Month2ManDaysTotal = PersonMonthlyCostRows.Sum(r => r.Month2ManDays);
-                SelectedProjectDisplay.Month3ManDaysTotal = PersonMonthlyCostRows.Sum(r => r.Month3ManDays);
-                
                 var breakdown = new List<UserCostBreakdownRow>();
+                var analystNameSet = (DisplayAnalystSummary ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
+                var devNameSet = (DisplayDeveloperSummary ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
+                bool analystIsHerkes = string.Equals(DisplayAnalystSummary, "Herkes", StringComparison.OrdinalIgnoreCase);
+                bool devIsHerkes = string.Equals(DisplayDeveloperSummary, "Herkes", StringComparison.OrdinalIgnoreCase);
+
                 foreach (var row in PersonMonthlyCostRows)
                 {
+                    if (row.User == null) continue;
+                    bool isAnalyst = analystIsHerkes || IsNameMatched(row.User.FullName, analystNameSet);
+                    bool isDev = devIsHerkes || IsNameMatched(row.User.FullName, devNameSet);
+                    string role;
+                    if (isAnalyst && !isDev) role = "Analist";
+                    else if (isDev && !isAnalyst) role = "Yazılımcı";
+                    else role = (row.User.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase) ? "Analist" : "Yazılımcı";
+
                     breakdown.Add(new UserCostBreakdownRow
                     {
                         UserId = row.User.Id,
                         FullName = row.User.FullName,
-                        Role = row.User.Title ?? "",
+                        Role = role,
                         Month1ManDays = row.Month1ManDays,
                         Month2ManDays = row.Month2ManDays,
                         Month3ManDays = row.Month3ManDays,
@@ -2520,6 +2553,89 @@ namespace ZiraatProje.UI.ViewModels
             OnPropertyChanged(nameof(IsBudgetCritical));
             OnPropertyChanged(nameof(HasBudgetWarning));
             OnPropertyChanged(nameof(BudgetWarningMessage));
+        }
+
+        private decimal _month1ManDaysTotal;
+        public decimal Month1ManDaysTotal
+        {
+            get => _month1ManDaysTotal;
+            set
+            {
+                _month1ManDaysTotal = value;
+                OnPropertyChanged();
+                if (IsEditMode) TotalManDayBudget = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal > 0 ? Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal : AnalystPlannedManDays + DeveloperPlannedManDays;
+                OnPropertyChanged(nameof(TotalInternalManDays));
+            }
+        }
+        private decimal _month2ManDaysTotal;
+        public decimal Month2ManDaysTotal
+        {
+            get => _month2ManDaysTotal;
+            set
+            {
+                _month2ManDaysTotal = value;
+                OnPropertyChanged();
+                if (IsEditMode) TotalManDayBudget = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal > 0 ? Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal : AnalystPlannedManDays + DeveloperPlannedManDays;
+                OnPropertyChanged(nameof(TotalInternalManDays));
+            }
+        }
+        private decimal _month3ManDaysTotal;
+        public decimal Month3ManDaysTotal
+        {
+            get => _month3ManDaysTotal;
+            set
+            {
+                _month3ManDaysTotal = value;
+                OnPropertyChanged();
+                if (IsEditMode) TotalManDayBudget = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal > 0 ? Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal : AnalystPlannedManDays + DeveloperPlannedManDays;
+                OnPropertyChanged(nameof(TotalInternalManDays));
+            }
+        }
+        private decimal _analystPlannedManDays;
+        public decimal AnalystPlannedManDays
+        {
+            get => _analystPlannedManDays;
+            set
+            {
+                _analystPlannedManDays = value;
+                OnPropertyChanged();
+                if (IsEditMode) TotalManDayBudget = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal > 0 ? Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal : AnalystPlannedManDays + DeveloperPlannedManDays;
+                OnPropertyChanged(nameof(TotalInternalManDays));
+            }
+        }
+        private decimal _developerPlannedManDays;
+        public decimal DeveloperPlannedManDays
+        {
+            get => _developerPlannedManDays;
+            set
+            {
+                _developerPlannedManDays = value;
+                OnPropertyChanged();
+                if (IsEditMode) TotalManDayBudget = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal > 0 ? Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal : AnalystPlannedManDays + DeveloperPlannedManDays;
+                OnPropertyChanged(nameof(TotalInternalManDays));
+            }
+        }
+
+        private decimal _analystActualManDays;
+        public decimal AnalystActualManDays
+        {
+            get => _analystActualManDays;
+            set
+            {
+                _analystActualManDays = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private decimal _developerActualManDays;
+        public decimal DeveloperActualManDays
+        {
+            get => _developerActualManDays;
+            set
+            {
+                _developerActualManDays = value;
+                OnPropertyChanged();
+            }
         }
 
         public void LoadProjects()
@@ -2617,9 +2733,9 @@ namespace ZiraatProje.UI.ViewModels
                         }
                     }
 
-                    decimal m1Sum = dbCosts.Where(c => c.Month == m1).Sum(c => c.ManDays);
-                    decimal m2Sum = dbCosts.Where(c => c.Month == m2).Sum(c => c.ManDays);
-                    decimal m3Sum = dbCosts.Where(c => c.Month == m3).Sum(c => c.ManDays);
+                    decimal m1Sum = p.AnalistAy1 + p.YazilimciAy1;
+                    decimal m2Sum = p.AnalistAy2 + p.YazilimciAy2;
+                    decimal m3Sum = p.AnalistAy3 + p.YazilimciAy3;
 
                     // Build user breakdown list for row details template & detail card
                     var userGroupIds = dbCosts.Select(c => c.UserId)
@@ -2687,6 +2803,9 @@ namespace ZiraatProje.UI.ViewModels
                         Month3ManDaysTotal = m3Sum,
                         UserBreakdownList = breakdown
                     };
+                    
+                    item.AnalystPlannedManDays = p.AnalistAy1 + p.AnalistAy2 + p.AnalistAy3;
+                    item.DeveloperPlannedManDays = p.YazilimciAy1 + p.YazilimciAy2 + p.YazilimciAy3;
 
                     item.AnalystUserItems = new ObservableCollection<SelectableUserItem>(
                         analystsList.Select(u => new SelectableUserItem
@@ -2812,6 +2931,12 @@ namespace ZiraatProje.UI.ViewModels
                 Description = SelectedProject.Description ?? string.Empty;
                 TotalManDayBudget = SelectedProject.TotalManDayBudget;
                 _isManuallyEditedBudget = SelectedProject.TotalManDayBudget > 0m;
+                Month1ManDaysTotal = SelectedProject.AnalistAy1 + SelectedProject.YazilimciAy1;
+                Month2ManDaysTotal = SelectedProject.AnalistAy2 + SelectedProject.YazilimciAy2;
+                Month3ManDaysTotal = SelectedProject.AnalistAy3 + SelectedProject.YazilimciAy3;
+                AnalystPlannedManDays = SelectedProject.AnalistAy1 + SelectedProject.AnalistAy2 + SelectedProject.AnalistAy3;
+                DeveloperPlannedManDays = SelectedProject.YazilimciAy1 + SelectedProject.YazilimciAy2 + SelectedProject.YazilimciAy3;
+
                 ActualManDays = SelectedProject.ActualManDays;
                 PlannedReleaseDate = SelectedProject.PlannedReleaseDate;
                 ActualReleaseDate = string.Equals(ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase) ? SelectedProject.ActualReleaseDate : null;
@@ -2846,11 +2971,23 @@ namespace ZiraatProje.UI.ViewModels
                 var dbCosts = _services.GetProjectMonthlyCosts(SelectedProject.Id) ?? new List<ProjectMonthlyCost>();
                 var dbAllocations = _services.GetAllocationsByProject(SelectedProject.Id) ?? new List<ProjectAllocation>();
 
+                // "Herkes" seçilince sadece unvanı Analist olan kullanıcılar analist sayılır
+                var analystUserIds = isAnalystHerkes
+                    ? _allUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).Select(u => u.Id).ToHashSet()
+                    : _allUsers.Where(u => IsNameMatched(u.FullName, analystNames)).Select(u => u.Id).ToHashSet();
+
+                var devUserIds = isDevHerkes
+                    ? _allUsers.Where(u => (u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yaz\u0131l\u0131mc\u0131", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("M\u00fchendis", StringComparison.OrdinalIgnoreCase)).Select(u => u.Id).ToHashSet()
+                    : _allUsers.Where(u => IsNameMatched(u.FullName, devNames)).Select(u => u.Id).ToHashSet();
+
+                AnalystActualManDays = dbAllocations.Where(a => analystUserIds.Contains(a.UserId)).Sum(a => a.ActualManDay);
+                DeveloperActualManDays = dbAllocations.Where(a => devUserIds.Contains(a.UserId)).Sum(a => a.ActualManDay);
+
                 var assignedUserIds = _allUsers.Where(u =>
-                    isAnalystHerkes ||
-                    isDevHerkes ||
-                    IsNameMatched(u.FullName, analystNames) ||
-                    IsNameMatched(u.FullName, devNames)
+                    (isAnalystHerkes && (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)) ||
+                    (!isAnalystHerkes && IsNameMatched(u.FullName, analystNames)) ||
+                    (isDevHerkes && ((u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yazılımcı", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Mühendis", StringComparison.OrdinalIgnoreCase))) ||
+                    (!isDevHerkes && IsNameMatched(u.FullName, devNames))
                 ).Select(u => u.Id).ToHashSet();
 
                 var selectedUserIds = AnalystUserItems.Concat(DeveloperUserItems)
@@ -3011,36 +3148,114 @@ namespace ZiraatProje.UI.ViewModels
                 p.ActualReleaseDate = string.Equals(ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase) ? ActualReleaseDate : null;
 
                 // Sync project budget with form budget
+                decimal monthSum = Month1ManDaysTotal + Month2ManDaysTotal + Month3ManDaysTotal;
+                decimal roleSum = AnalystPlannedManDays + DeveloperPlannedManDays;
+
+                decimal totalCost = monthSum > 0 ? monthSum : roleSum;
+                if (totalCost > 0m)
+                {
+                    TotalManDayBudget = totalCost;
+                }
                 p.TotalManDayBudget = TotalManDayBudget;
+
+                decimal m1Total = Month1ManDaysTotal;
+                decimal m2Total = Month2ManDaysTotal;
+                decimal m3Total = Month3ManDaysTotal;
+
+                if (monthSum == 0 && roleSum > 0)
+                {
+                    p.AnalistAy1 = AnalystPlannedManDays;
+                    p.AnalistAy2 = 0m; p.AnalistAy3 = 0m;
+                    p.YazilimciAy1 = DeveloperPlannedManDays;
+                    p.YazilimciAy2 = 0m; p.YazilimciAy3 = 0m;
+                }
+                else
+                {
+                    decimal remAnalyst = AnalystPlannedManDays;
+
+                    p.AnalistAy1 = Math.Min(remAnalyst, m1Total);
+                    p.YazilimciAy1 = m1Total - p.AnalistAy1;
+                    remAnalyst -= p.AnalistAy1;
+
+                    p.AnalistAy2 = Math.Min(remAnalyst, m2Total);
+                    p.YazilimciAy2 = m2Total - p.AnalistAy2;
+                    remAnalyst -= p.AnalistAy2;
+
+                    p.AnalistAy3 = Math.Min(remAnalyst, m3Total);
+                    p.YazilimciAy3 = m3Total - p.AnalistAy3;
+                }
 
                 int startMonth = (SelectedQuarter - 1) * 3 + 1;
                 var monthlyCosts = new List<ProjectMonthlyCost>();
                 var allocations = new List<ProjectAllocation>();
 
                 bool isCompletedForm = string.Equals(ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase);
-                p.ActualManDays = isCompletedForm ? ActualManDays : 0m;
+
+                p.AnalystActualManDays = SelectedProjectDisplay?.AnalystActualManDays ?? p.AnalystActualManDays;
+                p.DeveloperActualManDays = SelectedProjectDisplay?.DeveloperActualManDays ?? p.DeveloperActualManDays;
+                p.ActualManDays = p.AnalystActualManDays + p.DeveloperActualManDays;
                 p.ActualReleaseDate = isCompletedForm ? ActualReleaseDate : null;
 
-                foreach (var row in PersonMonthlyCostRows)
-                {
-                    monthlyCosts.Add(new ProjectMonthlyCost { UserId = row.User.Id, Month = startMonth, ManDays = row.Month1ManDays });
-                    monthlyCosts.Add(new ProjectMonthlyCost { UserId = row.User.Id, Month = startMonth + 1, ManDays = row.Month2ManDays });
-                    monthlyCosts.Add(new ProjectMonthlyCost { UserId = row.User.Id, Month = startMonth + 2, ManDays = row.Month3ManDays });
+                var analystsList = _allUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
+                var devList = _allUsers.Where(u => (u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yazılımcı", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Mühendis", StringComparison.OrdinalIgnoreCase)).ToList();
 
-                    allocations.Add(new ProjectAllocation
-                    {
-                        UserId = row.User.Id,
-                        AllocatedManDay = row.TotalManDays,
-                        ActualManDay = isCompletedForm ? row.ActualManDays : 0m
-                    });
+                var rawAnalysts = p.AssignedAnalystNames ?? string.Empty;
+                var analystNamesSet = rawAnalysts.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
+                bool isAnalystHerkes = string.Equals(rawAnalysts, "Herkes", StringComparison.OrdinalIgnoreCase);
+
+                var rawDevs = p.AssignedDeveloperNames ?? string.Empty;
+                var devNamesSet = rawDevs.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
+                bool isDevHerkes = string.Equals(rawDevs, "Herkes", StringComparison.OrdinalIgnoreCase);
+
+                var analystUsers = analystsList.Where(u => isAnalystHerkes || IsNameMatched(u.FullName, analystNamesSet)).ToList();
+                var devUsers = devList.Where(u => isDevHerkes || IsNameMatched(u.FullName, devNamesSet)).ToList();
+
+                if (!analystUsers.Any())
+                {
+                    var defaultAnalyst = analystsList.FirstOrDefault() ?? _allUsers.FirstOrDefault();
+                    if (defaultAnalyst != null) analystUsers.Add(defaultAnalyst);
+                }
+                if (!devUsers.Any())
+                {
+                    var defaultDev = devList.FirstOrDefault() ?? _allUsers.LastOrDefault();
+                    if (defaultDev != null) devUsers.Add(defaultDev);
                 }
 
-                // Efor uyumsuzluğu kontrolü
-                decimal totalRows = PersonMonthlyCostRows.Sum(r => r.Month1ManDays + r.Month2ManDays + r.Month3ManDays);
-                if (TotalManDayBudget > 0 && Math.Abs(TotalManDayBudget - totalRows) > 0.01m)
+                int numAnalysts = analystUsers.Count;
+                int numDevs = devUsers.Count;
+
+                decimal sumAnalystM1 = 0m, sumAnalystM2 = 0m, sumAnalystM3 = 0m, sumAnalystAlloc = 0m;
+                for (int i = 0; i < numAnalysts; i++)
                 {
-                    StatusMessage = $"⚠️ DİKKAT: Toplam proje bütçesi ({TotalManDayBudget:N1} gün) ile girdiğiniz eforların toplamı ({totalRows:N1} gün) uyumlu değil! Lütfen düzeltin.";
-                    return;
+                    var u = analystUsers[i];
+                    decimal m1 = (i == numAnalysts - 1) ? (p.AnalistAy1 - sumAnalystM1) : Math.Round(p.AnalistAy1 / numAnalysts, 2);
+                    decimal m2 = (i == numAnalysts - 1) ? (p.AnalistAy2 - sumAnalystM2) : Math.Round(p.AnalistAy2 / numAnalysts, 2);
+                    decimal m3 = (i == numAnalysts - 1) ? (p.AnalistAy3 - sumAnalystM3) : Math.Round(p.AnalistAy3 / numAnalysts, 2);
+                    decimal uTotal = (i == numAnalysts - 1) ? (AnalystPlannedManDays - sumAnalystAlloc) : Math.Round(AnalystPlannedManDays / numAnalysts, 2);
+                    
+                    sumAnalystM1 += m1; sumAnalystM2 += m2; sumAnalystM3 += m3; sumAnalystAlloc += uTotal;
+
+                    monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth, ManDays = m1 });
+                    monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth + 1, ManDays = m2 });
+                    monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth + 2, ManDays = m3 });
+                    allocations.Add(new ProjectAllocation { UserId = u.Id, AllocatedManDay = uTotal, ActualManDay = 0m }); // Allocation üzerinde ActualManDay tutmuyoruz artık
+                }
+
+                decimal sumDevM1 = 0m, sumDevM2 = 0m, sumDevM3 = 0m, sumDevAlloc = 0m;
+                for (int i = 0; i < numDevs; i++)
+                {
+                    var u = devUsers[i];
+                    decimal m1 = (i == numDevs - 1) ? (p.YazilimciAy1 - sumDevM1) : Math.Round(p.YazilimciAy1 / numDevs, 2);
+                    decimal m2 = (i == numDevs - 1) ? (p.YazilimciAy2 - sumDevM2) : Math.Round(p.YazilimciAy2 / numDevs, 2);
+                    decimal m3 = (i == numDevs - 1) ? (p.YazilimciAy3 - sumDevM3) : Math.Round(p.YazilimciAy3 / numDevs, 2);
+                    decimal uTotal = (i == numDevs - 1) ? (DeveloperPlannedManDays - sumDevAlloc) : Math.Round(DeveloperPlannedManDays / numDevs, 2);
+                    
+                    sumDevM1 += m1; sumDevM2 += m2; sumDevM3 += m3; sumDevAlloc += uTotal;
+
+                    monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth, ManDays = m1 });
+                    monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth + 1, ManDays = m2 });
+                    monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth + 2, ManDays = m3 });
+                    allocations.Add(new ProjectAllocation { UserId = u.Id, AllocatedManDay = uTotal, ActualManDay = 0m }); // Allocation üzerinde ActualManDay tutmuyoruz artık
                 }
 
                 _services.SaveProjectWithMonthlyCosts(p, monthlyCosts, allocations, LoggedUserName);
@@ -3093,147 +3308,56 @@ namespace ZiraatProje.UI.ViewModels
 
                 // Sync status and actual effort onto project object
                 p.ProjectStatus = item.ProjectStatus;
-                p.ActualManDays = item.ActualManDays;
                 p.PlannedReleaseDate = item.PlannedReleaseDate;
                 p.ActualReleaseDate = item.ActualReleaseDate;
 
                 decimal monthSum = item.Month1ManDaysTotal + item.Month2ManDaysTotal + item.Month3ManDaysTotal;
                 decimal roleSum = item.AnalystPlannedManDays + item.DeveloperPlannedManDays;
 
-                // Only warn about mismatch if user actually entered both month and role costs
-                if (monthSum > 0 && roleSum > 0 && Math.Abs(monthSum - roleSum) > 2m)
-                {
-                    decimal diff = monthSum - roleSum;
-                    string diffDetail = diff > 0 
-                        ? $"Ay bazlı toplam maliyet ({monthSum:N0} Gün), Analist & Yazılımcı toplam maliyetinden ({roleSum:N0} Gün) {diff:N0} gün FAZLADIR."
-                        : $"Analist & Yazılımcı toplam maliyeti ({roleSum:N0} Gün), ay bazlı toplam maliyetten ({monthSum:N0} Gün) {Math.Abs(diff):N0} gün FAZLADIR.";
-
-                    MessageBox.Show(
-                        $"⚠️ MALİYET DAĞILIMI UYUŞMAZLIĞI!\n\n" +
-                        $"{diffDetail}\n\n" +
-                        $"Lütfen Analist veya Yazılımcı maliyet tutarlarında da gerekli güncellemeyi yaparak toplam maliyeti ({monthSum:N0} Adam/Gün) eşitleyin.",
-                        "Maliyet Dağılım Uyuşmazlığı",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-
-                    return;
-                }
-
-                decimal totalCost = monthSum > 0 ? monthSum : (roleSum > 0 ? roleSum : item.TotalInternalManDays);
-
-                // Update project budget with the new total cost entered by the user
+                decimal totalCost = monthSum > 0 ? monthSum : roleSum;
                 if (totalCost > 0m)
                 {
                     p.TotalManDayBudget = totalCost;
                 }
 
-                int startMonth = (SelectedQuarter - 1) * 3 + 1;
-                var monthlyCosts = new List<ProjectMonthlyCost>();
-                var allocations = new List<ProjectAllocation>();
-
-                var analystsList = _allUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
-                var devList = _allUsers.Where(u => (u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yazılımcı", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Mühendis", StringComparison.OrdinalIgnoreCase)).ToList();
-
-                var rawAnalysts = p.AssignedAnalystNames ?? string.Empty;
-                var analystNamesSet = rawAnalysts.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
-                bool isAnalystHerkes = string.Equals(rawAnalysts, "Herkes", StringComparison.OrdinalIgnoreCase);
-
-                var rawDevs = p.AssignedDeveloperNames ?? string.Empty;
-                var devNamesSet = rawDevs.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
-                bool isDevHerkes = string.Equals(rawDevs, "Herkes", StringComparison.OrdinalIgnoreCase);
-
-                var analystUsers = analystsList.Where(u => isAnalystHerkes || IsNameMatched(u.FullName, analystNamesSet)).ToList();
-                var devUsers = devList.Where(u => isDevHerkes || IsNameMatched(u.FullName, devNamesSet)).ToList();
-
-                if (!analystUsers.Any())
+                if (monthSum == 0 && roleSum > 0)
                 {
-                    var defaultAnalyst = analystsList.FirstOrDefault() ?? _allUsers.FirstOrDefault();
-                    if (defaultAnalyst != null) analystUsers.Add(defaultAnalyst);
+                    p.AnalistAy1 = item.AnalystPlannedManDays;
+                    p.AnalistAy2 = 0m; p.AnalistAy3 = 0m;
+                    p.YazilimciAy1 = item.DeveloperPlannedManDays;
+                    p.YazilimciAy2 = 0m; p.YazilimciAy3 = 0m;
                 }
-                if (!devUsers.Any())
+                else
                 {
-                    var defaultDev = devList.FirstOrDefault() ?? _allUsers.LastOrDefault();
-                    if (defaultDev != null) devUsers.Add(defaultDev);
+                    decimal remAnalyst = item.AnalystPlannedManDays;
+
+                    p.AnalistAy1 = Math.Min(remAnalyst, item.Month1ManDaysTotal);
+                    p.YazilimciAy1 = item.Month1ManDaysTotal - p.AnalistAy1;
+                    remAnalyst -= p.AnalistAy1;
+
+                    p.AnalistAy2 = Math.Min(remAnalyst, item.Month2ManDaysTotal);
+                    p.YazilimciAy2 = item.Month2ManDaysTotal - p.AnalistAy2;
+                    remAnalyst -= p.AnalistAy2;
+
+                    p.AnalistAy3 = Math.Min(remAnalyst, item.Month3ManDaysTotal);
+                    p.YazilimciAy3 = item.Month3ManDaysTotal - p.AnalistAy3;
                 }
+                
+                p.AnalystPlannedManDays = item.AnalystPlannedManDays;
+                p.DeveloperPlannedManDays = item.DeveloperPlannedManDays;
 
-                // Distribute actual effort if overridden in the left grid
-                decimal totalAnalystActual = item.AnalystActualManDays;
-                decimal totalDevActual = item.DeveloperActualManDays;
+                // Gerçekleşen eforları doğrudan kaydet — ne girildiyse o
+                bool isCompletedForm = string.Equals(p.ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase);
 
-                var allAssigned = analystUsers.Concat(devUsers).DistinctBy(u => u.Id).ToList();
-                int numAnalysts = Math.Max(1, analystUsers.Count);
-                int numDevs = Math.Max(1, devUsers.Count);
-                int numAll = Math.Max(1, allAssigned.Count);
+                p.AnalystActualManDays = item.AnalystActualManDays;
+                p.DeveloperActualManDays = item.DeveloperActualManDays;
+                p.ActualManDays = p.AnalystActualManDays + p.DeveloperActualManDays;
 
-                bool isCompletedRow = string.Equals(item.ProjectStatus, "Tamamlandı", StringComparison.OrdinalIgnoreCase);
+                // Mevcut monthly costs ve allocations'ı koru
+                var existingMonthlyCosts = _services.GetProjectMonthlyCosts(p.Id) ?? new List<ProjectMonthlyCost>();
+                var existingAllocations = _services.GetAllocationsByProject(p.Id) ?? new List<ProjectAllocation>();
 
-                if (!isCompletedRow)
-                {
-                    item.AnalystActualManDays = 0m;
-                    item.DeveloperActualManDays = 0m;
-                    item.ActualManDays = 0m;
-                    item.ActualReleaseDate = null;
-                    p.ActualManDays = 0m;
-                    p.ActualReleaseDate = null;
-                }
-
-                foreach (var u in allAssigned)
-                {
-                    var existingRow = item.UserBreakdownList?.FirstOrDefault(r => r.UserId == u.Id);
-                    
-                    decimal allocated = existingRow?.TotalManDays ?? Math.Round((item.Month1ManDaysTotal + item.Month2ManDaysTotal + item.Month3ManDaysTotal) / numAll, 0);
-
-                    bool isAnalyst = analystUsers.Any(a => a.Id == u.Id);
-                    bool isDev = devUsers.Any(d => d.Id == u.Id);
-
-                    decimal actualShare = 0m;
-                    if (isCompletedRow)
-                    {
-                        if (isDev && totalDevActual > 0m)
-                        {
-                            actualShare = Math.Round(totalDevActual / numDevs, 1);
-                        }
-                        else if (isAnalyst && totalAnalystActual > 0m)
-                        {
-                            actualShare = Math.Round(totalAnalystActual / numAnalysts, 1);
-                        }
-                        else
-                        {
-                            actualShare = existingRow?.ActualManDaysShare ?? 0m;
-                        }
-                    }
-
-                    allocations.Add(new ProjectAllocation
-                    {
-                        UserId = u.Id,
-                        AllocatedManDay = allocated,
-                        ActualManDay = actualShare
-                    });
-
-                    if (existingRow != null)
-                    {
-                        existingRow.ActualManDaysShare = actualShare;
-                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth, ManDays = existingRow.Month1ManDays });
-                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth + 1, ManDays = existingRow.Month2ManDays });
-                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth + 2, ManDays = existingRow.Month3ManDays });
-                    }
-                    else
-                    {
-                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth, ManDays = Math.Round(item.Month1ManDaysTotal / numAll, 0) });
-                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth + 1, ManDays = Math.Round(item.Month2ManDaysTotal / numAll, 0) });
-                        monthlyCosts.Add(new ProjectMonthlyCost { UserId = u.Id, Month = startMonth + 2, ManDays = Math.Round(item.Month3ManDaysTotal / numAll, 0) });
-                    }
-                }
-
-                // Row üzerinden efor kontrolü
-                decimal totalRows = item.Month1ManDaysTotal + item.Month2ManDaysTotal + item.Month3ManDaysTotal;
-                if (item.Project.TotalManDayBudget > 0 && Math.Abs(item.Project.TotalManDayBudget - totalRows) > 0.01m)
-                {
-                    StatusMessage = $"⚠️ DİKKAT: Toplam proje bütçesi ({item.Project.TotalManDayBudget:N1} gün) ile aylara girdiğiniz eforların toplamı ({totalRows:N1} gün) uyumlu değil! Lütfen düzeltin.";
-                    return; // Düzenleme modunda kal
-                }
-
-                _services.SaveProjectWithMonthlyCosts(p, monthlyCosts, allocations, LoggedUserName);
+                _services.SaveProjectWithMonthlyCosts(p, existingMonthlyCosts, existingAllocations, LoggedUserName);
                 StatusMessage = $"✅ '{p.ProjectName}' projesinin bütçesi ve durumu GÜNCELLENDİ.";
                 item.IsEditing = false;
                 item.NotifyAllPropertiesChanged();
@@ -3320,6 +3444,11 @@ namespace ZiraatProje.UI.ViewModels
             SelectedTeam = string.Empty;
             TotalManDayBudget = 0m;
             ActualManDays = 0m;
+            Month1ManDaysTotal = 0m;
+            Month2ManDaysTotal = 0m;
+            Month3ManDaysTotal = 0m;
+            AnalystPlannedManDays = 0m;
+            DeveloperPlannedManDays = 0m;
 
             foreach (var item in AnalystUserItems) item.IsSelected = false;
             foreach (var item in DeveloperUserItems) item.IsSelected = false;

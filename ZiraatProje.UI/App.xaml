@@ -35,7 +35,6 @@
         <!-- TextBlock Helper Styles -->
         <Style TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource PrimaryFont}"/>
-            <Setter Property="Foreground" Value="{StaticResource DarkSlate}"/>
         </Style>
 
         <!-- Rounded TextBox Style -->
@@ -197,15 +196,22 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
+                        <ControlTemplate.Resources>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"/>
+                            </Style>
+                        </ControlTemplate.Resources>
                         <Border Name="Border" CornerRadius="5" Background="{TemplateBinding Background}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Border" Property="Background" Value="{StaticResource ZiraatRedLight}"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="Border" Property="Background" Value="{StaticResource ZiraatRed}"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Border" Property="Background" Value="#cbd5e0"/>
@@ -228,6 +234,11 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
+                        <ControlTemplate.Resources>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"/>
+                            </Style>
+                        </ControlTemplate.Resources>
                         <Border Name="Border" CornerRadius="8" Background="{TemplateBinding Background}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -248,15 +259,22 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
+                        <ControlTemplate.Resources>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"/>
+                            </Style>
+                        </ControlTemplate.Resources>
                         <Border Name="Border" CornerRadius="5" Background="{TemplateBinding Background}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#cbd5e0"/>
+                                <Setter TargetName="Border" Property="Background" Value="#64748b"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#e2e8f0"/>
+                                <Setter TargetName="Border" Property="Background" Value="#475569"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -370,17 +388,22 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
+                        <ControlTemplate.Resources>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=Foreground}"/>
+                            </Style>
+                        </ControlTemplate.Resources>
                         <Grid Margin="0,0,8,0">
                             <!-- Distinct Tab Pill Container -->
                             <Border Name="Panel" Background="#e2e8f0" BorderBrush="#94a3b8" BorderThickness="1.5" CornerRadius="8" Padding="20,10">
-                                <ContentPresenter Name="ContentSite" ContentSource="Header" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <ContentPresenter Name="ContentSite" ContentSource="Header" VerticalAlignment="Center" HorizontalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}"/>
                             </Border>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Panel" Property="Background" Value="#cbd5e1"/>
-                                <Setter TargetName="Panel" Property="BorderBrush" Value="#bc171d"/>
-                                <Setter Property="Foreground" Value="#0f172a"/>
+                                <Setter TargetName="Panel" Property="Background" Value="#bc171d"/>
+                                <Setter TargetName="Panel" Property="BorderBrush" Value="#881337"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Panel" Property="Background" Value="#bc171d"/>

@@ -693,20 +693,31 @@ namespace ZiraatProje.UI.ViewModels
             }
         }
 
-        public bool IsUserSelectorEnabled => IsCurrentUserAdmin;
+        public bool IsUserSelectorEnabled => false;
+
+        public static bool IsUserMatch(string name1, string name2)
+        {
+            if (string.IsNullOrWhiteSpace(name1) || string.IsNullOrWhiteSpace(name2)) return false;
+            var n1 = System.Text.RegularExpressions.Regex.Replace(name1.Trim(), @"\s+", " ");
+            var n2 = System.Text.RegularExpressions.Regex.Replace(name2.Trim(), @"\s+", " ");
+            if (string.Equals(n1, n2, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(n1, n2, StringComparison.CurrentCultureIgnoreCase))
+                return true;
+
+            var tr1 = n1.Replace("i", "İ").Replace("I", "ı");
+            var tr2 = n2.Replace("i", "İ").Replace("I", "ı");
+            return string.Equals(tr1, tr2, StringComparison.OrdinalIgnoreCase);
+        }
 
         public void AutoSelectCurrentUser()
         {
-            if (UsersList == null || !UsersList.Any()) return;
+            if (UsersList == null || !UsersList.Any() || string.IsNullOrWhiteSpace(CurrentUserName)) return;
 
-            var matched = UsersList.FirstOrDefault(u => string.Equals(u.FullName, CurrentUserName, StringComparison.OrdinalIgnoreCase));
+            var matched = UsersList.FirstOrDefault(u => IsUserMatch(u.FullName, CurrentUserName));
             if (matched != null)
             {
                 SelectedUser = matched;
-            }
-            else if (UsersList.Any())
-            {
-                SelectedUser = UsersList.First();
+                SelectedUserId = matched.Id;
             }
         }
 
@@ -714,7 +725,7 @@ namespace ZiraatProje.UI.ViewModels
         {
             get
             {
-                var found = UsersList.FirstOrDefault(u => u.FullName.Equals(CurrentUserName, StringComparison.OrdinalIgnoreCase));
+                var found = UsersList.FirstOrDefault(u => IsUserMatch(u.FullName, CurrentUserName));
                 return found?.Id ?? 0;
             }
         }
@@ -1114,7 +1125,7 @@ namespace ZiraatProje.UI.ViewModels
                         RequestNote = requestNote,
                         RequestedAt = DateTime.Now,
                         ApprovedAt = DateTime.Now,
-                        ApprovedByUserName = CurrentUserName,
+                        ApprovedByUserName = !string.IsNullOrWhiteSpace(CurrentUserName) ? CurrentUserName : (SelectedUser != null ? SelectedUser.FullName : "Sistem"),
                         IsNotificationSeen = true
                     };
 
@@ -1130,7 +1141,7 @@ namespace ZiraatProje.UI.ViewModels
                     SelectedLeave.EndDate = finalEndDate;
                     SelectedLeave.Status = "Approved";
                     SelectedLeave.IsSpecialRequest = isSpecialRequest;
-                    SelectedLeave.ApprovedByUserName = CurrentUserName;
+                    SelectedLeave.ApprovedByUserName = !string.IsNullOrWhiteSpace(CurrentUserName) ? CurrentUserName : (SelectedUser != null ? SelectedUser.FullName : "Sistem");
                     SelectedLeave.ApprovedAt = DateTime.Now;
                     SelectedLeave.IsNotificationSeen = true;
                     if (!string.IsNullOrWhiteSpace(requestNote))
@@ -1185,12 +1196,7 @@ namespace ZiraatProje.UI.ViewModels
         {
             SelectedLeave = null;
             SelectedUserId = 0;
-            // Pre-select current user for both admin and non-admin (admin can still change it via ComboBox)
-            if (!string.IsNullOrWhiteSpace(CurrentUserName))
-            {
-                var self = UsersList.FirstOrDefault(u => u.FullName.Equals(CurrentUserName, StringComparison.OrdinalIgnoreCase));
-                if (self != null) SelectedUserId = self.Id;
-            }
+            AutoSelectCurrentUser();
             StartDate = DateTime.Today;
             EndDate = DateTime.Today;
             HourlyDate = DateTime.Today;

@@ -45,14 +45,36 @@ namespace ZiraatProje.UI.ViewModels
             set
             {
                 _isCurrentUserAdmin = value;
+                if (!_isCurrentUserAdmin)
+                {
+                    _isDirectoryViewMode = true;
+                }
+                else
+                {
+                    _isDirectoryViewMode = false;
+                }
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsDirectoryViewMode));
+                OnPropertyChanged(nameof(AdminPanelVisibility));
+                OnPropertyChanged(nameof(UserDirectoryVisibility));
+            }
+        }
+
+        private bool _isDirectoryViewMode;
+        public bool IsDirectoryViewMode
+        {
+            get => _isDirectoryViewMode;
+            set
+            {
+                _isDirectoryViewMode = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(AdminPanelVisibility));
                 OnPropertyChanged(nameof(UserDirectoryVisibility));
             }
         }
 
-        public Visibility AdminPanelVisibility => IsCurrentUserAdmin ? Visibility.Visible : Visibility.Collapsed;
-        public Visibility UserDirectoryVisibility => IsCurrentUserAdmin ? Visibility.Collapsed : Visibility.Visible;
+        public Visibility AdminPanelVisibility => (IsCurrentUserAdmin && !IsDirectoryViewMode) ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility UserDirectoryVisibility => (!IsCurrentUserAdmin || IsDirectoryViewMode) ? Visibility.Visible : Visibility.Collapsed;
 
         private DirectoryTeamGroup? _managerGroup;
         public DirectoryTeamGroup? ManagerGroup
@@ -389,12 +411,18 @@ namespace ZiraatProje.UI.ViewModels
         public ICommand CloseUserFormCommand { get; }
         public ICommand OpenTeamFormCommand { get; }
         public ICommand CloseTeamFormCommand { get; }
+        public ICommand ToggleDirectoryViewCommand { get; }
 
         public UsersViewModel() : this(false) { }
 
         public UsersViewModel(bool isCurrentUserAdmin)
         {
             IsCurrentUserAdmin = isCurrentUserAdmin;
+
+            ToggleDirectoryViewCommand = new RelayCommand(_ =>
+            {
+                IsDirectoryViewMode = !IsDirectoryViewMode;
+            });
 
             SaveCommand = new RelayCommand(ExecuteSave);
             DeleteCommand = new RelayCommand(ExecuteDelete, CanDelete);
@@ -437,6 +465,11 @@ namespace ZiraatProje.UI.ViewModels
             });
             CloseTeamFormCommand = new RelayCommand(_ => { IsTeamFormOpen = false; });
 
+            RefreshData();
+        }
+
+        public void RefreshData()
+        {
             LoadTeams();
             LoadUsers();
         }

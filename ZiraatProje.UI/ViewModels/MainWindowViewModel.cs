@@ -273,7 +273,11 @@ namespace ZiraatProje.UI.ViewModels
                     IsLoggedIn = true;
                     ShowLoginPasswordText = false;
                     LoginEmailPrefix = string.Empty;
-                    LoginPassword = string.Empty;
+                    // Clear cached view models for new user session
+                    _cachedProjectsViewModel = null;
+                    _cachedShiftsViewModel = null;
+                    _cachedLeavesViewModel = null;
+                    _cachedUsersViewModel = null;
 
                     // Load initial dashboard for this team with full quick action delegates
                     var dashVm = CreateDashboardViewModel(IsCurrentUserAdmin, CurrentUserName);
@@ -344,6 +348,10 @@ namespace ZiraatProje.UI.ViewModels
                 ShowLoginPasswordText = false;
                 ErrorMessage = string.Empty;
                 ResetStatusMessage = string.Empty;
+                _cachedProjectsViewModel = null;
+                _cachedShiftsViewModel = null;
+                _cachedLeavesViewModel = null;
+                _cachedUsersViewModel = null;
                 CurrentViewModel = CreateDashboardViewModel(false, string.Empty);
             });
 
@@ -430,7 +438,16 @@ namespace ZiraatProje.UI.ViewModels
 
         private void NavigateToLeaves()
         {
-            _cachedLeavesViewModel ??= new LeavesViewModel(IsCurrentUserAdmin, CurrentUserName);
+            if (_cachedLeavesViewModel == null)
+            {
+                _cachedLeavesViewModel = new LeavesViewModel(IsCurrentUserAdmin, CurrentUserName);
+            }
+            else
+            {
+                _cachedLeavesViewModel.IsCurrentUserAdmin = IsCurrentUserAdmin;
+                _cachedLeavesViewModel.CurrentUserName = CurrentUserName;
+                _cachedLeavesViewModel.AutoSelectCurrentUser();
+            }
             CurrentViewModel = _cachedLeavesViewModel;
         }
 
@@ -442,13 +459,31 @@ namespace ZiraatProje.UI.ViewModels
 
         private void NavigateToUsers()
         {
-            _cachedUsersViewModel ??= new UsersViewModel(IsCurrentUserAdmin);
+            if (_cachedUsersViewModel == null)
+            {
+                _cachedUsersViewModel = new UsersViewModel(IsCurrentUserAdmin);
+            }
+            else
+            {
+                _cachedUsersViewModel.IsCurrentUserAdmin = IsCurrentUserAdmin;
+                _cachedUsersViewModel.RefreshData();
+            }
             CurrentViewModel = _cachedUsersViewModel;
         }
 
         private void CreateLeaveRequest()
         {
-            _cachedLeavesViewModel ??= new LeavesViewModel(IsCurrentUserAdmin, CurrentUserName, initialTabIndex: 1);
+            if (_cachedLeavesViewModel == null)
+            {
+                _cachedLeavesViewModel = new LeavesViewModel(IsCurrentUserAdmin, CurrentUserName, initialTabIndex: 1);
+            }
+            else
+            {
+                _cachedLeavesViewModel.IsCurrentUserAdmin = IsCurrentUserAdmin;
+                _cachedLeavesViewModel.CurrentUserName = CurrentUserName;
+                _cachedLeavesViewModel.SelectedTabIndex = 1;
+                _cachedLeavesViewModel.AutoSelectCurrentUser();
+            }
             CurrentViewModel = _cachedLeavesViewModel;
         }
 
@@ -466,7 +501,16 @@ namespace ZiraatProje.UI.ViewModels
 
         private void CreateUser()
         {
-            _cachedUsersViewModel ??= new UsersViewModel(IsCurrentUserAdmin);
+            if (_cachedUsersViewModel == null)
+            {
+                _cachedUsersViewModel = new UsersViewModel(IsCurrentUserAdmin);
+            }
+            else
+            {
+                _cachedUsersViewModel.IsCurrentUserAdmin = IsCurrentUserAdmin;
+                _cachedUsersViewModel.RefreshData();
+            }
+            _cachedUsersViewModel.OpenUserFormCommand.Execute(null);
             CurrentViewModel = _cachedUsersViewModel;
         }
     }

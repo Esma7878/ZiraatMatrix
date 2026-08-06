@@ -381,9 +381,15 @@
                                                                         Background="#10b981" Foreground="White" FontWeight="Bold" FontSize="11" Height="26" Width="78" Cursor="Hand">
                                                                     <Button.Template>
                                                                         <ControlTemplate TargetType="Button">
-                                                                            <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                                                            <Border Name="Bd" Background="{TemplateBinding Background}" CornerRadius="5">
                                                                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                                             </Border>
+                                                                            <ControlTemplate.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter TargetName="Bd" Property="Background" Value="#059669"/>
+                                                                                    <Setter Property="Foreground" Value="White"/>
+                                                                                </Trigger>
+                                                                            </ControlTemplate.Triggers>
                                                                         </ControlTemplate>
                                                                     </Button.Template>
                                                                 </Button>
@@ -433,6 +439,10 @@
                                                                              <Setter Property="Foreground" Value="White"/>
                                                                              <Setter Property="FontWeight" Value="Bold"/>
                                                                          </DataTrigger>
+                                                                         <Trigger Property="IsMouseOver" Value="True">
+                                                                             <Setter Property="Background" Value="#7c3aed"/>
+                                                                             <Setter Property="Foreground" Value="White"/>
+                                                                         </Trigger>
                                                                      </Style.Triggers>
                                                                  </Style>
                                                              </Button.Style>
@@ -462,6 +472,10 @@
                                                                              <Setter Property="Foreground" Value="White"/>
                                                                              <Setter Property="FontWeight" Value="Bold"/>
                                                                          </DataTrigger>
+                                                                         <Trigger Property="IsMouseOver" Value="True">
+                                                                             <Setter Property="Background" Value="#059669"/>
+                                                                             <Setter Property="Foreground" Value="White"/>
+                                                                         </Trigger>
                                                                      </Style.Triggers>
                                                                  </Style>
                                                              </Button.Style>
@@ -491,6 +505,10 @@
                                                                              <Setter Property="Foreground" Value="White"/>
                                                                              <Setter Property="FontWeight" Value="Bold"/>
                                                                          </DataTrigger>
+                                                                         <Trigger Property="IsMouseOver" Value="True">
+                                                                             <Setter Property="Background" Value="#2563eb"/>
+                                                                             <Setter Property="Foreground" Value="White"/>
+                                                                         </Trigger>
                                                                      </Style.Triggers>
                                                                  </Style>
                                                              </Button.Style>
@@ -686,9 +704,15 @@
                                                                     Background="#10b981" Foreground="White" FontWeight="Bold" FontSize="11" Height="26" Width="78" Cursor="Hand">
                                                                 <Button.Template>
                                                                     <ControlTemplate TargetType="Button">
-                                                                        <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                                                        <Border Name="Bd" Background="{TemplateBinding Background}" CornerRadius="5">
                                                                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                                         </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter TargetName="Bd" Property="Background" Value="#059669"/>
+                                                                                <Setter Property="Foreground" Value="White"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
                                                                     </ControlTemplate>
                                                                 </Button.Template>
                                                             </Button>
@@ -794,6 +818,7 @@
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
                                                                 <Setter TargetName="Border" Property="Background" Value="#c53030"/>
+                                                                <Setter Property="Foreground" Value="White"/>
                                                             </Trigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
@@ -808,6 +833,7 @@
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
                                                                 <Setter TargetName="Border" Property="Background" Value="#4a5568"/>
+                                                                <Setter Property="Foreground" Value="White"/>
                                                             </Trigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
@@ -890,6 +916,7 @@
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
                                                                 <Setter TargetName="Border" Property="Background" Value="#c53030"/>
+                                                                <Setter Property="Foreground" Value="White"/>
                                                             </Trigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
@@ -904,6 +931,7 @@
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
                                                                 <Setter TargetName="Border" Property="Background" Value="#4a5568"/>
+                                                                <Setter Property="Foreground" Value="White"/>
                                                             </Trigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
@@ -1485,6 +1513,10 @@
                                             <Setter Property="BorderThickness" Value="1"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                             <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#2563eb"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </Trigger>
                                                 <DataTrigger Binding="{Binding IsFinishedAllSelected}" Value="True">
                                                     <Setter Property="Background" Value="#3b82f6"/>
                                                     <Setter Property="Foreground" Value="White"/>
@@ -1496,7 +1528,7 @@
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
-                                                <TextBlock Text="🌐 Tüm Geçmiş Nöbetler" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <TextBlock Text="🌐 Tüm Geçmiş Nöbetler" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
                                             </Border>
                                         </ControlTemplate>
                                     </Button.Template>
@@ -1512,6 +1544,10 @@
                                             <Setter Property="BorderThickness" Value="1"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                             <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#ef4444"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </Trigger>
                                                 <DataTrigger Binding="{Binding IsFinishedMonthlySelected}" Value="True">
                                                     <Setter Property="Background" Value="#dc2626"/>
                                                     <Setter Property="Foreground" Value="White"/>
@@ -1523,7 +1559,7 @@
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
-                                                <TextBlock Text="🚀 Aylık Yaygınlaştırma" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <TextBlock Text="🚀 Aylık Yaygınlaştırma" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
                                             </Border>
                                         </ControlTemplate>
                                     </Button.Template>
@@ -1539,6 +1575,10 @@
                                             <Setter Property="BorderThickness" Value="1"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                             <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#3b82f6"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </Trigger>
                                                 <DataTrigger Binding="{Binding IsFinishedWeeklySelected}" Value="True">
                                                     <Setter Property="Background" Value="#2563eb"/>
                                                     <Setter Property="Foreground" Value="White"/>
@@ -1550,7 +1590,7 @@
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
-                                                <TextBlock Text="📆 Ekip Haftalık Nöbetleri" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <TextBlock Text="📆 Ekip Haftalık Nöbetleri" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
                                             </Border>
                                         </ControlTemplate>
                                     </Button.Template>
@@ -1566,6 +1606,10 @@
                                             <Setter Property="BorderThickness" Value="1"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                             <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#8b5cf6"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </Trigger>
                                                 <DataTrigger Binding="{Binding IsFinishedCustomSelected}" Value="True">
                                                     <Setter Property="Background" Value="#7c3aed"/>
                                                     <Setter Property="Foreground" Value="White"/>
@@ -1577,7 +1621,7 @@
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
                                             <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
-                                                <TextBlock Text="🛡️ Diğer / Özel Nöbetler" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <TextBlock Text="🛡️ Diğer / Özel Nöbetler" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
                                             </Border>
                                         </ControlTemplate>
                                     </Button.Template>

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZiraatProje.Business", "Zir
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZiraatProje.UI", "ZiraatProje.UI\ZiraatProje.UI.csproj", "{7093D13F-4239-4D70-9523-F31C9AE5443D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZiraatProje.Tests", "ZiraatProje.Tests\ZiraatProje.Tests.csproj", "{51273BFF-A31B-45AB-921F-45DE127131D0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{7093D13F-4239-4D70-9523-F31C9AE5443D}.Release|x64.Build.0 = Release|Any CPU
 		{7093D13F-4239-4D70-9523-F31C9AE5443D}.Release|x86.ActiveCfg = Release|Any CPU
 		{7093D13F-4239-4D70-9523-F31C9AE5443D}.Release|x86.Build.0 = Release|Any CPU
+		{51273BFF-A31B-45AB-921F-45DE127131D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51273BFF-A31B-45AB-921F-45DE127131D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51273BFF-A31B-45AB-921F-45DE127131D0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{51273BFF-A31B-45AB-921F-45DE127131D0}.Debug|x64.Build.0 = Debug|Any CPU
+		{51273BFF-A31B-45AB-921F-45DE127131D0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{51273BFF-A31B-45AB-921F-45DE127131D0}.Debug|x86.Build.0 = Debug|Any CPU
+		{51273BFF-A31B-45AB-921F-45DE127131D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51273BFF-A31B-45AB-921F-45DE127131D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51273BFF-A31B-45AB-921F-45DE127131D0}.Release|x64.ActiveCfg = Release|Any CPU
+		{51273BFF-A31B-45AB-921F-45DE127131D0}.Release|x64.Build.0 = Release|Any CPU
+		{51273BFF-A31B-45AB-921F-45DE127131D0}.Release|x86.ActiveCfg = Release|Any CPU
+		{51273BFF-A31B-45AB-921F-45DE127131D0}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

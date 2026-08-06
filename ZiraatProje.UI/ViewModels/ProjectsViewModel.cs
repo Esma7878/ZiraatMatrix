@@ -479,7 +479,7 @@ namespace ZiraatProje.UI.ViewModels
             var selected = AnalystUserItems.Where(i => i.IsSelected).Select(i => i.User.FullName).ToList();
             if (AnalystUserItems.Any() && selected.Count == AnalystUserItems.Count)
             {
-                Project.AssignedAnalystNames = "Herkes";
+                Project.AssignedAnalystNames = "Herkes (" + string.Join(", ", selected) + ")";
             }
             else if (selected.Any())
             {
@@ -498,7 +498,7 @@ namespace ZiraatProje.UI.ViewModels
             var selected = DeveloperUserItems.Where(i => i.IsSelected).Select(i => i.User.FullName).ToList();
             if (DeveloperUserItems.Any() && selected.Count == DeveloperUserItems.Count)
             {
-                Project.AssignedDeveloperNames = "Herkes";
+                Project.AssignedDeveloperNames = "Herkes (" + string.Join(", ", selected) + ")";
             }
             else if (selected.Any())
             {
@@ -512,19 +512,43 @@ namespace ZiraatProje.UI.ViewModels
             OnPropertyChanged(nameof(FormattedDeveloperNames));
         }
 
-        public string FormattedAnalystNames => ProjectsViewModel.FormatNamesWithAbbreviatedSurname(Project?.AssignedAnalystNames);
-        public string FormattedDeveloperNames => ProjectsViewModel.FormatNamesWithAbbreviatedSurname(Project?.AssignedDeveloperNames);
+        public string FormattedAnalystNames
+        {
+            get
+            {
+                string raw = Project?.AssignedAnalystNames ?? "";
+                if (raw.StartsWith("Herkes", StringComparison.OrdinalIgnoreCase)) return "Herkes";
+                return ProjectsViewModel.FormatNamesWithAbbreviatedSurname(raw);
+            }
+        }
+
+        public string FormattedDeveloperNames
+        {
+            get
+            {
+                string raw = Project?.AssignedDeveloperNames ?? "";
+                if (raw.StartsWith("Herkes", StringComparison.OrdinalIgnoreCase)) return "Herkes";
+                return ProjectsViewModel.FormatNamesWithAbbreviatedSurname(raw);
+            }
+        }
 
         public string DisplayAnalystSummary
         {
             get
             {
-                var names = FormattedAnalystNames;
-                if (string.IsNullOrWhiteSpace(names) || names == "-")
+                string? raw = Project?.AssignedAnalystNames;
+                if (string.IsNullOrWhiteSpace(raw) || raw == "-") return "Seçilmedi";
+
+                if (raw.Equals("Herkes", StringComparison.OrdinalIgnoreCase) && AnalystUserItems != null)
                 {
-                    names = Project?.AssignedAnalystNames;
+                    var selected = AnalystUserItems.Where(i => i.IsSelected).Select(i => i.User.FullName).ToList();
+                    if (selected.Any())
+                    {
+                        return "Herkes (" + string.Join(", ", selected) + ")";
+                    }
                 }
-                return string.IsNullOrWhiteSpace(names) || names == "-" ? "Seçilmedi" : names;
+
+                return raw;
             }
         }
 
@@ -532,12 +556,19 @@ namespace ZiraatProje.UI.ViewModels
         {
             get
             {
-                var names = FormattedDeveloperNames;
-                if (string.IsNullOrWhiteSpace(names) || names == "-")
+                string? raw = Project?.AssignedDeveloperNames;
+                if (string.IsNullOrWhiteSpace(raw) || raw == "-") return "Seçilmedi";
+
+                if (raw.Equals("Herkes", StringComparison.OrdinalIgnoreCase) && DeveloperUserItems != null)
                 {
-                    names = Project?.AssignedDeveloperNames;
+                    var selected = DeveloperUserItems.Where(i => i.IsSelected).Select(i => i.User.FullName).ToList();
+                    if (selected.Any())
+                    {
+                        return "Herkes (" + string.Join(", ", selected) + ")";
+                    }
                 }
-                return string.IsNullOrWhiteSpace(names) || names == "-" ? "Seçilmedi" : names;
+
+                return raw;
             }
         }
 
@@ -932,9 +963,11 @@ namespace ZiraatProje.UI.ViewModels
         public static string FormatNamesWithAbbreviatedSurname(string? rawNames)
         {
             if (string.IsNullOrWhiteSpace(rawNames)) return "-";
-            if (rawNames.Trim().Equals("Herkes", StringComparison.OrdinalIgnoreCase)) return "Herkes";
 
-            var items = rawNames.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            string namesToFormat = rawNames.Trim();
+            if (namesToFormat.StartsWith("Herkes", StringComparison.OrdinalIgnoreCase)) return "Herkes";
+
+            var items = namesToFormat.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
             var result = new List<string>();
 
             foreach (var item in items)
@@ -966,7 +999,7 @@ namespace ZiraatProje.UI.ViewModels
             foreach (var n in namesSet)
             {
                 if (string.IsNullOrWhiteSpace(n)) continue;
-                if (string.Equals(n, "Herkes", StringComparison.OrdinalIgnoreCase)) return true;
+                if (n.StartsWith("Herkes", StringComparison.OrdinalIgnoreCase)) return true;
                 if (string.Equals(fullName, n, StringComparison.OrdinalIgnoreCase)) return true;
                 if (string.Equals(abbreviated, n, StringComparison.OrdinalIgnoreCase)) return true;
 
@@ -2825,6 +2858,18 @@ namespace ZiraatProje.UI.ViewModels
                         })
                     );
 
+                    if (isAnalystHerkes && analystsList.Any())
+                    {
+                        var selNames = item.AnalystUserItems.Where(i => i.IsSelected).Select(i => i.User.FullName).ToList();
+                        if (selNames.Any()) p.AssignedAnalystNames = "Herkes (" + string.Join(", ", selNames) + ")";
+                    }
+
+                    if (isDevHerkes && devList.Any())
+                    {
+                        var selNames = item.DeveloperUserItems.Where(i => i.IsSelected).Select(i => i.User.FullName).ToList();
+                        if (selNames.Any()) p.AssignedDeveloperNames = "Herkes (" + string.Join(", ", selNames) + ")";
+                    }
+
                     var defaultDeptNames = new[] { 
                         "Kredi Risk", "Bireysel Bankacılık", "BT Altyapı", "Raporlama & Veri", 
                         "Muhasebe & Finans", "Uyum & Mevzuat", "Dijital Bankacılık", "Kurumsal Bankacılık", 
@@ -2950,7 +2995,7 @@ namespace ZiraatProje.UI.ViewModels
                 }
 
                 var analystNames = (SelectedProject.AssignedAnalystNames ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
-                bool isAnalystHerkes = string.Equals(SelectedProject.AssignedAnalystNames, "Herkes", StringComparison.OrdinalIgnoreCase);
+                bool isAnalystHerkes = (SelectedProject.AssignedAnalystNames ?? "").StartsWith("Herkes", StringComparison.OrdinalIgnoreCase);
 
                 foreach (var item in AnalystUserItems)
                 {
@@ -2958,12 +3003,33 @@ namespace ZiraatProje.UI.ViewModels
                 }
 
                 var devNames = (SelectedProject.AssignedDeveloperNames ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
-                bool isDevHerkes = string.Equals(SelectedProject.AssignedDeveloperNames, "Herkes", StringComparison.OrdinalIgnoreCase);
+                bool isDevHerkes = (SelectedProject.AssignedDeveloperNames ?? "").StartsWith("Herkes", StringComparison.OrdinalIgnoreCase);
 
                 foreach (var item in DeveloperUserItems)
                 {
                     item.IsSelected = isDevHerkes || IsNameMatched(item.User.FullName, devNames);
                 }
+
+                if (isAnalystHerkes && AnalystUserItems.Any())
+                {
+                    var selNames = AnalystUserItems.Where(i => i.IsSelected).Select(i => i.User.FullName).ToList();
+                    if (selNames.Any())
+                    {
+                        SelectedProject.AssignedAnalystNames = "Herkes (" + string.Join(", ", selNames) + ")";
+                    }
+                }
+
+                if (isDevHerkes && DeveloperUserItems.Any())
+                {
+                    var selNames = DeveloperUserItems.Where(i => i.IsSelected).Select(i => i.User.FullName).ToList();
+                    if (selNames.Any())
+                    {
+                        SelectedProject.AssignedDeveloperNames = "Herkes (" + string.Join(", ", selNames) + ")";
+                    }
+                }
+
+                OnPropertyChanged(nameof(DisplayAnalystSummary));
+                OnPropertyChanged(nameof(DisplayDeveloperSummary));
 
                 RefreshAssigneesAndCostRows();
 

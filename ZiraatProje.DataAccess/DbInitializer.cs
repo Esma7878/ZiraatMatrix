@@ -304,6 +304,7 @@ namespace ZiraatProje.DataAccess
                     UPDATE Teams SET Color = '#2563eb' WHERE (Color IS NULL OR Color = '') AND LOWER(TeamName) = 'teminat';
                     UPDATE Teams SET Color = '#7c3aed' WHERE Color IS NULL OR Color = '';
                     UPDATE Users SET Title = 'Developer', IsAdmin = 0 WHERE (Name LIKE 'Esma%' OR Email LIKE 'esma%' OR Email LIKE 'eozturk%') AND IsAdmin = 0;
+                    UPDATE Users SET IsAdmin = 1 WHERE Title LIKE '%Yönetici%' OR Team = 'Departman Yönetimi' OR Email LIKE 'nesli%' OR Email LIKE 'ahmet.yilmaz%' OR Email LIKE 'ali.celik%';
                 ");
             }
             catch { }

@@ -45,9 +45,15 @@
                             Padding="12,8" FontSize="12" FontWeight="Bold" Cursor="Hand" HorizontalAlignment="Stretch">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border CornerRadius="8" Background="{TemplateBinding Background}">
+                                <Border Name="Bd" CornerRadius="8" Background="{TemplateBinding Background}">
                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="{StaticResource ZiraatRedLight}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
@@ -114,13 +120,29 @@
                 <!-- Footer Clear Chat Button -->
                 <Border Grid.Row="4" Padding="10" BorderBrush="#e2e8f0" BorderThickness="0,1,0,0" Background="#f8fafc">
                     <Button Content="🗑️ Bugünkü Sohbeti Temizle" Command="{Binding ClearChatCommand}" 
-                            Background="#fef2f2" Foreground="{StaticResource ZiraatRed}" BorderBrush="#fecaca" BorderThickness="1"
+                            Background="#fef2f2" BorderBrush="#fecaca" BorderThickness="1"
                             Padding="8,5" FontSize="10" FontWeight="Bold" Cursor="Hand" HorizontalAlignment="Stretch">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Foreground" Value="{StaticResource ZiraatRed}"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                <Border Name="Bd" CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="{StaticResource ZiraatRed}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
@@ -262,9 +284,15 @@
                                 Padding="18,10" Margin="10,0,0,0" Cursor="Hand" VerticalAlignment="Center">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border CornerRadius="8" Background="{TemplateBinding Background}">
+                                    <Border Name="Bd" CornerRadius="8" Background="{TemplateBinding Background}">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ZiraatRedLight}"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
@@ -384,13 +412,29 @@
                     <!-- Bottom Action Bar -->
                     <Grid Grid.Row="4" Margin="0,12,0,0">
                         <Button Content="Kapat" Command="{Binding CloseNewChatModalCommand}" 
-                                Background="#f1f5f9" Foreground="#475569" BorderBrush="#cbd5e1" BorderThickness="1"
+                                Background="#f1f5f9" BorderBrush="#cbd5e1" BorderThickness="1"
                                 Padding="14,8" FontSize="11" FontWeight="Bold" Cursor="Hand" HorizontalAlignment="Left">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Foreground" Value="#475569"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                    <Border Name="Bd" CornerRadius="6" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#94a3b8"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
@@ -401,9 +445,15 @@
                                 Padding="16,8" FontSize="11" FontWeight="Bold" Cursor="Hand" HorizontalAlignment="Right">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border CornerRadius="6" Background="{TemplateBinding Background}">
+                                    <Border Name="Bd" CornerRadius="6" Background="{TemplateBinding Background}">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ZiraatRedLight}"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>

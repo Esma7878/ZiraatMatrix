@@ -26,10 +26,19 @@
             </Grid.RowDefinitions>
 
             <!-- Admin Header -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                <TextBlock Text="Ekip Üyeleri ve Ekip Yönetimi" FontSize="22" FontWeight="Bold" Foreground="#1a202c"/>
-                <TextBlock Text="Sistemdeki ekip üyelerini, unvanlarını, yetkilerini ve ekipleri kolayca yönetin" FontSize="13" Foreground="#718096" Margin="0,4,0,0"/>
-            </StackPanel>
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Ekip Üyeleri ve Ekip Yönetimi" FontSize="22" FontWeight="Bold" Foreground="#1a202c"/>
+                    <TextBlock Text="Sistemdeki ekip üyelerini, unvanlarını, yetkilerini ve ekipleri kolayca yönetin" FontSize="13" Foreground="#718096" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <Button Command="{Binding ToggleDirectoryViewCommand}" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Right" VerticalAlignment="Center" Height="34" Width="Auto" Padding="14,6">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="👁️ " FontSize="13"/>
+                        <TextBlock Text="Ekip Rehberini Görüntüle" FontSize="12" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
 
             <!-- Master-Detail Content Layout -->
             <Grid Grid.Row="1">
@@ -372,10 +381,19 @@
             </Grid.RowDefinitions>
 
             <!-- Directory Header -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                <TextBlock Text="Ekip &amp; Personel Rehberi" FontSize="22" FontWeight="Bold" Foreground="#1a202c"/>
-                <TextBlock Text="Departmanımızdaki 3 ekibi (Takip, Tahsis, Teminat) ve çalışan iletişim bilgilerini görüntüleyin." FontSize="13" Foreground="#718096" Margin="0,4,0,0"/>
-            </StackPanel>
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Ekip &amp; Personel Rehberi" FontSize="22" FontWeight="Bold" Foreground="#1a202c"/>
+                    <TextBlock Text="Departmanımızdaki 3 ekibi (Takip, Tahsis, Teminat) ve çalışan iletişim bilgilerini görüntüleyin." FontSize="13" Foreground="#718096" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <Button Visibility="{Binding IsCurrentUserAdmin, Converter={StaticResource BoolToVisConverter}}" Command="{Binding ToggleDirectoryViewCommand}" Style="{StaticResource NormalLoginButton}" HorizontalAlignment="Right" VerticalAlignment="Center" Height="34" Width="Auto" Padding="14,6">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="⚙️ " FontSize="13"/>
+                        <TextBlock Text="Yönetici Kullanıcı Yönetimi" FontSize="12" FontWeight="Bold"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
 
             <!-- Teams Grid / Directory Cards -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">

@@ -249,7 +249,6 @@ namespace ZiraatProje.UI.ViewModels
             get => _selectedUser;
             set
             {
-                if (_selectedUser == value) return;
                 _selectedUser = value;
                 OnPropertyChanged();
                 LoadSelectedUser();
@@ -455,7 +454,11 @@ namespace ZiraatProje.UI.ViewModels
                 IsTeamFormOpen = false;
                 IsUserFormOpen = true;
             });
-            CloseUserFormCommand = new RelayCommand(_ => { IsUserFormOpen = false; });
+            CloseUserFormCommand = new RelayCommand(_ => { 
+                IsUserFormOpen = false;
+                _selectedUser = null;
+                OnPropertyChanged(nameof(SelectedUser));
+            });
 
             OpenTeamFormCommand = new RelayCommand(_ =>
             {

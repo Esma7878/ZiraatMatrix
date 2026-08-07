@@ -228,7 +228,7 @@ namespace ZiraatProje.UI.ViewModels
         // ── Leave Notifications & Navigation Properties ─────────────────────────
         private Action? _onNavigateToLeaves;
         private Action? _onNavigateToShifts;
-        private Action? _onNavigateToProjects;
+        private Action<string?>? _onNavigateToProjects;
         private Action? _onNavigateToUsers;
         private Action? _onCreateLeaveRequest;
         private Action? _onCreateShift;
@@ -342,11 +342,11 @@ namespace ZiraatProje.UI.ViewModels
 
         public string ProjectShortcutTitle => IsAdmin ? "Proje Kaydı Ekle" : "Projeleri Görüntüle";
         public string ProjectShortcutSubtitle => IsAdmin ? "Yeni proje tanımla" : "Proje listesini incele";
-        public string ProjectShortcutIcon => IsAdmin ? "➕📊" : "📊";
+        public string ProjectShortcutIcon => IsAdmin ? "\uE710 \uE9D2" : "\uE9D2";
 
         public string UserShortcutTitle => IsAdmin ? "Personel / Ekip Tanımla" : "Kullanıcıları Görüntüle";
         public string UserShortcutSubtitle => IsAdmin ? "Personel ve rol yetkileri" : "Personel ve ekip listesi";
-        public string UserShortcutIcon => IsAdmin ? "➕👥" : "👥";
+        public string UserShortcutIcon => IsAdmin ? "\uE710 \uE716" : "\uE716";
 
         public Visibility PendingApprovalNotificationVisibility =>
             (IsAdmin && PendingApprovalCount > 0) ? Visibility.Visible : Visibility.Collapsed;
@@ -372,7 +372,7 @@ namespace ZiraatProje.UI.ViewModels
             string currentUserName = "", 
             Action? onNavigateToLeaves = null,
             Action? onNavigateToShifts = null,
-            Action? onNavigateToProjects = null,
+            Action<string?>? onNavigateToProjects = null,
             Action? onNavigateToUsers = null,
             Action? onCreateLeaveRequest = null,
             Action? onCreateShift = null,
@@ -393,7 +393,7 @@ namespace ZiraatProje.UI.ViewModels
 
             NavigateToLeavesCommand = new RelayCommand(_ => _onNavigateToLeaves?.Invoke());
             NavigateToShiftsCommand = new RelayCommand(_ => _onNavigateToShifts?.Invoke());
-            NavigateToProjectsCommand = new RelayCommand(_ => _onNavigateToProjects?.Invoke());
+            NavigateToProjectsCommand = new RelayCommand(param => _onNavigateToProjects?.Invoke(param as string));
             NavigateToUsersCommand = new RelayCommand(_ => _onNavigateToUsers?.Invoke());
             NavigateToConflictingShiftCommand = new RelayCommand(param =>
             {
@@ -412,7 +412,7 @@ namespace ZiraatProje.UI.ViewModels
             CreateProjectCommand = new RelayCommand(_ =>
             {
                 if (IsAdmin) _onCreateProject?.Invoke();
-                else _onNavigateToProjects?.Invoke();
+                else _onNavigateToProjects?.Invoke(null);
             });
             CreateUserCommand = new RelayCommand(_ =>
             {
@@ -504,7 +504,9 @@ namespace ZiraatProje.UI.ViewModels
                     p.ProjectStatus != "Tamamlandı" && p.ProjectStatus != "İptal"
                 ).ToList();
 
-                TotalProjectsCount = ongoingCurrentQuarterProjects.Count;
+                // Devam eden projeler: Sadece "Devam Ediyor" durumundaki aktif projeler
+                TotalProjectsCount = currentQuarterProjects.Count(p => string.Equals(p.ProjectStatus, "Devam Ediyor", StringComparison.OrdinalIgnoreCase));
+                // Proje talepleri: Aktif iş süreçleri (Tamamlanmamış ve iptal edilmemiş tüm talepler)
                 OngoingProjectsCount = ongoingCurrentQuarterProjects.Count;
 
                 // 4. Critical Budget Projects (Allocations >= 85% of TotalManDayBudget)

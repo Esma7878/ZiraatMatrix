@@ -305,6 +305,20 @@ namespace ZiraatProje.DataAccess
                     UPDATE Teams SET Color = '#7c3aed' WHERE Color IS NULL OR Color = '';
                     UPDATE Users SET Title = 'Developer', IsAdmin = 0 WHERE (Name LIKE 'Esma%' OR Email LIKE 'esma%' OR Email LIKE 'eozturk%') AND IsAdmin = 0;
                     UPDATE Users SET IsAdmin = 1 WHERE Title LIKE '%Yönetici%' OR Team = 'Departman Yönetimi' OR Email LIKE 'nesli%' OR Email LIKE 'ahmet.yilmaz%' OR Email LIKE 'ali.celik%';
+
+                    UPDATE Projects 
+                    SET AssignedAnalystNames = REPLACE(REPLACE(AssignedAnalystNames, 'Neslihan Keske', 'Seçilmedi'), 'Neslihan Yilmaz', 'Seçilmedi'),
+                        AssignedDeveloperNames = REPLACE(REPLACE(AssignedDeveloperNames, 'Neslihan Keske', 'Seçilmedi'), 'Neslihan Yilmaz', 'Seçilmedi'),
+                        AssignedUserNames = REPLACE(REPLACE(AssignedUserNames, 'Neslihan Keske', 'Seçilmedi'), 'Neslihan Yilmaz', 'Seçilmedi')
+                    WHERE AssignedAnalystNames LIKE '%Neslihan%' 
+                       OR AssignedDeveloperNames LIKE '%Neslihan%' 
+                       OR AssignedUserNames LIKE '%Neslihan%';
+
+                    UPDATE Projects SET AssignedAnalystNames = 'Seçilmedi' WHERE AssignedAnalystNames IS NULL OR AssignedAnalystNames = '' OR AssignedAnalystNames = ',';
+                    UPDATE Projects SET AssignedDeveloperNames = 'Seçilmedi' WHERE AssignedDeveloperNames IS NULL OR AssignedDeveloperNames = '' OR AssignedDeveloperNames = ',';
+
+                    DELETE FROM ProjectMonthlyCosts WHERE UserId IN (SELECT Id FROM Users WHERE Team = 'Departman Yönetimi' OR Title = 'Departman Yöneticisi');
+                    DELETE FROM ProjectAllocations WHERE UserId IN (SELECT Id FROM Users WHERE Team = 'Departman Yönetimi' OR Title = 'Departman Yöneticisi');
                 ");
             }
             catch { }

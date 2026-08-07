@@ -1199,6 +1199,29 @@ namespace ZiraatProje.UI.ViewModels
             "Teminat"
         };
 
+        public void RefreshTeamsList()
+        {
+            try
+            {
+                var teams = _services.GetAllTeams();
+                if (teams != null && teams.Any())
+                {
+                    var validTeamNames = teams
+                        .Select(t => t.TeamName)
+                        .Where(t => !string.IsNullOrWhiteSpace(t) && !t.Equals("Departman Yönetimi", StringComparison.OrdinalIgnoreCase))
+                        .Distinct()
+                        .ToList();
+
+                    foreach (var tn in validTeamNames)
+                    {
+                        if (!TeamList.Contains(tn)) TeamList.Add(tn);
+                        if (!TeamFilterList.Contains(tn)) TeamFilterList.Add(tn);
+                    }
+                }
+            }
+            catch { }
+        }
+
         private string _selectedTeam = string.Empty;
         public string SelectedTeam
         {
@@ -2184,17 +2207,19 @@ namespace ZiraatProje.UI.ViewModels
             OpenCreateFormCommand = new RelayCommand(_ =>
             {
                 ClearForm();
-                if (SelectedTeamFilter != "Tüm Ekipler" && !string.IsNullOrWhiteSpace(SelectedTeamFilter))
+                RefreshTeamsList();
+                if (SelectedTeamFilter != "Tüm Ekipler" && !string.IsNullOrWhiteSpace(SelectedTeamFilter) && TeamList.Contains(SelectedTeamFilter))
                 {
-                    _selectedTeam = SelectedTeamFilter;
-                    OnPropertyChanged(nameof(SelectedTeam));
+                    SelectedTeam = SelectedTeamFilter;
                 }
-                else if (!string.IsNullOrWhiteSpace(LoggedTeam))
+                else if (!string.IsNullOrWhiteSpace(LoggedTeam) && TeamList.Contains(LoggedTeam))
                 {
-                    _selectedTeam = LoggedTeam;
-                    OnPropertyChanged(nameof(SelectedTeam));
+                    SelectedTeam = LoggedTeam;
                 }
-                LoadUsersAndBuildAssigneeLists();
+                else
+                {
+                    SelectedTeam = TeamList.FirstOrDefault() ?? "Takip";
+                }
                 IsNewProjectMode = true;
                 IsEditMode = true;
                 IsDetailPanelVisible = true;
@@ -2301,27 +2326,82 @@ namespace ZiraatProje.UI.ViewModels
 
         private void InitializeStakeholders()
         {
-            var defaultDeptNames = new[] { "Kredi Risk", "Bireysel Bankacılık", "BT Altyapı", "Raporlama & Veri", "Muhasebe & Finans", "Uyum & Mevzuat", "Dijital Bankacılık" };
-            StakeholderItems = new ObservableCollection<SelectableStakeholderItem>(
-                defaultDeptNames.Select(d => new SelectableStakeholderItem
+            EnsureStakeholderItems(null);
+        }
+
+        private void EnsureStakeholderItems(IEnumerable<string>? activeStakeholders = null)
+        {
+            var defaultDeptNames = new[] { 
+                "Kredi Risk", "Bireysel Bankacılık", "BT Altyapı", "Raporlama & Veri", 
+                "Muhasebe & Finans", "Uyum & Mevzuat", "Dijital Bankacılık", "Kurumsal Bankacılık", 
+                "Hazine, Finansal Kurumlar", "IT Güvenlik, Operasyon" 
+            };
+
+            List<string> existingProjectStakeholders;
+            try
+            {
+                existingProjectStakeholders = (_services.GetAllProjects() ?? new List<Project>())
+                    .SelectMany(p => (p.Stakeholders ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .ToList();
+            }
+            catch
+            {
+                existingProjectStakeholders = new List<string>();
+            }
+
+            var currentInForm = StakeholderItems != null 
+                ? StakeholderItems.Select(s => s.Name) 
+                : Enumerable.Empty<string>();
+
+            var allKnown = defaultDeptNames
+                .Union(existingProjectStakeholders)
+                .Union(currentInForm)
+                .Union(activeStakeholders ?? Enumerable.Empty<string>())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Distinct()
+                .ToList();
+
+            HashSet<string>? activeSet = activeStakeholders != null 
+                ? activeStakeholders.Where(s => !string.IsNullOrWhiteSpace(s)).ToHashSet(StringComparer.OrdinalIgnoreCase)
+                : null;
+
+            var existingSelectedMap = (StakeholderItems ?? new ObservableCollection<SelectableStakeholderItem>())
+                .ToDictionary(s => s.Name, s => s.IsSelected, StringComparer.OrdinalIgnoreCase);
+
+            var newCollection = new ObservableCollection<SelectableStakeholderItem>();
+            foreach (var name in allKnown)
+            {
+                bool isSelected = false;
+                if (activeSet != null)
                 {
-                    Name = d,
-                    IsSelected = false,
+                    isSelected = activeSet.Contains(name);
+                }
+                else if (existingSelectedMap.TryGetValue(name, out bool wasSelected))
+                {
+                    isSelected = wasSelected;
+                }
+
+                newCollection.Add(new SelectableStakeholderItem
+                {
+                    Name = name,
+                    IsSelected = isSelected,
                     OnSelectionChangedAction = () => OnPropertyChanged(nameof(StakeholderItems))
-                })
-            );
+                });
+            }
+
+            StakeholderItems = newCollection;
         }
 
         private List<User> _allUsers = new List<User>();
 
-        private void LoadUsersAndBuildAssigneeLists()
+        public void LoadUsersAndBuildAssigneeLists()
         {
             try
             {
-                if (_allUsers == null || !_allUsers.Any())
-                {
-                    _allUsers = _services.GetAllUsers() ?? new List<User>();
-                }
+                var rawUsers = _services.GetAllUsers() ?? new List<User>();
+                _allUsers = rawUsers.Where(u => !string.Equals(u.Team, "Departman Yönetimi", StringComparison.OrdinalIgnoreCase) && !string.Equals(u.Title, "Departman Yöneticisi", StringComparison.OrdinalIgnoreCase)).ToList();
 
                 var teamUsers = (string.IsNullOrWhiteSpace(SelectedTeam) || SelectedTeam == "Tüm Ekipler")
                     ? _allUsers
@@ -2330,12 +2410,7 @@ namespace ZiraatProje.UI.ViewModels
                 if (!teamUsers.Any()) teamUsers = _allUsers;
 
                 var analysts = teamUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
-                if (!analysts.Any())
-                {
-                    analysts = teamUsers.Take(Math.Max(1, teamUsers.Count / 2)).ToList();
-                }
-
-                var developers = teamUsers.Except(analysts).ToList();
+                var developers = teamUsers.Where(u => !(u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
 
                 AnalystUserItems = new ObservableCollection<SelectableUserItem>(
                     analysts.Select(u => new SelectableUserItem
@@ -2675,6 +2750,8 @@ namespace ZiraatProje.UI.ViewModels
         {
             try
             {
+                var rawUsers = _services.GetAllUsers() ?? new List<User>();
+                _allUsers = rawUsers.Where(u => !string.Equals(u.Team, "Departman Yönetimi", StringComparison.OrdinalIgnoreCase) && !string.Equals(u.Title, "Departman Yöneticisi", StringComparison.OrdinalIgnoreCase)).ToList();
                 string filterTeam = (SelectedTeamFilter == "Tüm Ekipler" || string.IsNullOrWhiteSpace(SelectedTeamFilter))
                     ? ""
                     : SelectedTeamFilter;
@@ -2714,8 +2791,9 @@ namespace ZiraatProje.UI.ViewModels
                     var dbCosts = allProjectCosts.Where(c => c.ProjectId == p.Id).ToList();
                     var dbAllocations = allProjectAllocations.Where(a => a.ProjectId == p.Id).ToList();
 
-                    var analystsList = _allUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
-                    var devList = _allUsers.Where(u => (u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yazılımcı", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Mühendis", StringComparison.OrdinalIgnoreCase)).ToList();
+                    var projectUsers = _allUsers.Where(u => !string.Equals(u.Team, "Departman Yönetimi", StringComparison.OrdinalIgnoreCase) && !string.Equals(u.Title, "Departman Yöneticisi", StringComparison.OrdinalIgnoreCase)).ToList();
+                    var analystsList = projectUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
+                    var devList = projectUsers.Where(u => !(u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
 
                     var rawAnalysts = p.AssignedAnalystNames ?? string.Empty;
                     var analystNamesSet = rawAnalysts.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
@@ -2875,8 +2953,9 @@ namespace ZiraatProje.UI.ViewModels
                         "Muhasebe & Finans", "Uyum & Mevzuat", "Dijital Bankacılık", "Kurumsal Bankacılık", 
                         "Hazine, Finansal Kurumlar", "IT Güvenlik, Operasyon" 
                     };
+                    var allDbStakeholders = list.SelectMany(proj => (proj.Stakeholders ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)).Select(s => s.Trim()).Where(s => !string.IsNullOrWhiteSpace(s));
                     var currentStakeholders = (p.Stakeholders ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
-                    var allDeptNames = defaultDeptNames.Union(currentStakeholders).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
+                    var allDeptNames = defaultDeptNames.Union(allDbStakeholders).Union(currentStakeholders).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
 
                     item.StakeholderItems = new ObservableCollection<SelectableStakeholderItem>(
                         allDeptNames.Select(d => new SelectableStakeholderItem
@@ -2988,11 +3067,8 @@ namespace ZiraatProje.UI.ViewModels
 
                 SelectedTeam = SelectedProject.Team ?? string.Empty;
 
-                var stakeholdersList = (SelectedProject.Stakeholders ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
-                foreach (var sh in StakeholderItems)
-                {
-                    sh.IsSelected = stakeholdersList.Contains(sh.Name);
-                }
+                var stakeholdersList = (SelectedProject.Stakeholders ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList();
+                EnsureStakeholderItems(stakeholdersList);
 
                 var analystNames = (SelectedProject.AssignedAnalystNames ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
                 bool isAnalystHerkes = (SelectedProject.AssignedAnalystNames ?? "").StartsWith("Herkes", StringComparison.OrdinalIgnoreCase);
@@ -3262,8 +3338,9 @@ namespace ZiraatProje.UI.ViewModels
                 p.ActualManDays = p.AnalystActualManDays + p.DeveloperActualManDays;
                 p.ActualReleaseDate = isCompletedForm ? ActualReleaseDate : null;
 
-                var analystsList = _allUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
-                var devList = _allUsers.Where(u => (u.Title ?? "").Contains("Developer", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Yazılımcı", StringComparison.OrdinalIgnoreCase) || (u.Title ?? "").Contains("Mühendis", StringComparison.OrdinalIgnoreCase)).ToList();
+                var projectUsers = _allUsers.Where(u => !string.Equals(u.Team, "Departman Yönetimi", StringComparison.OrdinalIgnoreCase) && !string.Equals(u.Title, "Departman Yöneticisi", StringComparison.OrdinalIgnoreCase)).ToList();
+                var analystsList = projectUsers.Where(u => (u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
+                var devList = projectUsers.Where(u => !(u.Title ?? "").Contains("Analist", StringComparison.OrdinalIgnoreCase)).ToList();
 
                 var rawAnalysts = p.AssignedAnalystNames ?? string.Empty;
                 var analystNamesSet = rawAnalysts.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToHashSet();
@@ -3278,12 +3355,12 @@ namespace ZiraatProje.UI.ViewModels
 
                 if (!analystUsers.Any())
                 {
-                    var defaultAnalyst = analystsList.FirstOrDefault() ?? _allUsers.FirstOrDefault();
+                    var defaultAnalyst = analystsList.FirstOrDefault();
                     if (defaultAnalyst != null) analystUsers.Add(defaultAnalyst);
                 }
                 if (!devUsers.Any())
                 {
-                    var defaultDev = devList.FirstOrDefault() ?? _allUsers.LastOrDefault();
+                    var defaultDev = devList.FirstOrDefault();
                     if (defaultDev != null) devUsers.Add(defaultDev);
                 }
 
@@ -3518,7 +3595,7 @@ namespace ZiraatProje.UI.ViewModels
 
             foreach (var item in AnalystUserItems) item.IsSelected = false;
             foreach (var item in DeveloperUserItems) item.IsSelected = false;
-            foreach (var item in StakeholderItems) item.IsSelected = false;
+            EnsureStakeholderItems(Enumerable.Empty<string>());
 
             _isManuallyEditedBudget = false;
             PersonMonthlyCostRows.Clear();

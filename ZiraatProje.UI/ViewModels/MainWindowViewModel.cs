@@ -362,7 +362,7 @@ namespace ZiraatProje.UI.ViewModels
             ShowUsersCommand = new RelayCommand(_ => NavigateToUsers());
             ShowShiftsCommand = new RelayCommand(_ => NavigateToShifts());
             ShowLeavesCommand = new RelayCommand(_ => NavigateToLeaves());
-            ShowProjectsCommand = new RelayCommand(_ => NavigateToProjects());
+            ShowProjectsCommand = new RelayCommand(_ => NavigateToProjects(null));
             ShowChatCommand = new RelayCommand(_ => NavigateToChat());
 
             // Setup real-time chat notification badge timer (every 2 seconds)
@@ -451,9 +451,31 @@ namespace ZiraatProje.UI.ViewModels
             CurrentViewModel = _cachedLeavesViewModel;
         }
 
-        private void NavigateToProjects()
+        private void NavigateToProjects(string? statusFilter = null)
         {
-            _cachedProjectsViewModel ??= new ProjectsViewModel(IsCurrentUserAdmin, CurrentUserName, SelectedLoginTeam);
+            if (_cachedProjectsViewModel == null)
+            {
+                _cachedProjectsViewModel = new ProjectsViewModel(IsCurrentUserAdmin, CurrentUserName, SelectedLoginTeam);
+            }
+            else
+            {
+                _cachedProjectsViewModel.LoadUsersAndBuildAssigneeLists();
+                _cachedProjectsViewModel.LoadProjects();
+            }
+
+            if (!string.IsNullOrWhiteSpace(statusFilter))
+            {
+                _cachedProjectsViewModel.SelectedStatusFilter = statusFilter;
+            }
+            else
+            {
+                _cachedProjectsViewModel.SelectedStatusFilter = "Tüm Durumlar";
+            }
+
+            var today = DateTime.Today;
+            byte currentQuarter = (byte)((today.Month - 1) / 3 + 1);
+            _cachedProjectsViewModel.SelectedQuarter = currentQuarter;
+
             CurrentViewModel = _cachedProjectsViewModel;
         }
 

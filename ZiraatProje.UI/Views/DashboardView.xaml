@@ -329,7 +329,7 @@
                             <!-- Card 3: PROJE TALEPLERİ -->
                             <Border Grid.Column="2" Style="{StaticResource KpiCard}" Padding="12,12" Margin="0,0,6,0" ToolTip="Proje Yönetimine Git">
                                 <Border.InputBindings>
-                                    <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToProjectsCommand}"/>
+                                    <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToProjectsCommand}" CommandParameter="Tüm Durumlar"/>
                                 </Border.InputBindings>
                                 <StackPanel>
                                     <TextBlock Text="PROJE TALEPLERİ" FontSize="10.5" FontWeight="Bold" Foreground="#2563eb"/>
@@ -341,7 +341,7 @@
                             <!-- Card 4: DEVAM EDEN PROJELER -->
                             <Border Grid.Column="3" Style="{StaticResource KpiCard}" Padding="12,12" Margin="0,0,0,0" ToolTip="Proje Sayfasına Git">
                                 <Border.InputBindings>
-                                    <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToProjectsCommand}"/>
+                                    <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateToProjectsCommand}" CommandParameter="Devam Ediyor"/>
                                 </Border.InputBindings>
                                 <StackPanel>
                                     <TextBlock Text="DEVAM EDEN PROJELER" FontSize="10.5" FontWeight="Bold" Foreground="#7c3aed"/>
@@ -425,7 +425,7 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="➕🌴" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <TextBlock Grid.Column="0" Text="&#xE710; &#xE8B9;" FontFamily="Segoe MDL2 Assets" FontSize="15" FontWeight="Bold" Foreground="#065f46" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                 <TextBlock Text="İzin Kaydı Oluştur" FontSize="11.5" FontWeight="Bold" Foreground="#065f46"/>
                                                 <TextBlock Text="Yeni izin veya değişiklik isteği" FontSize="9.5" Foreground="#059669" Margin="0,2,0,0"/>
@@ -448,7 +448,7 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="➕🗓️" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <TextBlock Grid.Column="0" Text="&#xE710; &#xE787;" FontFamily="Segoe MDL2 Assets" FontSize="15" FontWeight="Bold" Foreground="#1e40af" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                 <TextBlock Text="Nöbet Kaydı Ekle" FontSize="11.5" FontWeight="Bold" Foreground="#1e40af"/>
                                                 <TextBlock Text="Yaygınlaştırma veya özel nöbet" FontSize="9.5" Foreground="#3b82f6" Margin="0,2,0,0"/>
@@ -471,7 +471,7 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding ProjectShortcutIcon}" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <TextBlock Grid.Column="0" Text="{Binding ProjectShortcutIcon}" FontFamily="Segoe MDL2 Assets" FontSize="15" FontWeight="Bold" Foreground="#5b21b6" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding ProjectShortcutTitle}" FontSize="11.5" FontWeight="Bold" Foreground="#5b21b6"/>
                                                 <TextBlock Text="{Binding ProjectShortcutSubtitle}" FontSize="9.5" Foreground="#7c3aed" Margin="0,2,0,0"/>
@@ -494,7 +494,7 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding UserShortcutIcon}" FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            <TextBlock Grid.Column="0" Text="{Binding UserShortcutIcon}" FontFamily="Segoe MDL2 Assets" FontSize="15" FontWeight="Bold" Foreground="#c2410c" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding UserShortcutTitle}" FontSize="11.5" FontWeight="Bold" Foreground="#c2410c"/>
                                                 <TextBlock Text="{Binding UserShortcutSubtitle}" FontSize="9.5" Foreground="#ea580c" Margin="0,2,0,0"/>

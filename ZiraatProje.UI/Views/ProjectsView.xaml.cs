@@ -26,6 +26,15 @@ namespace ZiraatProje.UI.Views
                 hwndSource?.AddHook(MouseWheelScrollHelper.HwndHook);
             }
             catch { }
+
+            try
+            {
+                Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
+                {
+                    MainScrollViewer?.ScrollToTop();
+                }));
+            }
+            catch { }
         }
 
         private void DataGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

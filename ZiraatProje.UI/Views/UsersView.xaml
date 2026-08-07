@@ -79,7 +79,25 @@
                             </StackPanel>
                         </Grid>
 
-                        <DataGrid Grid.Row="1" ItemsSource="{Binding UsersViewCollection}" SelectedItem="{Binding SelectedUser}" AutoGenerateColumns="False" HeadersVisibility="Column" ScrollViewer.CanContentScroll="False" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding UsersViewCollection}" SelectedItem="{Binding SelectedUser}" 
+                                  AutoGenerateColumns="False" HeadersVisibility="Column" IsReadOnly="True" 
+                                  SelectionMode="Single" SelectionUnit="FullRow" GridLinesVisibility="Horizontal"
+                                  ScrollViewer.CanContentScroll="False" helpers:MouseWheelScrollHelper.EnableMouseWheelScroll="True">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#ffeef0"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#0284c7"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
                             <DataGrid.GroupStyle>
                                 <GroupStyle>
                                     <GroupStyle.HeaderTemplate>

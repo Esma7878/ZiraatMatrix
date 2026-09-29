@@ -1,67 +1,47 @@
- ZiraatMatrix 
-Kurumsal Proje, Nöbet ve Ekip Kaynak Yönetim Platformu
-.NET 9 ve WPF kullanılarak geliştirilmiş; kurumsal ekiplerde proje adam/gün maliyetlerini, çeyreklik efor planlamalarını, ekip izin çakışmalarını ve nöbet çizelgelerini akıllı öneri algoritmalarıyla yöneten N-Katmanlı masaüstü yönetim platformudur.
-TEKNOLOJİLER:
-C# .NET 9 WPF (XAML) EF Core 9 MS SQL Server N-Tier Architecture Akıllı Algoritmalar Enterprise Resource Management
+# 🏛️ ZiraatMatrix
 
-Smart Executive Digest & Ana Sayfa: Ekip yükü dağılımları, yaklaşan nöbetler ve kritik izin uyarılarını içeren özet panel.
+> **Kurumsal Proje, Nöbet ve Ekip Kaynak Yönetim Platformu**  
+> .NET 9 ve WPF kullanılarak N-Katmanlı Mimari (N-Tier) prensipleriyle geliştirilmiş; analist ve yazılımcı efor takibini, kritik izin çakışma risklerini ve adil nöbet dağıtımlarını akıllı karar destek algoritmalarıyla yöneten yeni nesil kurumsal masaüstü yönetim sistemi.
 
-Kullanıcı & Takım Yönetimi: Ekip renk kodları, roller (Analist, Dev, Yönetici) ve personel rehberi.
+---
 
-Akıllı İzin Çakışma Yönetimi: %50 ekip çakışma riski tespiti, özel izin onay akışları ve saatlik/tam gün izin takvimi.
+## 🎯 Projenin Amacı ve Çözülen Problemler
 
-Proje & Adam/Gün Efor Yönetimi: Çeyreklik (Q1-Q4) analist/yazılımcı efor planlama, gerçekleşen harcamalar ve dış firma maliyet takibi.
+Kurumsal yazılım ve operasyon ekiplerinde karşılaşılan yönetsel darboğazları tek merkezden çözmek üzere geliştirilmiştir:
 
-Ekip İçi Anlık İletişim: Departman/Ekip kanalları ve birebir (Direct Message) mesajlaşma altyapısı.
+* **Dağınık Efor ve Kaynak Yönetimi:** Çeyreklik (Q1-Q4) ve aylık bazda analist/yazılımcı adam/gün (man-day) planlamalarının şeffaf, izlenebilir ve kurumsal hiyerarşiye (GMY, İş Birimi, Dış Firma) uygun şekilde yürütülmesi.
+* **Kritik İzin Çakışmaları:** Aynı roldeki çalışanların eşzamanlı izin alması durumunda operasyonel risk yaratan senaryoları önleyen **%50 Ekip Risk Eşiği Algoritması**.
+* **Düzensiz Nöbet Dağılımları:** Canlıya geçiş (Release), Firewall ve sunucu bakım nöbetlerinin geçmiş veriler analiz edilerek adil ve otomatik şekilde planlanması.
+* **Bütünleşik İletişim:** Ekiplerin operasyonel süreçleri ve proje detaylarını harici araçlara ihtiyaç duymadan uygulama içi kanallar üzerinden anlık koordine edebilmesi.
 
-Projenin Amacı ve Çözdüğü Problemler
-Kurumsal yazılım ve operasyon ekiplerinde karşılaşılan temel yönetimsel problemleri tek bir platformda çözmek amacıyla geliştirilmiştir:
-Dağınık Efor Takibi: Projelerde analist ve yazılımcı adam/gün (man-day) eforlarının çeyreklik/aylık bazda yanlış planlanmasını engeller.
-Kritik İzin Çakışmaları: Aynı anda birden fazla kritik personelin izne çıkması durumunda projelerin aksamasını önleyen %50 Ekip Risk Eşiği kontrolü sunar.
-Düzensiz Nöbet Dağılımları: Canlıya geçiş (Release), Firewall ve Sunucu bakım nöbetlerinin adil ve otomatik dağıtılmasını sağlar.
-Şeffaf Ekip İletişimi: Proje ve nöbet süreçleri hakkında ekip içi anlık mesajlaşma imkanı verir.
+---
 
-Öne Çıkan Modüller ve Yetenekler
+## 🚀 Öne Çıkan Modüller ve Yetenekler
 
- A. Proje & Efor Yönetimi (Smart Project Allocation)
- 
-Çeyreklik (Q1-Q4) ve Aylık Matris Planlama: Analist ve yazılımcılar için ay bazlı adam/gün planlaması ve gerçekleşen efor takibi.
-Kurumsal Hiyerarşi: GMY (Genel Müdür Yardımcılığı), İş Birimi ve Paydaş Departman kırılımları.
-Dış Firma & Maliyet Yönetimi: İç kaynak eforlarının yanı sıra dış firma maliyetlerinin (External Cost) takibi.
-Pergel No & Jira Entegrasyonu: Kurumsal talep numaraları ile izlenebilirlik.
+### 📊 1. Proje & Efor Yönetimi (Smart Project Allocation)
+* **Matris Planlama:** Analist ve yazılımcılar için çeyreklik (Q1-Q4) ve aylık bazda planlanan vs. gerçekleşen adam/gün takibi.
+* **Kurumsal Hiyerarşi & Maliyet:** GMY, iş birimi ve paydaş departman kırılımları; iç kaynakların yanı sıra dış firma danışmanlık maliyetlerinin takibi.
+* **Kurumsal İzlenebilirlik:** Pergel No ve Jira entegrasyonu ile talep bazlı efor eşleştirme.
 
- B. İzin Yönetimi & Akıllı Risk Algoritması (Smart Leave Recommendation)
- 
-Kritik Çakışma Motoru: İzin talebi girildiğinde aynı ekipte aynı roldeki kişilerin çakışma oranını hesaplar. Çakışma %50'yi aşarsa sistemi "Özel İzin Talebi" moduna geçirir.
-Saatlik ve Tam Gün İzin: Esnek izin tipleri ve otomatik durum güncellemeleri (Approved / Pending / Rejected).
-Yönetici Onay Akışı: Unseen notification sistemi ile yöneticilere anlık izin onay bildirimi düşer.
+### 🛡️ 2. İzin Yönetimi & Akıllı Risk Algoritması (Smart Leave Recommendation)
+* **%50 Çakışma Riski Analizi:** Aynı ekipte ve aynı roldeki çalışanların izin taleplerinde operasyonel aksama riskini anlık hesaplama.
+* **Dinamik Onay Akışları:** Eşik değeri aşan durumlarda süreci otomatik olarak *"Özel İzin Onayı"* statüsüne yönlendirme.
+* **Esnek İzin Yapısı:** Saatlik ve tam gün izin türleri, yönetici anlık bildirimleri ve onay mekanizmaları.
 
-C. Nöbet & Sürüm Yönetimi (Smart Shift Assistant)
+### 📅 3. Nöbet & Sürüm Yönetimi (Smart Shift Assistant)
+* **Çoklu Nöbet Desteği:** Canlıya geçiş (Release), sistem/sunucu bakımları ve firewall geçiş nöbetleri.
+* **Adil Dağıtım Motoru:** Çalışanların geçmiş nöbet geçmişini, rollerini ve sıklığını analiz ederek nöbetleri ekipler arasında optimize eden akıllı öneri motoru.
+* **Jira Entegrasyonu:** Nöbet kayıtlarına doğrudan Jira biletleri ve bağlantı linklerinin tanımlanması.
 
-Çoklu Nöbet Tipleri: Aylık Sürüm Nöbetleri, Sunucu/Firewall Geçişleri ve Özel Konu Nöbetleri.
-Adil Nöbet Öneri Motoru: Geçmiş nöbet sayılarını analiz ederek nöbeti ekipler arasında eşit dağıtan asistan algoritması.
-Harici Bağlantı & Jira Entegrasyonu: Nöbet kayıtlarına Jira bilet no ve yönlendirme linkleri ekleme.
+### 💬 4. Ekip İçi Anlık Mesajlaşma (Team Chat)
+* **Kanal Tabanlı İletişim:** Genel duyuru kanalları, takıma özel çalışma odaları (Takip, Tahsis, Teminat vb.) ve uçtan uca birebir (DM) mesajlaşma.
+* **Etkileşim:** Okundu bilgisi takibi (`ChatMessageReadState`) ve gerçek zamanlı bildirim yönetimi.
 
-D. Ekip İçi Anlık Mesajlaşma (Team Chat)
+### 📈 5. Yönetici Özet Paneli (Smart Executive Digest)
+* Yaklaşan teslimler, kritik eşiğe ulaşan izinler, nöbet takvimi ve ekip kapasite oranlarını tek bir dinamik dashboard üzerinde görselleştirme.
 
-Kanal Bazlı İletişim: Genel Kanal, Takım Kanalları (Takip, Tahsis, Teminat vb.) ve Birebir (DM) mesajlaşma.
-Okundu Durumu & Bildirim: Mesaj okundu durumlarının takip edilmesi (ChatMessageReadState).
+---
 
-Mimari ve Teknolojik Stack
+## 🛠️ Mimari ve Teknolojik Yığın
 
-Proje, kurumsal standartlara uygun olarak N-Katmanlı Mimari (N-Tier Architecture) ile tasarlanmıştır.
-ZiraatProje (Solution)
- ├── 🎨 ZiraatProje.UI          --> WPF (XAML), Modern Custom UI Controls, ViewModels & Views
- ├── ⚙️ ZiraatProje.Business    --> Business Logic, Smart/AI Recommendation Engines, Validation
- └── 💾 ZiraatProje.DataAccess  --> Entity Framework Core 9, MS SQL Server, DbInitializer
-​
-Dil / Platform: C# 13 / .NET 9 (Windows Desktop Platform)
-
-Kullanıcı Arayüzü (UI): WPF (Windows Presentation Foundation), Modern XAML Stilleri, Visual State Manager & Özel Animasyonlar
-Veritabanı & ORM: Entity Framework Core 9.0, MS SQL Server LocalDB
-
-Algoritmik Servisler:
-SmartLeaveRecommendationService (Ekip İzin Risk Analizi)
-SmartShiftAssistantService (Adil Nöbet Dağıtım Motoru)
-SmartProjectAllocationService (Matris Efor Hesaplama)
-SmartExecutiveDigestService (Yönetici Özet Motoru)
+Proje, kurumsal ölçeklenebilirlik ve sorumlulukların ayrılığı prensiplerine tam uyum için **N-Katmanlı Mimari (N-Tier)** ile inşa edilmiştir:
